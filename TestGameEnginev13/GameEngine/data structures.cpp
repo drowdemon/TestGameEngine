@@ -117,3 +117,16 @@ reportsimpleunitinfo::reportsimpleunitinfo(short esid, point esl, short ep, shor
 	enemyplayer=ep;
 	enemyindex=ei;
 }
+RGB::RGB(int pr, int pg, int pb)
+{
+	r=pr;
+	g=pg;
+	b=pb;
+}
+ARGB::ARGB(int pa, int pr, int pg, int pb)
+{
+	a=pa;
+	r=pr;
+	g=pg;
+	b=pb;
+}

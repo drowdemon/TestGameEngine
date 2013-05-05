@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "base unit buildings.h"
 baseunit::baseunit(float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, short sn, float ar, short pid, float c, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg)
 {

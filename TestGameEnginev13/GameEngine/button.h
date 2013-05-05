@@ -29,9 +29,9 @@ public:
 	int width;
 	int height;
 	string text;
-	void (*func)(buttonparam, HWND);
+	void (*func)(buttonparam);
 	unsigned long long dispwhen;
 	int unitorbuilding;
-	button(int px, int py, int w, int h, string txt, void (*f)(buttonparam, HWND), unsigned long long dw, int uorb=-1);
+	button(int px, int py, int w, int h, string txt, void (*f)(buttonparam), unsigned long long dw, int uorb=-1);
 };
 #endif

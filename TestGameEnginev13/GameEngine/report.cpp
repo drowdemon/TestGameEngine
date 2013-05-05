@@ -42,7 +42,7 @@ void report::updatedkilledunits(short player, short index)
 		}
 	}
 }
-void report::give(HWND hWnd)
+void report::give()
 {
 	reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
 	updatetext(reportdialoghwnd,MSG_ONE,gentxtMyKilled());

@@ -138,5 +138,20 @@ public:
 	//!<Constructor
 	reportsimpleunitinfo(short esid, point esl, short ep, short ei);
 };
+class RGB
+{
+	int r;
+	int g;
+	int b;
+	RGB(int pr, int pg, int pb);
+};
+class ARGB
+{
+	int a;
+	int r;
+	int g;
+	int b;
+	ARGB(int pa, int pr, int pg, int pb);
+};
 
 #endif

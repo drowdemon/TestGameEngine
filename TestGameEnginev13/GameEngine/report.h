@@ -40,7 +40,7 @@ public:
 	//! This takes an enemy unit that was killed, and records that
 	void updatedkilledunits(short player, short index);
 	//! This gives a report
-	void give(HWND hWnd);
+	void give();
 	//! This updates the text in the report
 	char* gentxtMyKilled();
 	char* gentxtSeen();

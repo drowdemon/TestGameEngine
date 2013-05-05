@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "building.h"
 #include "globals.h"
 #include "button functions.h"

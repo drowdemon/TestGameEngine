@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "test game engine v13.h"
 #include "globals.h"
 #include "data structures.h"
@@ -12,21 +11,15 @@
 #include "astarsearch.h"
 #include "button functions.h"
 #include "display functions.h"
-//Testing git again!
-#include <objidl.h>
-#include <gdiplus.h>
-#include <WindowsX.h>
+
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 #include <math.h>
 #include <fstream>
-#include <string>
-#include <commctrl.h>
+#include <string.h>
+#include <GL/glut.h>
 
-#pragma comment (lib,"Gdiplus.lib")
-
-using namespace Gdiplus;
 using namespace std;
 
 //forward declarations of classes
@@ -47,8 +40,12 @@ class siege;
 class regiment;
 class button;
 
+#define WIDTH 700 //temporary, I hope
+#define HEIGHT 700 //temporary, I hope
+#define DBL_CLICK 3
 // Global Variables:
-HINSTANCE hInst;								// current instance
+int dblclickglut=-1;
+/*HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 HDC hdc;
@@ -63,7 +60,16 @@ ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
-INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);*/
+void mainTimerProc(int arg);
+void renderScene();
+void initializeGameEngine();
+
+struct POINT
+{
+	int x;
+	int y;
+};
 
 vector<point> astarsearch(problem p, float speed, unit *u)
 {
@@ -130,10 +136,11 @@ vector<point> astarsearch(problem p, float speed, unit *u)
 		fringe.erase(fringe.begin()+minindex);
 	}
 }
-VOID CALLBACK hourpassed(HWND hWnd, UINT msg, UINT_PTR idEvent, DWORD dwTime)
+//VOID CALLBACK hourpassed(HWND hWnd, UINT msg, UINT_PTR idEvent, DWORD dwTime)
+void hourpassed(int arg)
 {
 	hours+=hourspersecond;//goes off every 1 sec.
-	if((int)hours%24==0 && abs(hours-int(hours+0.00001))<=0.0001) //one day passed
+	if((int)hours%24==0 && abs((long)(hours-int(hours+0.00001)))<=0.0001) //one day passed
 	{
 		for(unsigned int i=0; i<allunits.size(); i++)//loops through all the players
 		{
@@ -233,8 +240,9 @@ VOID CALLBACK hourpassed(HWND hWnd, UINT msg, UINT_PTR idEvent, DWORD dwTime)
 			//}
 		}
 	}
+	glutTimerFunc(1000,hourpassed,0);
 }
-DWORD WINAPI ThreadTimerProc(LPVOID lpParameter) // thread data
+/*DWORD WINAPI ThreadTimerProc(LPVOID lpParameter) // thread data
 {
 	UINT uiTimer = SetTimer(NULL, 1234, 1000, hourpassed);		
 	MSG msg;
@@ -244,7 +252,7 @@ DWORD WINAPI ThreadTimerProc(LPVOID lpParameter) // thread data
 		DispatchMessage(&msg);
 	}
 	return 0;
-}
+}*/
 void selectone(int player, point &clicked) //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
 {
 	redraw=true;//mod buttons likely
@@ -898,656 +906,621 @@ void updatetext(HWND hDlg, int index, char text[])
 	RedrawWindow(hDlg, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
 }
 
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int main(int argc, char **argv)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-	GdiplusStartupInput gdiplusStartupInput;
-    ULONG_PTR           gdiplusToken;
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowPosition(100,100);
+	glutInitWindowSize(WIDTH,HEIGHT);
+	glutCreateWindow("Lighthouse3D- GLUT Tutorial");
 
- 	// TODO: Place code here.
-	MSG msg;
-	HACCEL hAccelTable;
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	glutDisplayFunc(renderScene);
+	glutMouseFunc(processMouse);
+	glutReshapeFunc(changeSize);
+	glutMotionFunc(processMouseMove); //this is while mouse button pressed
+	glutPassiveMotionFunc(processPassiveMouseMove); //this is while mouse button is not pressed
 
-	// Initialize global strings
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_TESTGAMEENGINEV10, szWindowClass, MAX_LOADSTRING);
-	MyRegisterClass(hInstance);
+	initializeGameEngine();
 
-	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
+	glutMainLoop();
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_TESTGAMEENGINEV10));
-	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-	GdiplusShutdown(gdiplusToken);
-	return (int) msg.wParam;
-}
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-
-	wcex.style			= CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_TESTGAMEENGINEV10));
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_TESTGAMEENGINEV10);
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-	return RegisterClassEx(&wcex);
-}
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-   HWND hWnd;
-
-   hInst = hInstance; // Store instance handle in our global variable
-
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-
-   ShowWindow(hWnd, SW_MAXIMIZE);
-   UpdateWindow(hWnd);
-
-   return TRUE;
-}
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	int wmId, wmEvent;
-	PAINTSTRUCT ps;
-	//HDC hdc;
-
-	switch (message)
-	{
-	case WM_CREATE:
-	{
-		srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
-		map.resize(MAPSIZE);
-		minimapseen.resize(numplayers);
-		overwriteunits.resize(numplayers);
-		overwritebuildings.resize(numplayers);
-		selectedunits.resize(numplayers);
-		whatsselected.resize(numplayers);
-		minimapseen[0].resize(MAPSIZE);
-		minimapseen[1].resize(MAPSIZE);
-		allsiegeunits.resize(numplayers);
-		resources.resize(numplayers);
-		resources[0].resize(4);
-		resources[1].resize(4);
-		players.push_back(0);
-		players.push_back(1);
-		newlybuiltbuildings.resize(numplayers);
-		designatedunit.resize(numplayers);
-		allregiments.resize(numplayers);
-		allgarrisonedselectedunits.resize(numplayers);
-		for(int i=0; i<MAPSIZE; i++)
-		{
-			map[i].resize(MAPSIZE);
-			minimapseen[0][i].resize(MAPSIZE);
-			minimapseen[1][i].resize(MAPSIZE);
-		}
-		allunits.resize(numplayers);
-		actallunits.resize(numplayers);
-		actallunits[0].reserve(100);
-		actallunits[1].reserve(100);
-		allbuildings.resize(numplayers);
-		allobstacles.resize(numplayers);
-		players.push_back(0);
-		players.push_back(1);
-		creationqueueunits.resize(numplayers);
-
-		ifstream inf("unit.specs"); //Get allbuildableunits
-		if(!inf)
-		{
-			MessageBox(hWnd, "Unable to open unit.specs", "Error", NULL);
-			exit(-235);
-		}
-		float args[26]={0};
-		string name;
-		while(!inf.eof())
-		{
-			for(int i=0; i<26; i++) //26=number of args to basic unit. Make sure that this is so.
-			{
-				inf >> args[i];
-				inf.get();
-			}
-			getline(inf, name);
-			allbuildableunits.push_back(basicunit(args[0],(short)args[1],(short)args[2],(short)args[3],(short)args[4],args[5],args[6],(short)args[7],(short)args[8],(short)args[9],args[10],(short)args[11],args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(unsigned char)args[17],(unsigned char)args[18],(unsigned char)args[19],(char)args[20],(short)args[21],(short)args[22],(short)args[23],(short)args[24],(short)args[25],name));
-		}
-		ifstream inf2("building.specs");
-		if(!inf2)
-		{
-			MessageBox(hWnd, "Unable to open building.specs", "Error", NULL);
-			exit(-235);
-		}
-		while(!inf2.eof())
-		{
-			for(int i=0; i<21; i++) //21=number of args to basic building. Make sure that this is so.
-			{
-				inf2 >> args[i];
-				inf2.get();
-			}
-			getline(inf2, name);
-			allbuildablebuildings.push_back(basicbuilding((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],args[11],args[12],(short)args[13],(short)args[14],(bool)args[15],(short)args[16],(short)args[17],(short)args[18],(short)args[19],(short)args[20],name));
-		}
-		ifstream inf3("map2.specs");
-		if(!inf3)
-		{
-			MessageBox(hWnd, "Unable to open map.specs", "Error", NULL);
-			exit(-235);
-		}
-
-		//buttons
-		int width  = GetSystemMetrics(SM_CXFULLSCREEN);//screen dimensions
-		int height = GetSystemMetrics(SM_CYFULLSCREEN);
-
-		allbuttons.push_back(button(width*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));
-		indexStancebutton=allbuttons.size();
-		allbuttons.push_back(button(width*2/3+5,615,70,18,"Aggressive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
-		allbuttons.push_back(button(width*2/3+5+75,615,70,18,"Defensive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
-		allbuttons.push_back(button(width*2/3+5+150,615,70,18,"Don't Move",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
-		allbuttons.push_back(button(width*2/3+5+225,615,70,18,"Do Nothing",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
-		allbuttons.push_back(button(width*2/3+5, 615+22, 70, 18, "Designate",designate,YOUR_UNIT));
-		allbuttons.push_back(button(width*2/3+5, 615+22*3, 70, 18, "Record", beginrecordreport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
-		allbuttons.push_back(button(width*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
-		
-		for(unsigned int i=1; i<allbuildablebuildings.size(); i++) //starting with 1 skips the pile
-		{
-			if(i<=12)
-				allbuttons.push_back(button(5+103*((i-1)/3), 615+22*((i-1)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_1,i));
-			else
-				allbuttons.push_back(button(5+103*((i-13)/3), 615+22*((i-13)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_2,i));
-		}
-		allbuttons.push_back(button(5+309, 615+66, 100, 18, "Switch Page", nextpage, YOUR_UNIT | YOUR_MULT_UNITS));
-		//allbuttons.push_back(button(5, 615, 60, 18, "House", build, YOUR_UNIT | YOUR_MULT_UNITS,0));
-		//allbuttons.push_back(button(5, 615+22, 60, 18, "Barracks", build, YOUR_UNIT | YOUR_MULT_UNITS,2));
-		//allbuttons.push_back(button(5, 615+44, 60, 18, "Dock", build, YOUR_UNIT | YOUR_MULT_UNITS,3));
-
-		allbuttons.push_back(button(5, 615, 60, 18, "Villager", createnewunit, YOUR_BUILDING | HOUSE_BUILDING, 1));
-		allbuttons.push_back(button(5, 615, 60, 18, "Militia", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 4));
-		allbuttons.push_back(button(5, 615, 60, 18, "Ship", createnewunit, YOUR_BUILDING | DOCK_BUILDING, 3));
-
-		indexGarrisonbutton=allbuttons.size();
-		for(int i=0; i<4; i++)
-		{
-			for(int j=0; j<3; j++)
-			{
-				allbuttons.push_back(button(width/3+5+j*80, 615+22*i, 75, 18, "", selectgarrison, YOUR_BUILDING));
-			}
-		}
-		indexGarrisonbuttonend=allbuttons.size();
-		indexSailorsbutton=allbuttons.size();
-		for(int i=0; i<4; i++)
-		{
-			for(int j=0; j<3; j++)
-			{
-				allbuttons.push_back(button(width/3+5+j*80, 615+22*i, 75, 18, "", leaveship, YOUR_UNIT | YOUR_SHIP));
-			}
-		}
-		indexSailorsbuttonend=allbuttons.size();
-		allbuttons.push_back(button(width*2/3+5, 615, 88, 18, "Ungarrison All",ungarrisonall,YOUR_BUILDING));
-
-		//display
-		indexResourcedispunit=alldisp.size();
-		//alldisp.push_back(display("Food", width/3+5, 615, YOUR_UNIT, &allunits[0][selectedunits[0][0]]->holding[0]));
-		alldisp.push_back(display("Food: ", width/3+5, 615+0*18, YOUR_UNIT, dispresourcesunit));
-		alldisp.push_back(display("Wood: ", width/3+5, 615+1*18, YOUR_UNIT, dispresourcesunit));
-		alldisp.push_back(display("Gold: ", width/3+5, 615+2*18, YOUR_UNIT, dispresourcesunit));
-		alldisp.push_back(display("Stone: ", width/3+5, 615+3*18, YOUR_UNIT, dispresourcesunit));
-		indexResourcedispbuilding=alldisp.size();
-		alldisp.push_back(display("Food: ", width/3+5, 615+0*18, YOUR_BUILDING, dispresourcesbuilding));
-		alldisp.push_back(display("Wood: ", width/3+5, 615+1*18, YOUR_BUILDING, dispresourcesbuilding));
-		alldisp.push_back(display("Gold: ", width/3+5, 615+2*18, YOUR_BUILDING, dispresourcesbuilding));
-		alldisp.push_back(display("Stone: ", width/3+5, 615+3*18, YOUR_BUILDING, dispresourcesbuilding));
-
-		alldisp.push_back(display("Health: ", width/3+5+370, 615, YOUR_UNIT, disphealth));
-		alldisp.push_back(display("", width/3+5+275, 615, YOUR_UNIT, dispname));
-		alldisp.push_back(display("Moral: ", width/3+5+373, 635, YOUR_UNIT, dispmoral));
-		alldisp.push_back(display("Food Required: ", width/3+5+320, 655, YOUR_UNIT, dispfoodrequired));
-		alldisp.push_back(display("Health: ", width/3+5+370, 615, YOUR_BUILDING, dispbuildinghealth));
-		alldisp.push_back(display("", width/3+5+275, 615, YOUR_BUILDING, dispbuildingname));
-
-		indexGarrisondisp=alldisp.size();
-		for(int i=0; i<4; i++)
-		{
-			for(int j=0; j<3; j++)
-			{
-				alldisp.push_back(display("", width/3+5+j*80, 615+22*i, YOUR_BUILDING, dispgarrissoned));
-			}
-		}
-		indexSailorsdisp=alldisp.size();
-		for(int i=0; i<4; i++)
-		{
-			for(int j=0; j<3; j++)
-			{
-				alldisp.push_back(display("", width/3+5+j*80, 615+22*i, YOUR_UNIT | YOUR_SHIP, dispsailors));
-			}
-		}
-		for(int i=0; i<numplayers; i++)
-			generals[i]=0; 
-		int ts=0;
-		for(int i=0; i<MAPSIZE; i++)
-		{
-			for(int j=0; j<MAPSIZE; j++)
-			{
-				inf3.get(); //open paren
-				inf3 >> ts;
-				map[i][j].tilestyle=ts;
-				inf3.get(); //comma
-				inf3 >> map[i][j].elevation;
-				map[i][j].elevation-='0';
-				inf3.get(); //comma
-				inf3 >> map[i][j].resources[0]; //food
-				inf3.get(); //comma
-				inf3 >> map[i][j].resources[1]; //wood
-				inf3.get(); //comma
-				inf3 >> map[i][j].resources[2]; //gold
-				inf3.get(); //comma
-				inf3 >> map[i][j].resources[3]; //stone
-				inf3.get(); //close paren
-				for(int k=0; k<4; k++)
-				{
-					map[i][j].resources[k]*=100;
-				}
-			}
-			inf3.get(); //newline
-		}
-		for(int i=0; i<5; i++)
-		{
-			for(int j=0; j<MAPSIZE; j++)
-			{
-				map[i][j].tilestyle=TS_USELESS;
-				map[MAPSIZE-1-i][j].tilestyle=TS_USELESS;
-				map[j][i].tilestyle=TS_USELESS;
-				map[j][MAPSIZE-1-i].tilestyle=TS_USELESS;
-			}
-		}
-		//End absolutely necessary stuff. Next is unit creation, building creation, etc.
-		//elevation change
-		/*for(int i=20; i<30; i++)
-		{
-			for(int j=20; j<30; j++)
-			{
-				if(i<26 || i>28)
-					map[i][j].elevation=1;
-				else
-					map[i][j].elevation=2;
-			}
-		}*/
-		/*for(int i=50; i<60; i++)//create water
-		{
-			for(int j=15; j<35; j++)
-			{
-				map[j][i].tilestyle=TS_WATER;
-			}
-		}//end create water*/
-		for(int i=0; i<6; i++)//unit creation
-		{
-			/*if(i==5)
-			{
-				actallunits[0].push_back(unit(allbuildableunits[2], ((float)i*4)+5, 5, 0, i, 100, 0, 0, 0, -1, -1,0));
-				//actallunits[0].push_back(unit(100, 50, 0, 1, 0, 10, (float)5/25, 25, 0, 0, ((float)i*4)+5, 5, MELEE, 1, 2, 0, i, 2, 2, 1, 10, 2, 0, 0, 100, 0, 0, 0, -1, -1,0, '\001', false, 0, 0, 10));
-				allsiegeunits[0].push_back(siege(actallunits[0][i], 1, 4)); 
-			}*/
-			if(i==0)
-				actallunits[0].push_back(unit(allbuildableunits[0], ((float)i*4)+70, 60, 0, i));
-			else
-				actallunits[0].push_back(unit(allbuildableunits[1], ((float)i*4)+70, 60, 0, i));
-				//actallunits[0].push_back(unit(100, 50, 0, 1, 0, 10, (float)5/25, 25, 0, 0, ((float)i*4)+5, 5, MELEE, 1, 2, 0, i, 1, 1, 1, 10, 1, 0, 0, 100, 0, 0, 0, -1, -1,-1, '\001', false, 0, 0, 10));
-			//actallunits[0][i].boundingbox.top=actallunits[0][i].y;
-			//actallunits[0][i].boundingbox.left=actallunits[0][i].x;
-			//actallunits[0][i].boundingbox.right=actallunits[0][i].x+actallunits[0][i].width;
-			//actallunits[0][i].boundingbox.bottom=actallunits[0][i].y+actallunits[0][i].height;
-		}
-		actallunits[0][0].veterancylvl=3; //TESTING ONLY
-		actallunits[0][0].lieutenant=1;   //TESTING ONLY
-		//actallunits[0].push_back(unit(allbuildableunits[2], 50, 20, 0, 6)); 
-		allbuildings[0].push_back(building(allbuildablebuildings[1], 85, 65, 0, 0, 68, 65, 85, 88, 500, 500, 500, 500, -2)); //MUST UPDATE BoundingBox
-		creationqueueunits[0].resize(1);
-		for(float k=allbuildings[0][0].y; k<allbuildings[0][0].y+allbuildings[0][0].height; k+=.25)
-		{
-			for(float h=allbuildings[0][0].x; h<allbuildings[0][0].x+allbuildings[0][0].width; h+=.25)
-			{
-				map[(int)k][(int)h].tilestyle=TS_BUILDING;
-				map[(int)k][(int)h].player=0;
-				map[(int)k][(int)h].index=0;
-				map[(int)k][(int)h].whichplayer.set(false, (unsigned char)0);
-				map[(int)k][(int)h].whichplayer.set(true, players[0]);
-			}
-		}
-		for(float k=allbuildings[0][0].y-allbuildings[0][0].radiustodistribute; k<allbuildings[0][0].y+allbuildings[0][0].height+allbuildings[0][0].radiustodistribute; k+=.25)
-		{
-			for(float h=allbuildings[0][0].x-allbuildings[0][0].radiustodistribute; h<allbuildings[0][0].x+allbuildings[0][0].width+allbuildings[0][0].radiustodistribute; h+=.25)
-			{
-				map[(int)k][(int)h].inbuildingrad=0;
-			}
-		}
-		for(int i=0; i<5; i++)
-		{
-			actallunits[1].push_back(unit(allbuildableunits[1], ((float)i)+70, 80, 1, i));
-		}
-		allobstacles[0].resize(12);
-		allobstacles[1].resize(10);
-		for(unsigned int i=0; i<actallunits.size(); i++)
-		{
-			for(unsigned int j=0; j<actallunits[i].size(); j++)
-			{
-				allunits[i].push_back(&actallunits[i][j]);
-				allunits[i][j]->revealmapcreation();
-				for(float k=actallunits[i][j].y; k<actallunits[i][j].y+actallunits[i][j].height; k+=.25)
-				{
-					for(float h=actallunits[i][j].x; h<actallunits[i][j].x+actallunits[i][j].width; h+=.25)
-					{
-						map[(int)k][(int)h].uniton=true;
-						map[(int)k][(int)h].index=actallunits[i][j].index;
-						map[(int)k][(int)h].player=actallunits[i][j].player;
-					}
-				}
-			}
-		}
-		//map[10][10].tilestyle=TS_BERRIES;
-		//map[10][10].resources[0]=100;
-		//allunits[1][0]->movetoy=5; //makes unit move up
-		SetTimer(hWnd, 50, 1000/FPS, mainTimerProc);
-		CreateThread(NULL, 0, ThreadTimerProc, NULL, 0, NULL);
-		break;
-	}
-	case WM_ERASEBKGND:
-		return true;
-	case WM_COMMAND:
-		wmId    = LOWORD(wParam);
-		wmEvent = HIWORD(wParam);
-		// Parse the menu selections:
-		switch (wmId)
-		{
-		case IDM_ABOUT:
-			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-			break;
-		case IDM_EXIT:
-			DestroyWindow(hWnd);
-			break;
-		case IDM_TRAINTAB:
-			if(whatsselected[0]==true && selectedunits[0].size()!=0)
-			{
-				if(-allunits[0][selectedunits[0][0]]->garrisoned-1>=0)
-				{
-					if(allunits[0][selectedunits[0][0]]->id==0)//its a villager
-						EnableMenuItem(GetMenu(hWnd), IDM_MILITIA, MF_ENABLED);
-					else
-						EnableMenuItem(GetMenu(hWnd), IDM_MILITIA, MF_GRAYED);
-				}
-				else
-					EnableMenuItem(GetMenu(hWnd), IDM_MILITIA, MF_GRAYED);
-			}
-			else
-				EnableMenuItem(GetMenu(hWnd), IDM_MILITIA, MF_GRAYED);
-			break;
-		case IDM_TRAIN:
-			if(whatsselected[0]==true && selectedunits[0].size()!=0)
-			{
-				for(unsigned int i=0; i<selectedunits[0].size(); i++)
-				{
-					if(allunits[0][selectedunits[0][i]]->garrisoned<0)
-					{
-						allunits[0][selectedunits[0][i]]->training=true;
-					}
-				}
-			}
-			break;
-		case IDM_MILITIA://CHANGE GARRISONEDUNITS[0] TO SOMETHING FROM GUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			if(whatsselected[0]==false && selectedunits[0].size()!=0)
-				allbuildings[0][selectedunits[0][0]].createunit(1,allbuildings[0][selectedunits[0][0]].garrisoned[0]);
-			break;
-		/*case IDB_MAKEREG:
-			allregiments[0].push_back(regiment(designatedunit[0],0,allregiments[0].size()));//only for player 0
-			allregiments[0][allregiments[0].size()-1].addunits(selectedunits[0]);
-			break;*/
-		/*case IDM_DEFAULTBUILD:
-		case IDM_PILE:
-			if(whatsselected[0]==true && selectedunits[0].size()!=0)
-			{
-				short bindex=allunits[0][selectedunits[0][0]]->build(wmId-IDM_DEFAULTBUILD);
-				for(unsigned int i=0; i<selectedunits[0].size(); i++)
-				{
-					allunits[0][selectedunits[0][i]]->garrisoned=bindex+1;
-					allunits[0][selectedunits[0][i]]->movetox=allbuildings[0][bindex].x;
-					allunits[0][selectedunits[0][i]]->movetoy=allbuildings[0][bindex].y;
-				}
-			}
-			break;*/
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
-		}
-		break;
-	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-		// TODO: Add any drawing code here...
-		EndPaint(hWnd, &ps);
-		break;
-	case WM_DESTROY:
-		KillTimer(hWnd, 50);
-		SelectObject(hdcBuf, hbmOldBackBM);
-		DeleteObject(hbmBackBM);
-		ReleaseDC(hWnd, hdcBuf);
-		ReleaseDC(hWnd,hdc);
-		DestroyWindow(buttons[0]);
-		DestroyWindow(buttons[1]);
-		DestroyWindow(reportdialoghwnd);
-		PostQuitMessage(0);
-		break;
-	case WM_LBUTTONDBLCLK:
-	{
-		dblclick=true;
-		float mx=(float)GET_X_LPARAM(lParam);
-		float my=(float)GET_Y_LPARAM(lParam);
-		int reg=-1;
-		if(map[(int)(mousey/15)][(int)(mousex/15)].uniton==true)
-			reg=allunits[0][map[(int)(mousey/15)][(int)(mousex/15)].index]->regimentid;
-		if(reg!=-1)
-		{
-			for(unsigned int i=0; i<selectedunits[0].size(); i++)
-				allunits[0][i]->selected=false;
-			selectedunits[0].clear();
-			for(unsigned int i=0; i<allregiments[0][reg].unitids.size(); i++)
-			{
-				allunits[0][allregiments[0][reg].unitids[i]]->selected=true;
-				selectedunits[0].push_back(allregiments[0][reg].unitids[i]);
-			}
-		}
-		break;
-	}
-	case WM_LBUTTONDOWN:
-		mousex=(float)GET_X_LPARAM(lParam);
-		mousey=(float)GET_Y_LPARAM(lParam);
-		mousex+=(topleft.x*15);
-		mousey+=(topleft.y*15);
-		if(buildinghover==true)
-		{
-			build(0,buildingwhat,(int)mousex/15,(int)mousey/15);
-			buildinghover=false;
-			buildingwhat=-1;
-			buildingwidth=0;
-			buildingheight=0;
-			break; //don't do the below three lines
-		}
-		lbuttondown=true;
-		uptomousex=mousex;
-		uptomousey=mousey;
-		break;
-	case WM_MOUSEMOVE:
-		if(mousex!=GET_X_LPARAM(lParam) && mousey!=GET_Y_LPARAM(lParam))
-		{
-			uptomousex=(float)GET_X_LPARAM(lParam);
-			uptomousey=(float)GET_Y_LPARAM(lParam);
-			uptomousex+=(topleft.x*15);
-			uptomousey+=(topleft.y*15);
-		}
-		break;
-	case WM_LBUTTONUP:
-	{
-		if(dblclick==true)
-		{
-			dblclick=false;
-			break;
-		}
-		RECT client;
-		GetClientRect(hWnd, &client);
-		int currx=GET_X_LPARAM(lParam);
-		int curry=GET_Y_LPARAM(lParam);
-		lbuttondown=false;
-		if(curry>=client.bottom-100)//buttons
-		{
-			for(unsigned int i=0; i<allbuttons.size(); i++)
-			{
-				if(checkdisp(0,allbuttons[i].dispwhen))
-				{
-					if(currx>allbuttons[i].x && currx<allbuttons[i].x+allbuttons[i].width && curry>allbuttons[i].y && curry<allbuttons[i].y+allbuttons[i].height)
-					{
-						allbuttons[i].func(buttonparam(0,i,allbuttons[i].unitorbuilding), hWnd); //player 0, index i
-					}
-				}
-			}
-			break; //not selecting anything in the button area, so finished
-		}
-		/*if(mousex==uptomousex && mousey==uptomousey && (wParam & MK_CONTROL))
-			designate(0,map[(int)(mousey/15)][(int)(mousex/15)].index);*/
-		else if(mousex==uptomousex && mousey==uptomousey)
-		{
-			selectone(0/*map[(int)(mousey/15)][(int)(mousex/15)].player*/, point(mousex/15, mousey/15));
-		}
-		else
-		{
-			myrect clicked;
-			if(uptomousex-mousex>0 && uptomousey-mousey>0)
-			{
-				clicked.left=mousex;
-				clicked.top=mousey;
-				//clicked.right=uptomousex-mousex;
-				//clicked.bottom=uptomousey-mousey;
-				clicked.right=uptomousex;
-				clicked.bottom=uptomousey;
-			}
-			else if(uptomousex-mousex<0 && uptomousey-mousey>0)
-			{
-				clicked.left=uptomousex;
-				clicked.top=mousey;
-				//clicked.right=mousex-uptomousex;
-				//clicked.bottom=uptomousey-mousey;
-				clicked.right=mousex;
-				clicked.bottom=uptomousey;
-			}
-			else if(uptomousex-mousex>0 && uptomousey-mousey<0)
-			{
-				clicked.left=mousex;
-				clicked.top=uptomousey;
-				clicked.right=uptomousex;
-				clicked.bottom=mousey;
-				//clicked.right=uptomousex-mousex;
-				//clicked.bottom=mousey-uptomousey;
-			}
-			else if(uptomousex-mousex<0 && uptomousey-mousey<0)
-			{
-				clicked.left=uptomousex;
-				clicked.top=uptomousey;
-				//clicked.right=mousex-uptomousex;
-				//clicked.bottom=mousey-uptomousey;
-				clicked.right=mousex;
-				clicked.bottom=mousey;
-			}
-			clicked.top/=15;
-			clicked.bottom/=15;
-			clicked.left/=15;
-			clicked.right/=15;
-			selectmany(currplayer,clicked);
-		}
-		break;
-	}
-	case WM_RBUTTONDOWN:
-	{
-		POINT p;
-		p.x=GET_X_LPARAM(lParam);
-		p.y=GET_Y_LPARAM(lParam);
-		RECT client;
-		GetClientRect(hWnd, &client);
-		if(p.y>client.bottom-100)
-			break; //clicked in the 'button' area
-		p.x+=(topleft.x*15);
-		p.y+=(topleft.y*15);
-		p.x/=15;
-		p.y/=15;
-		move(currplayer, p);
-		break;
-	}
-	case WM_RBUTTONUP:
-	{
-		POINT p;
-		p.x=GET_X_LPARAM(lParam);
-		p.y=GET_Y_LPARAM(lParam);
-		RECT client;
-		GetClientRect(hWnd,&client);
-		if(p.y>=client.bottom-100)//buttons
-		{
-			for(int i=indexGarrisonbutton; i<indexGarrisonbuttonend; i++)
-			{
-				if(checkdisp(0,allbuttons[i].dispwhen))
-				{
-					if(p.x>allbuttons[i].x && p.x<allbuttons[i].x+allbuttons[i].width && p.y>allbuttons[i].y && p.y<allbuttons[i].y+allbuttons[i].height)
-					{
-						ungarrison(buttonparam(0,i,-1));
-					}
-				}
-			}
-		}
-	}
-	case WM_KEYDOWN:  
-		if(wParam==VK_SHIFT) //for switching control to other player
-		{
-			if(currplayer==0)
-				currplayer=1;
-			else
-				currplayer=0;
-		}
-		break;
-	case WM_MBUTTONUP:
-	{
-		point p(GET_X_LPARAM(lParam)/15.0f, GET_Y_LPARAM(lParam)/15.0f);
-		capture(currplayer, p);
-		break;
-	}
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
 	return 0;
 }
-VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+void processPassiveMouseMove(int x, int y)
+{
+	if(x<=20 && topleft.x>0)
+		topleft.x-=1;
+	else if(x>=(WIDTH-20) && topleft.x<((map[0].size()*15)-WIDTH)/15)
+		topleft.x+=1;
+	if(y<=40 && topleft.y>0)
+		topleft.y-=.5;
+	else if(y>=(HEIGHT-20) && y<=HEIGHT+20 && topleft.y<((map.size()*15)-HEIGHT)/15)
+		topleft.y+=.5;//end scroll
+}
+void processMouseMove(int x, int y)
+{
+	if(mousex!=x && mousey!=y)
+	{
+		uptomousex=(float)x;
+		uptomousey=(float)y;
+		uptomousex+=(topleft.x*15);
+		uptomousey+=(topleft.y*15);
+	}
+}
+
+void dblClickTimer(int arg)
+{
+	dblclick=-1;
+}
+
+void processMouse(int button, int state, int x, int y)
+{
+	if(button==GLUT_LEFT_BUTTON)
+	{
+		if(dblclickglut==-1)
+		{
+			glutTimerFunc(250,dblClickTimer,0);
+			dblclickglut=0;
+		}
+		else if(dblclickglut==0)
+			state=DBL_CLICK;
+		if(state==GLUT_DOWN)
+		{
+			//mousex=(float)GET_X_LPARAM(lParam);
+			//mousey=(float)GET_Y_LPARAM(lParam);
+			mousex=x;
+			mousey=y;
+			mousex+=(topleft.x*15);
+			mousey+=(topleft.y*15);
+			if(buildinghover==true)
+			{
+				build(0,buildingwhat,(int)mousex/15,(int)mousey/15);
+				buildinghover=false;
+				buildingwhat=-1;
+				buildingwidth=0;
+				buildingheight=0;
+				break; //don't do the below three lines
+			}
+			lbuttondown=true;
+			uptomousex=mousex;
+			uptomousey=mousey;
+		}
+		else if(state==GLUT_UP)
+		{
+			if(dblclick==true)
+			{
+				dblclick=false; //makes sure this isn't called after a double click. It will be:  left down, left up, left down, double click, left up (ignored due to this) end
+				break;
+			}
+			//RECT client;
+			//GetClientRect(hWnd, &client);
+			//int currx=GET_X_LPARAM(lParam);
+			//int curry=GET_Y_LPARAM(lParam);
+			lbuttondown=false;
+			if(y>=HEIGHT-100)//buttons
+			{
+				for(unsigned int i=0; i<allbuttons.size(); i++)
+				{
+					if(checkdisp(0,allbuttons[i].dispwhen))
+					{
+						if(x>allbuttons[i].x && x<allbuttons[i].x+allbuttons[i].width && y>allbuttons[i].y && y<allbuttons[i].y+allbuttons[i].height)
+						{
+							allbuttons[i].func(buttonparam(0,i,allbuttons[i].unitorbuilding)); //player 0, index i
+						}
+					}
+				}
+				break; //not selecting anything in the button area, so finished
+			}
+			else if(mousex==uptomousex && mousey==uptomousey)
+			{
+				point p(mousex/15,mousey/15);
+				selectone(0, p);//point(mousex/15, mousey/15));
+			}
+			else
+			{
+				myrect clicked;
+				if(uptomousex-mousex>0 && uptomousey-mousey>0)
+				{
+					clicked.left=mousex;
+					clicked.top=mousey;
+					//clicked.right=uptomousex-mousex;
+					//clicked.bottom=uptomousey-mousey;
+					clicked.right=uptomousex;
+					clicked.bottom=uptomousey;
+				}
+				else if(uptomousex-mousex<0 && uptomousey-mousey>0)
+				{
+					clicked.left=uptomousex;
+					clicked.top=mousey;
+					//clicked.right=mousex-uptomousex;
+					//clicked.bottom=uptomousey-mousey;
+					clicked.right=mousex;
+					clicked.bottom=uptomousey;
+				}
+				else if(uptomousex-mousex>0 && uptomousey-mousey<0)
+				{
+					clicked.left=mousex;
+					clicked.top=uptomousey;
+					clicked.right=uptomousex;
+					clicked.bottom=mousey;
+					//clicked.right=uptomousex-mousex;
+					//clicked.bottom=mousey-uptomousey;
+				}
+				else if(uptomousex-mousex<0 && uptomousey-mousey<0)
+				{
+					clicked.left=uptomousex;
+					clicked.top=uptomousey;
+					//clicked.right=mousex-uptomousex;
+					//clicked.bottom=mousey-uptomousey;
+					clicked.right=mousex;
+					clicked.bottom=mousey;
+				}
+				clicked.top/=15;
+				clicked.bottom/=15;
+				clicked.left/=15;
+				clicked.right/=15;
+				selectmany(currplayer,clicked);
+			}
+			break;
+		}
+		else if(state==DBL_CLICK)
+		{
+			dblclick=true;
+			dblclickglut=-1;
+			float mx=x;
+			float my=y;
+			int reg=-1;
+			if(map[(int)(mousey/15)][(int)(mousex/15)].uniton==true)
+				reg=allunits[0][map[(int)(mousey/15)][(int)(mousex/15)].index]->regimentid;
+			if(reg!=-1)
+			{
+				for(unsigned int i=0; i<selectedunits[0].size(); i++)
+					allunits[0][i]->selected=false;
+				selectedunits[0].clear();
+				for(unsigned int i=0; i<allregiments[0][reg].unitids.size(); i++)
+				{
+					allunits[0][allregiments[0][reg].unitids[i]]->selected=true;
+					selectedunits[0].push_back(allregiments[0][reg].unitids[i]);
+				}
+			}
+			break;
+		}
+	}
+	else if(button==GLUT_RIGHT_BUTTON)
+	{
+		if(state==GLUT_DOWN)
+		{
+			POINT p;
+			p.x=x;
+			p.y=y;
+			if(p.y>HEIGHT-100)
+				break; //clicked in the 'button' area
+			p.x+=(topleft.x*15);
+			p.y+=(topleft.y*15);
+			p.x/=15;
+			p.y/=15;
+			move(currplayer, p);
+			break;
+		}
+		else if(state==GLUT_UP)
+		{
+			POINT p;
+			p.x=x;
+			p.y=y;
+			if(p.y>=HEIGHT-100)//buttons
+			{
+				for(int i=indexGarrisonbutton; i<indexGarrisonbuttonend; i++)
+				{
+					if(checkdisp(0,allbuttons[i].dispwhen))
+					{
+						if(p.x>allbuttons[i].x && p.x<allbuttons[i].x+allbuttons[i].width && p.y>allbuttons[i].y && p.y<allbuttons[i].y+allbuttons[i].height)
+						{
+							ungarrison(buttonparam(0,i,-1));
+						}
+					}
+				}
+			}
+		}
+	}
+	else if(button==GLUT_MIDDLE_BUTTON)
+	{
+		point p(x/15.0f, y/15.0f);
+		capture(currplayer, p);
+	}
+}
+
+void initializeGameEngine()
+{
+	srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
+	map.resize(MAPSIZE);
+	minimapseen.resize(numplayers);
+	overwriteunits.resize(numplayers);
+	overwritebuildings.resize(numplayers);
+	selectedunits.resize(numplayers);
+	whatsselected.resize(numplayers);
+	minimapseen[0].resize(MAPSIZE);
+	minimapseen[1].resize(MAPSIZE);
+	allsiegeunits.resize(numplayers);
+	resources.resize(numplayers);
+	resources[0].resize(4);
+	resources[1].resize(4);
+	players.push_back(0);
+	players.push_back(1);
+	newlybuiltbuildings.resize(numplayers);
+	designatedunit.resize(numplayers);
+	allregiments.resize(numplayers);
+	allgarrisonedselectedunits.resize(numplayers);
+	for(int i=0; i<MAPSIZE; i++)
+	{
+		map[i].resize(MAPSIZE);
+		minimapseen[0][i].resize(MAPSIZE);
+		minimapseen[1][i].resize(MAPSIZE);
+	}
+	allunits.resize(numplayers);
+	actallunits.resize(numplayers);
+	actallunits[0].reserve(100);
+	actallunits[1].reserve(100);
+	allbuildings.resize(numplayers);
+	allobstacles.resize(numplayers);
+	players.push_back(0);
+	players.push_back(1);
+	creationqueueunits.resize(numplayers);
+
+	ifstream inf("unit.specs"); //Get allbuildableunits
+	if(!inf)
+	{
+		printf("Unable to open unit.specs");
+		exit(-235);
+	}
+	float args[26]={0};
+	string name;
+	while(!inf.eof())
+	{
+		for(int i=0; i<26; i++) //26=number of args to basic unit. Make sure that this is so.
+		{
+			inf >> args[i];
+			inf.get();
+		}
+		getline(inf, name);
+		allbuildableunits.push_back(basicunit(args[0],(short)args[1],(short)args[2],(short)args[3],(short)args[4],args[5],args[6],(short)args[7],(short)args[8],(short)args[9],args[10],(short)args[11],args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(unsigned char)args[17],(unsigned char)args[18],(unsigned char)args[19],(char)args[20],(short)args[21],(short)args[22],(short)args[23],(short)args[24],(short)args[25],name));
+	}
+	ifstream inf2("building.specs");
+	if(!inf2)
+	{
+		printf("Unable to open building.specs");
+		exit(-235);
+	}
+	while(!inf2.eof())
+	{
+		for(int i=0; i<21; i++) //21=number of args to basic building. Make sure that this is so.
+		{
+			inf2 >> args[i];
+			inf2.get();
+		}
+		getline(inf2, name);
+		allbuildablebuildings.push_back(basicbuilding((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],args[11],args[12],(short)args[13],(short)args[14],(bool)args[15],(short)args[16],(short)args[17],(short)args[18],(short)args[19],(short)args[20],name));
+	}
+	ifstream inf3("map2.specs");
+	if(!inf3)
+	{
+		printf("Unable to open map.specs");
+		exit(-235);
+	}
+
+	//buttons
+	/*int width  = GetSystemMetrics(SM_CXFULLSCREEN);//screen dimensions
+	int height = GetSystemMetrics(SM_CYFULLSCREEN);*/
+
+	allbuttons.push_back(button(WIDTH*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));
+	indexStancebutton=allbuttons.size();
+	allbuttons.push_back(button(WIDTH*2/3+5,615,70,18,"Aggressive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
+	allbuttons.push_back(button(WIDTH*2/3+5+75,615,70,18,"Defensive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
+	allbuttons.push_back(button(WIDTH*2/3+5+150,615,70,18,"Don't Move",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
+	allbuttons.push_back(button(WIDTH*2/3+5+225,615,70,18,"Do Nothing",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
+	allbuttons.push_back(button(WIDTH*2/3+5, 615+22, 70, 18, "Designate",designate,YOUR_UNIT));
+	allbuttons.push_back(button(WIDTH*2/3+5, 615+22*3, 70, 18, "Record", beginrecordreport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
+	allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
+
+	for(unsigned int i=1; i<allbuildablebuildings.size(); i++) //starting with 1 skips the pile
+	{
+		if(i<=12)
+			allbuttons.push_back(button(5+103*((i-1)/3), 615+22*((i-1)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_1,i));
+		else
+			allbuttons.push_back(button(5+103*((i-13)/3), 615+22*((i-13)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_2,i));
+	}
+	allbuttons.push_back(button(5+309, 615+66, 100, 18, "Switch Page", nextpage, YOUR_UNIT | YOUR_MULT_UNITS));
+	//allbuttons.push_back(button(5, 615, 60, 18, "House", build, YOUR_UNIT | YOUR_MULT_UNITS,0));
+	//allbuttons.push_back(button(5, 615+22, 60, 18, "Barracks", build, YOUR_UNIT | YOUR_MULT_UNITS,2));
+	//allbuttons.push_back(button(5, 615+44, 60, 18, "Dock", build, YOUR_UNIT | YOUR_MULT_UNITS,3));
+
+	allbuttons.push_back(button(5, 615, 60, 18, "Villager", createnewunit, YOUR_BUILDING | HOUSE_BUILDING, 1));
+	allbuttons.push_back(button(5, 615, 60, 18, "Militia", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 4));
+	allbuttons.push_back(button(5, 615, 60, 18, "Ship", createnewunit, YOUR_BUILDING | DOCK_BUILDING, 3));
+
+	indexGarrisonbutton=allbuttons.size();
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<3; j++)
+		{
+			allbuttons.push_back(button(WIDTH/3+5+j*80, 615+22*i, 75, 18, "", selectgarrison, YOUR_BUILDING));
+		}
+	}
+	indexGarrisonbuttonend=allbuttons.size();
+	indexSailorsbutton=allbuttons.size();
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<3; j++)
+		{
+			allbuttons.push_back(button(WIDTH/3+5+j*80, 615+22*i, 75, 18, "", leaveship, YOUR_UNIT | YOUR_SHIP));
+		}
+	}
+	indexSailorsbuttonend=allbuttons.size();
+	allbuttons.push_back(button(WIDTH*2/3+5, 615, 88, 18, "Ungarrison All",ungarrisonall,YOUR_BUILDING));
+
+	//display
+	indexResourcedispunit=alldisp.size();
+	//alldisp.push_back(display("Food", width/3+5, 615, YOUR_UNIT, &allunits[0][selectedunits[0][0]]->holding[0]));
+	alldisp.push_back(display("Food: ", WIDTH/3+5, 615+0*18, YOUR_UNIT, dispresourcesunit));
+	alldisp.push_back(display("Wood: ", WIDTH/3+5, 615+1*18, YOUR_UNIT, dispresourcesunit));
+	alldisp.push_back(display("Gold: ", WIDTH/3+5, 615+2*18, YOUR_UNIT, dispresourcesunit));
+	alldisp.push_back(display("Stone: ", WIDTH/3+5, 615+3*18, YOUR_UNIT, dispresourcesunit));
+	indexResourcedispbuilding=alldisp.size();
+	alldisp.push_back(display("Food: ", WIDTH/3+5, 615+0*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Wood: ", WIDTH/3+5, 615+1*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Gold: ", WIDTH/3+5, 615+2*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Stone: ", WIDTH/3+5, 615+3*18, YOUR_BUILDING, dispresourcesbuilding));
+
+	alldisp.push_back(display("Health: ", WIDTH/3+5+370, 615, YOUR_UNIT, disphealth));
+	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_UNIT, dispname));
+	alldisp.push_back(display("Moral: ", WIDTH/3+5+373, 635, YOUR_UNIT, dispmoral));
+	alldisp.push_back(display("Food Required: ", WIDTH/3+5+320, 655, YOUR_UNIT, dispfoodrequired));
+	alldisp.push_back(display("Health: ", WIDTH/3+5+370, 615, YOUR_BUILDING, dispbuildinghealth));
+	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_BUILDING, dispbuildingname));
+
+	indexGarrisondisp=alldisp.size();
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<3; j++)
+		{
+			alldisp.push_back(display("", WIDTH/3+5+j*80, 615+22*i, YOUR_BUILDING, dispgarrissoned));
+		}
+	}
+	indexSailorsdisp=alldisp.size();
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<3; j++)
+		{
+			alldisp.push_back(display("", WIDTH/3+5+j*80, 615+22*i, YOUR_UNIT | YOUR_SHIP, dispsailors));
+		}
+	}
+	for(int i=0; i<numplayers; i++)
+		generals[i]=0;
+	int ts=0;
+	for(int i=0; i<MAPSIZE; i++)
+	{
+		for(int j=0; j<MAPSIZE; j++)
+		{
+			inf3.get(); //open paren
+			inf3 >> ts;
+			map[i][j].tilestyle=ts;
+			inf3.get(); //comma
+			inf3 >> map[i][j].elevation;
+			map[i][j].elevation-='0';
+			inf3.get(); //comma
+			inf3 >> map[i][j].resources[0]; //food
+			inf3.get(); //comma
+			inf3 >> map[i][j].resources[1]; //wood
+			inf3.get(); //comma
+			inf3 >> map[i][j].resources[2]; //gold
+			inf3.get(); //comma
+			inf3 >> map[i][j].resources[3]; //stone
+			inf3.get(); //close paren
+			for(int k=0; k<4; k++)
+			{
+				map[i][j].resources[k]*=100;
+			}
+		}
+		inf3.get(); //newline
+	}
+	for(int i=0; i<5; i++)
+	{
+		for(int j=0; j<MAPSIZE; j++)
+		{
+			map[i][j].tilestyle=TS_USELESS;
+			map[MAPSIZE-1-i][j].tilestyle=TS_USELESS;
+			map[j][i].tilestyle=TS_USELESS;
+			map[j][MAPSIZE-1-i].tilestyle=TS_USELESS;
+		}
+	}
+	//End absolutely necessary stuff. Next is unit creation, building creation, etc.
+	//elevation change
+	/*for(int i=20; i<30; i++)
+	{
+		for(int j=20; j<30; j++)
+		{
+			if(i<26 || i>28)
+				map[i][j].elevation=1;
+			else
+				map[i][j].elevation=2;
+		}
+	}*/
+	/*for(int i=50; i<60; i++)//create water
+	{
+		for(int j=15; j<35; j++)
+		{
+			map[j][i].tilestyle=TS_WATER;
+		}
+	}//end create water*/
+	for(int i=0; i<6; i++)//unit creation
+	{
+		/*if(i==5)
+		{
+			actallunits[0].push_back(unit(allbuildableunits[2], ((float)i*4)+5, 5, 0, i, 100, 0, 0, 0, -1, -1,0));
+			//actallunits[0].push_back(unit(100, 50, 0, 1, 0, 10, (float)5/25, 25, 0, 0, ((float)i*4)+5, 5, MELEE, 1, 2, 0, i, 2, 2, 1, 10, 2, 0, 0, 100, 0, 0, 0, -1, -1,0, '\001', false, 0, 0, 10));
+			allsiegeunits[0].push_back(siege(actallunits[0][i], 1, 4));
+		}*/
+		if(i==0)
+			actallunits[0].push_back(unit(allbuildableunits[0], ((float)i*4)+70, 60, 0, i));
+		else
+			actallunits[0].push_back(unit(allbuildableunits[1], ((float)i*4)+70, 60, 0, i));
+			//actallunits[0].push_back(unit(100, 50, 0, 1, 0, 10, (float)5/25, 25, 0, 0, ((float)i*4)+5, 5, MELEE, 1, 2, 0, i, 1, 1, 1, 10, 1, 0, 0, 100, 0, 0, 0, -1, -1,-1, '\001', false, 0, 0, 10));
+		//actallunits[0][i].boundingbox.top=actallunits[0][i].y;
+		//actallunits[0][i].boundingbox.left=actallunits[0][i].x;
+		//actallunits[0][i].boundingbox.right=actallunits[0][i].x+actallunits[0][i].width;
+		//actallunits[0][i].boundingbox.bottom=actallunits[0][i].y+actallunits[0][i].height;
+	}
+	actallunits[0][0].veterancylvl=3; //TESTING ONLY
+	actallunits[0][0].lieutenant=1;   //TESTING ONLY
+	//actallunits[0].push_back(unit(allbuildableunits[2], 50, 20, 0, 6));
+	allbuildings[0].push_back(building(allbuildablebuildings[1], 85, 65, 0, 0, 68, 65, 85, 88, 500, 500, 500, 500, -2)); //MUST UPDATE BoundingBox
+	creationqueueunits[0].resize(1);
+	for(float k=allbuildings[0][0].y; k<allbuildings[0][0].y+allbuildings[0][0].height; k+=.25)
+	{
+		for(float h=allbuildings[0][0].x; h<allbuildings[0][0].x+allbuildings[0][0].width; h+=.25)
+		{
+			map[(int)k][(int)h].tilestyle=TS_BUILDING;
+			map[(int)k][(int)h].player=0;
+			map[(int)k][(int)h].index=0;
+			map[(int)k][(int)h].whichplayer.set(false, (unsigned char)0);
+			map[(int)k][(int)h].whichplayer.set(true, players[0]);
+		}
+	}
+	for(float k=allbuildings[0][0].y-allbuildings[0][0].radiustodistribute; k<allbuildings[0][0].y+allbuildings[0][0].height+allbuildings[0][0].radiustodistribute; k+=.25)
+	{
+		for(float h=allbuildings[0][0].x-allbuildings[0][0].radiustodistribute; h<allbuildings[0][0].x+allbuildings[0][0].width+allbuildings[0][0].radiustodistribute; h+=.25)
+		{
+			map[(int)k][(int)h].inbuildingrad=0;
+		}
+	}
+	for(int i=0; i<5; i++)
+	{
+		actallunits[1].push_back(unit(allbuildableunits[1], ((float)i)+70, 80, 1, i));
+	}
+	allobstacles[0].resize(12);
+	allobstacles[1].resize(10);
+	for(unsigned int i=0; i<actallunits.size(); i++)
+	{
+		for(unsigned int j=0; j<actallunits[i].size(); j++)
+		{
+			allunits[i].push_back(&actallunits[i][j]);
+			allunits[i][j]->revealmapcreation();
+			for(float k=actallunits[i][j].y; k<actallunits[i][j].y+actallunits[i][j].height; k+=.25)
+			{
+				for(float h=actallunits[i][j].x; h<actallunits[i][j].x+actallunits[i][j].width; h+=.25)
+				{
+					map[(int)k][(int)h].uniton=true;
+					map[(int)k][(int)h].index=actallunits[i][j].index;
+					map[(int)k][(int)h].player=actallunits[i][j].player;
+				}
+			}
+		}
+	}
+	//map[10][10].tilestyle=TS_BERRIES;
+	//map[10][10].resources[0]=100;
+	//allunits[1][0]->movetoy=5; //makes unit move up
+
+	//SetTimer(hWnd, 50, 1000/FPS, mainTimerProc);
+	glutTimerFunc(50,mainTimerProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE
+	//CreateThread(NULL, 0, ThreadTimerProc, NULL, 0, NULL);
+	glutTimerFunc(1000,hourpassed,0);
+}
+
+void changeSize(int w, int h)
+{
+	// Prevent a divide by zero, when window is too short
+	// (you cant make a window of zero width).
+	if(h == 0)
+		h = 1;
+	float ratio = 1.0* w / h;
+
+	// Use the Projection Matrix
+	glMatrixMode(GL_PROJECTION);
+
+        // Reset Matrix
+	glLoadIdentity();
+
+	// Set the viewport to be the entire window
+	glViewport(0, 0, w, h);
+
+	// Set the correct perspective.
+	gluPerspective(45,ratio,1,1000);
+
+	// Get Back to the Modelview
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void renderScene()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glLoadIdentity();
+		// Set the camera
+	gluLookAt(	500.0f, 500.0f, 1000.0f,
+			0.0f, 0.0f,  0.0f,
+			0.0f, 1.0f,  0.0f);
+
+	glutSwapBuffers();
+}
+
+void makeRect(int x, int y, int width, int height, RGB color)
+{
+	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glBegin(GL_QUADS);
+		glVertex3f(x,y,0);
+		glVertex3f(x+width,y,0);
+		glVertex3f(x+width,y+height,0);
+		glVertex3f(x,y+height,0);
+	glEnd();
+}
+
+void makeRect(int x, int y, int width, int height, ARGB color)
+{
+	glColor4f(color.r/255.0, color.g/255.0, color.b/255.0, color.a/255.0); //rgba
+	glBegin(GL_QUADS);
+		glVertex3f(x,y,0);
+		glVertex3f(x+width,y,0);
+		glVertex3f(x+width,y+height,0);
+		glVertex3f(x,y+height,0);
+	glEnd();
+}
+
+void drawLine(int x, int y, int fx, int fy, RGB color)
+{
+	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glBegin(GL_LINES);
+		glVertex3f(x,y,0);
+		glVertex3f(fx,fy,0);
+	glEnd();
+}
+
+void drawEmptyRect(int x, int y, int width, int height, RGB color)
+{
+	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glBegin(GL_LINE_LOOP);
+		glVertex3f(x,y,0);
+		glVertex3f(x+width,y,0);
+		glVertex3f(x+width,y+height,0);
+		glVertex3f(x,y+height,0);
+	glEnd();
+}
+
+void renderBitmapString(float x,float y,float z,void *font,char *string)
+{
+	char *c;
+	glRasterPos3f(x,y,z);
+	for (c=string; *c != '\0'; c++)
+	{
+		glutBitmapCharacter(font, *c);
+	}
+}
+
+void mainTimerProc(int arg)
 {
 	frames++;
-	RECT client;
-	GetClientRect(hWnd, &client);
-	client.bottom-=100;
-	Pen p[6]={Color(0,0,0), Color(255,0,0), Color(0,255,0), Color(0,0,255), Color(255,0,255), Color(255,255,0)};
+	//RECT client;
+	//GetClientRect(hWnd, &client);
+	//client.bottom-=100; //IMPORTANT
+	/*Pen p[6]={Color(0,0,0), Color(255,0,0), Color(0,255,0), Color(0,0,255), Color(255,0,255), Color(255,255,0)};
 	SolidBrush sb(Color(0,255,0));
 	SolidBrush green(Color(50, 0, 255, 0));
 	SolidBrush black(Color(0, 0, 0)); 
@@ -1564,43 +1537,58 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 	SolidBrush lightgrey(Color(50,230,230,230));
 	FontFamily  fontFamily(L"Times New Roman"); //To print unit lvl
 	Font        font(&fontFamily, 12, FontStyleRegular, UnitPixel);
-	Font        bigfont(&fontFamily, 14, FontStyleRegular, UnitPixel);
+	Font        bigfont(&fontFamily, 14, FontStyleRegular, UnitPixel);*/
 	//SolidBrush white(Color(255,255,255));
+	RGB yelloworange(250,225,65);
+	RGB black(0,0,0);
+	RGB red(255,0,0);
+	RGB sea(55,160,225);
+	RGB grass(35,228,50);
+	RGB tree(106,52,43);
+	RGB bushes(0,81,0);
+	RGB animal(128,128,0);
+	RGB road(0,255,255);
+	ARGB elevation(100,100,100,100);
+	ARGB yellow(100,255,255,0);
 
-	if(redraw==true)
+	//Setting up openGL
+	// Clear Color and Depth Buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clears the whole screen
+
+	// Reset transformations
+	glLoadIdentity();
+	// Set the camera
+	gluLookAt(	500.0f, 500.0f, 1000.0f,
+			0.0f, 0.0f,  0.0f,
+			0.0f, 1.0f,  0.0f);
+	//end setup
+
+	if(redraw==true) //TODO note that currently the whole screen is cleared each time. Fix this so it only clears the upper part.
 	{
 		redraw=false;
-		hdc = GetDC(hWnd);
+		
+		makeRect(0,HEIGHT-70,WIDTH,70,yelloworange);
 
-		/*hdcBuf2 = CreateCompatibleDC(hdc);
-  		hbmBackBM2 = CreateCompatibleBitmap(hdc, client.right, client.bottom);
-		hbmOldBackBM2 = (HBITMAP)SelectObject(hdcBuf2, hbmBackBM2);*/
-		
-		hdcBuf = CreateCompatibleDC(hdc); 
- 		hbmBackBM = CreateCompatibleBitmap(hdc, client.right, client.bottom);
-		hbmOldBackBM = (HBITMAP)SelectObject(hdcBuf, hbmBackBM);
-		
-		Graphics temp(hdc);
-		SolidBrush yelloworange(Color(250,225,65));
-		temp.FillRectangle(&yelloworange,0,client.bottom,client.right,100);
-		temp.DrawLine(&(p[0]),client.right/3,client.bottom,client.right/3,client.bottom+100);
-		temp.DrawLine(&(p[0]),client.right*2/3,client.bottom,client.right*2/3,client.bottom+100);
+		drawLine(WIDTH/3,HEIGHT-70,WIDTH/3,HEIGHT,black);
+		drawLine(WIDTH*2/3,HEIGHT-70,WIDTH*2/3,HEIGHT,black);
 		for(unsigned int i=0; i<allbuttons.size(); i++) // Print buttons
 		{
 			if(checkdisp(0,allbuttons[i].dispwhen))
 			{
 				if(((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend) && alldisp[indexGarrisondisp+i-indexGarrisonbutton].func(indexGarrisondisp+i-indexGarrisonbutton)=="")
 					continue;
-				WCHAR *toprint=new WCHAR[allbuttons[i].text.size()];
+				char *toprint=new char[allbuttons[i].text.size()];
 				for(unsigned int j=0; j<allbuttons[i].text.size(); j++)
 				{
 					if(allbuttons[i].text[j]=='_')
-						toprint[j]=WCHAR(' ');
+						toprint[j]=' ';
 					else
-						toprint[j]=WCHAR(allbuttons[i].text[j]);
+						toprint[j]=allbuttons[i].text[j];
 				}
-				temp.DrawString(toprint,allbuttons[i].text.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL(allbuttons[i].x), Gdiplus::REAL(allbuttons[i].y)),&black);
-				temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
+				renderBitmapString(allbuttons[i].x,allbuttons[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
+				//temp.DrawString(toprint,allbuttons[i].text.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL(allbuttons[i].x), Gdiplus::REAL(allbuttons[i].y)),&black);
+				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
+				drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
 				delete[] toprint;
 			}
 		}
@@ -1609,22 +1597,23 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 			if(checkdisp(0,alldisp[i].dispwhen))
 			{
 				string var=alldisp[i].func(i);
-				WCHAR *toprint=new WCHAR[alldisp[i].text.size()+var.size()];
+				char *toprint=new char[alldisp[i].text.size()+var.size()];
 				for(unsigned int j=0; j<alldisp[i].text.size(); j++)
 				{
 					if(alldisp[i].text[j]=='_')
-						toprint[j]=WCHAR(' ');
+						toprint[j]=' ';
 					else
-						toprint[j]=WCHAR(alldisp[i].text[j]);
+						toprint[j]=alldisp[i].text[j];
 				}
 				for(unsigned int j=0; j<var.size(); j++)
 				{
 					if(var[j]=='_')
-						toprint[j]=WCHAR(' ');
+						toprint[j]=' ';
 					else
-						toprint[j+alldisp[i].text.size()]=WCHAR(var[j]);
+						toprint[j+alldisp[i].text.size()]=var[j];
 				}
-				temp.DrawString(toprint,alldisp[i].text.size()+var.size(), &bigfont, Gdiplus::PointF(Gdiplus::REAL(alldisp[i].x),Gdiplus::REAL(alldisp[i].y)),&black);
+				//temp.DrawString(toprint,alldisp[i].text.size()+var.size(), &bigfont, Gdiplus::PointF(Gdiplus::REAL(alldisp[i].x),Gdiplus::REAL(alldisp[i].y)),&black);
+				renderBitmapString(alldisp[i].x,alldisp[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
 				delete[] toprint;
 			}
 		}
@@ -1641,9 +1630,9 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 		//buttons[0]=CreateWindow("button","makereg", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 630, 60, 20, hWnd, HMENU(IDB_MAKEREG), NULL, NULL);
 		//buttons[1]=CreateWindow("button","destroyreg", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 670, 80, 20, hWnd, HMENU(IDB_MAKEREG), NULL, NULL);
 	}
-	Graphics g(hdcBuf);
+	//Graphics g(hdcBuf);
 	//Graphics g2(hdcBuf2);
-	FillRect(hdcBuf, &client, (HBRUSH)GetStockObject(WHITE_BRUSH)); //Add optimization code: if most of screen must be black, fill with black and color rest white. Else do this.
+	//FillRect(hdcBuf, &client, (HBRUSH)GetStockObject(WHITE_BRUSH)); //Add optimization code: if most of screen must be black, fill with black and color rest white. Else do this.
 	//g.FillRectangle(&white,0,0,client.right,client.bottom);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
 	{
@@ -1736,7 +1725,7 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 			g.FillRectangle(&SolidBrush(Color(255-(map[i][j].elevation*30),255-(map[i][j].elevation*30),255-(map[i][j].elevation*30))), j*15, i*15, 15, 15);
 		}
 	}*/
-	POINT mouse;//scroll
+	/*POINT mouse;//scroll
 	GetCursorPos(&mouse);
 	if(mouse.x<=20 && topleft.x>0)
 		topleft.x-=1;
@@ -1745,9 +1734,10 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 	if(mouse.y<=40 && topleft.y>0)
 		topleft.y-=.5;
 	else if(mouse.y>=(client.bottom-20) && mouse.y<=client.bottom+20 && topleft.y<((map.size()*15)-client.bottom)/15)
-		topleft.y+=.5;//end scroll
+		topleft.y+=.5;//end scroll*/
 	//Below draws things
-	mouse.y-=20;
+
+	//mouse.y-=20; //IMPORTANT
 	if(frames%(FPS/5)==0) //Every fifth of a second. This just makes it update relatively infrequently, as more common ones are not needed
 	{
 		for(unsigned int i=0; i<allregiments.size(); i++) //updates reports of all regiments
@@ -1782,38 +1772,46 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 			}
 		}
 	}
-	WCHAR text[1];
-	for(unsigned int i=(int)topleft.y; i<topleft.y+client.bottom/15; i++) //loop through map, print tiles
+	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, print tiles
 	{
-		for(unsigned int j=(int)topleft.x; j<topleft.x+client.right/15; j++)
+		for(unsigned int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
 		{
 			if(j>=MAPSIZE)
 				break;
 			if(i>=MAPSIZE)
 				break;
 			if(map[i][j].tilestyle==TS_BERRIES) //print berries
-				g.FillRectangle(&red,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,red);
+				//g.FillRectangle(&red,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 			else if(map[i][j].tilestyle==TS_WATER || map[i][j].tilestyle==TS_FISH || map[i][j].tilestyle==TS_WATERBUILDING) //print water and fish as the same thing
-				g.FillRectangle(&sea,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,sea);
+				//g.FillRectangle(&sea,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 			else if(map[i][j].tilestyle==TS_GRASS || map[i][j].tilestyle==TS_STONE || map[i][j].tilestyle==TS_GOLD || map[i][j].tilestyle==TS_BUILDING || map[i][j].tilestyle==TS_GATE)
-				g.FillRectangle(&grass,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print grass, gold, stone, and buildings
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,grass);
+				//g.FillRectangle(&grass,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print grass, gold, stone, and buildings
 			else if(map[i][j].tilestyle==TS_TREE)
-				g.FillRectangle(&tree,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print trees
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,tree);
+				//g.FillRectangle(&tree,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print trees
 			else if(map[i][j].tilestyle==TS_BUSHES)
-				g.FillRectangle(&bushes,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print bushes
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,bushes);
+				//g.FillRectangle(&bushes,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print bushes
 			else if(map[i][j].tilestyle==TS_ANIMAL)
-				g.FillRectangle(&animal,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print animals
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,animal);
+				//g.FillRectangle(&animal,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print animals
 			else if(map[i][j].tilestyle==TS_ROAD)
-				g.FillRectangle(&road,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print roads
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,road);
+				//g.FillRectangle(&road,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print roads
 			else if(map[i][j].tilestyle==TS_USELESS)
-				g.FillRectangle(&black,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print void
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,black);
+				//g.FillRectangle(&black,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print void
 			for(int k=0; k<map[i][j].elevation; k++)
-				g.FillRectangle(&elevation,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print elevation
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,elevation);
+				//g.FillRectangle(&elevation,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print elevation
 		}
 	}
-	for(unsigned int i=(int)topleft.y; i<topleft.y+client.bottom/15; i++) //loop through map, to print, only print stuff for units and buildings
+	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, to print, only print stuff for units and buildings
 	{
-		for(unsigned int j=(int)topleft.x; j<topleft.x+client.right/15; j++)
+		for(unsigned int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
 		{
 			if(j>=MAPSIZE || i>=MAPSIZE || i<0 || j<0)
 				break;
@@ -1826,7 +1824,7 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 				{
 					if(allbuildings[player][index].health>0)//don't print dead things
 					{
-						WCHAR *text=new WCHAR[allbuildablebuildings[allbuildings[player][index].id].name.size()];
+						char *text=new char[allbuildablebuildings[allbuildings[player][index].id].name.size()];
 						for(unsigned int k=0; k<allbuildablebuildings[allbuildings[player][index].id].name.size(); k++)
 						{
 							if(allbuildablebuildings[allbuildings[player][index].id].name[k]=='_')
@@ -1834,14 +1832,14 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 							else
 								text[k]=allbuildablebuildings[allbuildings[player][index].id].name[k];
 						}
-						g.DrawString(text,allbuildablebuildings[allbuildings[player][index].id].name.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL((j-topleft.x)*15+2), Gdiplus::REAL((i-topleft.y)*15+2)),&black);
+						renderBitmapString((j-topleft.x)*15+2, (i-topleft.y)*15+2,0,GLUT_BITMAP_TIMES_ROMAN_10,text);
+						//g.DrawString(text,allbuildablebuildings[allbuildings[player][index].id].name.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL((j-topleft.x)*15+2), Gdiplus::REAL((i-topleft.y)*15+2)),&black);
 						if(allbuildings[player][index].beingbuilt<0)
 						{
-							g.FillEllipse(&yellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
+							//TODO Figure out the below ellipse
+							//g.FillEllipse(&yellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
 							if(allbuildings[player][index].selected==false && player==0)
 								g.DrawRectangle(&(p[4]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
-							//else if(allbuildings[player][index].selected==false && player==0)
-							//	g.DrawRectangle(&(p[5]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
 							else
 								g.DrawRectangle(&(p[3]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
 						}
@@ -1897,24 +1895,7 @@ VOID CALLBACK mainTimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime
 	//BitBlt(hdcBuf2,0,0,client.right,client.bottom,hdcBuf,0,0,SRCAND);
 	BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
 }
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	UNREFERENCED_PARAMETER(lParam);
-	switch (message)
-	{
-	case WM_INITDIALOG:
-		return (INT_PTR)TRUE;
 
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
-			EndDialog(hDlg, LOWORD(wParam));
-			return (INT_PTR)TRUE;
-		}
-		break;
-	}
-	return (INT_PTR)FALSE;
-}
 BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	switch(Message)
