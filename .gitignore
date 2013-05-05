@@ -1,0 +1,8 @@
+/.metadata/*
+.o
+.exe
+.cproject
+.ini
+.metadata
+.metadata/*
+.project
