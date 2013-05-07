@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "regiment.h"
 #include "unit.h"
 #include "globals.h"

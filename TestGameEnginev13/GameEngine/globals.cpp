@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "unit.h"
 #include "data structures.h"
 #include "building.h"
@@ -37,10 +36,12 @@ vector <vector <vector <creationinfo> > > creationqueueunits;  //var[player][ind
 vector <vector <vector <bool> > > minimapseen; //in form [player][y][x], if the specified player can see the tile, it is true, else false
 vector <vector <short> > newlybuiltbuildings; //var[player][index of built thing]
 bool lbuttondown=false;
-float mousex=0;
+float mousex=0; //where the mouse was when clicked
 float mousey=0;
-float uptomousex=0;
+float uptomousex=0; //where the mouse was when last held down
 float uptomousey=0;
+float currmousex=0; //where the mouse is currently
+float currmousey=0;
 vector <short> designatedunit; //each player can designate one unit by ctrl-clicking. vector is of players. This is to select the lieutenant in a regiment
 short numplayers=2; //this will later be made changeable, NOT FULLY IMPLEMENTED, CANT JUST CHANGE HERE
 short tilecameo[14]={0,0,0,1,0,0,0,0,0,3,3,-2,0,0};
@@ -56,12 +57,14 @@ int buildingheight=0;
 int buildingwidth=0;
 int buildingwhat=-1;
 bool redraw=true;
-HWND reportdialoghwnd;
+/*HWND reportdialoghwnd;
 HWND hTabControl; // tab control handle
-HWND hCurrentTab; // tab dialog handle
+HWND hCurrentTab; // tab dialog handle*/
 char* (report::*reportfuncs[3])();
 report *currRep=NULL;
 int pagenum=0; //!< The page that the user is on, 
+int mainWindow=0;
+int reportDialogWindow=0;
 
 int indexStancebutton;
 int indexResourcedispunit;

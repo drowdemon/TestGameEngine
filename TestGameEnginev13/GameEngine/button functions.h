@@ -3,18 +3,18 @@
 
 //! \file "button functions.h" This contains functions for the function pointer in the button class
 
-void makereg(buttonparam b, HWND hWnd);
-void setstance(buttonparam b, HWND hWnd);
-void designate(buttonparam b, HWND hWnd);
-void build(buttonparam b, HWND hWnd);
-void createnewunit(buttonparam b, HWND hWnd);
-void createunit(buttonparam b, HWND hWnd);
-void selectgarrison(buttonparam b, HWND hWnd);
-void ungarrisonall(buttonparam b, HWND hWnd);
-void ungarrison(buttonparam b, HWND hWnd=NULL);
-void leaveship(buttonparam b, HWND hWnd);
-void beginrecordreport(buttonparam b, HWND hWnd);
-void givereport(buttonparam b, HWND hWnd);
-void nextpage(buttonparam b, HWND hWnd);
+void makereg(buttonparam b);
+void setstance(buttonparam b);
+void designate(buttonparam b);
+void build(buttonparam b);
+void createnewunit(buttonparam b);
+void createunit(buttonparam b);
+void selectgarrison(buttonparam b);
+void ungarrisonall(buttonparam b);
+void ungarrison(buttonparam b);
+void leaveship(buttonparam b);
+void beginrecordreport(buttonparam b);
+void givereport(buttonparam b);
+void nextpage(buttonparam b);
 
 #endif

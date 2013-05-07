@@ -912,7 +912,8 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100,100);
 	glutInitWindowSize(WIDTH,HEIGHT);
-	glutCreateWindow("Lighthouse3D- GLUT Tutorial");
+
+	mainWindow=glutCreateWindow("Lighthouse3D- GLUT Tutorial");
 
 	glutDisplayFunc(renderScene);
 	glutMouseFunc(processMouse);
@@ -936,6 +937,10 @@ void processPassiveMouseMove(int x, int y)
 		topleft.y-=.5;
 	else if(y>=(HEIGHT-20) && y<=HEIGHT+20 && topleft.y<((map.size()*15)-HEIGHT)/15)
 		topleft.y+=.5;//end scroll
+	currmousex=x;
+	currmousey=y;
+	currmousex+=(topleft.x*15);
+	currmousey+=(topleft.y*15);
 }
 void processMouseMove(int x, int y)
 {
@@ -1539,6 +1544,10 @@ void mainTimerProc(int arg)
 	Font        font(&fontFamily, 12, FontStyleRegular, UnitPixel);
 	Font        bigfont(&fontFamily, 14, FontStyleRegular, UnitPixel);*/
 	//SolidBrush white(Color(255,255,255));
+	RGB green(0,255,0);
+	RGB blue(0,0,255);
+	RGB magenta(255,0,255);
+	RGB yellow(255,255,0);
 	RGB yelloworange(250,225,65);
 	RGB black(0,0,0);
 	RGB red(255,0,0);
@@ -1549,8 +1558,10 @@ void mainTimerProc(int arg)
 	RGB animal(128,128,0);
 	RGB road(0,255,255);
 	ARGB elevation(100,100,100,100);
-	ARGB yellow(100,255,255,0);
-
+	ARGB softyellow(100,255,255,0);
+	RGB colors[]={black,red};
+	ARGB lightgrey(50,230,230,230);
+	ARGB hoverColor(100,200,200,200);
 	//Setting up openGL
 	// Clear Color and Depth Buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clears the whole screen
@@ -1837,14 +1848,17 @@ void mainTimerProc(int arg)
 						if(allbuildings[player][index].beingbuilt<0)
 						{
 							//TODO Figure out the below ellipse
-							//g.FillEllipse(&yellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
+							//g.FillEllipse(&softyellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
 							if(allbuildings[player][index].selected==false && player==0)
-								g.DrawRectangle(&(p[4]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
+								drawEmptyRect((j-topleft.x)*15,(i-topleft.y)*15,allbuildings[player][index].width*15, allbuildings[player][index].height*15,magenta);
+								//g.DrawRectangle(&(p[4]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
 							else
-								g.DrawRectangle(&(p[3]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
+								drawEmptyRect((j-topleft.x)*15,(i-topleft.y)*15,allbuildings[player][index].width*15, allbuildings[player][index].height*15,blue);
+								//g.DrawRectangle(&(p[3]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
 						}
 						else
-							g.DrawRectangle(&(p[5]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
+							drawEmptyRect((j-topleft.x)*15,(i-topleft.y)*15,allbuildings[player][index].width*15, allbuildings[player][index].height*15,yellow);
+							//g.DrawRectangle(&(p[5]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
 					}
 				}
 			}//end print buildings
@@ -1856,44 +1870,60 @@ void mainTimerProc(int arg)
 				{
 					if(allunits[player][index]->health>0)
 					{
-						text[0]=WCHAR(allunits[player][index]->veterancylvl+'0');
-						g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
+						char text=allunits[player][index]->veterancylvl;
+						glRasterPos3f((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,0);
+						glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,text);
+						//g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
 						if(allunits[player][index]->selected==false)
-							g.DrawRectangle(&(p[player]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
+							drawEmptyRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,allunits[player][index]->width*15,allunits[player][index]->height*15,colors[player]);
+							//g.DrawRectangle(&(p[player]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
 						else
 						{
-							g.DrawRectangle(&(p[3]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
-							g.DrawRectangle(&(p[0]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15-3, (Gdiplus::REAL)15, (Gdiplus::REAL)3);
-							g.FillRectangle(&sb, (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15-3, (Gdiplus::REAL)(allunits[player][index]->health/allbuildableunits[allunits[player][index]->id].health*15), (Gdiplus::REAL)3); 
+							//Pen p[6]={Color(0,0,0), Color(255,0,0), Color(0,255,0), Color(0,0,255), Color(255,0,255), Color(255,255,0)};
+							drawEmptyRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,allunits[player][index]->width*15,allunits[player][index]->height*15,blue);
+							drawEmptyRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15-3,15,3,black);
+							makeRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15-3,allunits[player][index]->health/allbuildableunits[allunits[player][index]->id].health*15,3,green);
+							//g.DrawRectangle(&(p[3]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
+							//g.DrawRectangle(&(p[0]), (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15-3, (Gdiplus::REAL)15, (Gdiplus::REAL)3);
+							//g.FillRectangle(&sb, (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15-3, (Gdiplus::REAL)(allunits[player][index]->health/allbuildableunits[allunits[player][index]->id].health*15), (Gdiplus::REAL)3);
 						}
 						if(allunits[player][index]->siegeindex!=-1 && allunits[player][index]->whatisit!=2)
-							g.FillRectangle(&sb, (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
+							makeRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,allunits[player][index]->width*15,allunits[player][index]->height*15,green);
+							//g.FillRectangle(&sb, (Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15, (Gdiplus::REAL)allunits[player][index]->width*15, (Gdiplus::REAL)allunits[player][index]->height*15);
 					}
 				}
 			}//end print units
 			if(minimapseen[0][i][j]==false)//color unknown parts of map
 			{
-				g.FillRectangle(&black, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15,15,black);
+				//g.FillRectangle(&black, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 			}//end color unknown parts of map
 			if(allunits[0][generals[0]]->los<dist) //far away
-				g.FillRectangle(&lightgrey, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15,15,lightgrey);
+				//g.FillRectangle(&lightgrey, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 		}
 	}
 	if(mousex!=uptomousex && mousey!=uptomousey && lbuttondown==true)//selection box
 	{
 		if(uptomousex-mousex>0 && uptomousey-mousey>0)
-			g.DrawRectangle(&(p[0]), mousex-topleft.x*15, mousey-topleft.y*15, uptomousex-mousex, uptomousey-mousey);
+			drawEmptyRect(mousex-topleft.x*15, mousey-topleft.y*15, uptomousex-mousex, uptomousey-mousey, black);
+			//g.DrawRectangle(&(p[0]), mousex-topleft.x*15, mousey-topleft.y*15, uptomousex-mousex, uptomousey-mousey);
 		else if(uptomousex-mousex<0 && uptomousey-mousey>0)
-			g.DrawRectangle((&p[0]), uptomousex-topleft.x*15, mousey-topleft.y*15, mousex-uptomousex, uptomousey-mousey);
+			drawEmptyRect(uptomousex-topleft.x*15, mousey-topleft.y*15, mousex-uptomousex, uptomousey-mousey, black);
+			//g.DrawRectangle((&p[0]), uptomousex-topleft.x*15, mousey-topleft.y*15, mousex-uptomousex, uptomousey-mousey);
 		else if(uptomousex-mousex>0 && uptomousey-mousey<0)
-			g.DrawRectangle((&p[0]), mousex-topleft.x*15, uptomousey-topleft.y*15, uptomousex-mousex, mousey-uptomousey);
+			drawEmptyRect(mousex-topleft.x*15, uptomousey-topleft.y*15, uptomousex-mousex, mousey-uptomousey, black);
+			//g.DrawRectangle((&p[0]), mousex-topleft.x*15, uptomousey-topleft.y*15, uptomousex-mousex, mousey-uptomousey);
 		else if(uptomousex-mousex<0 && uptomousey-mousey<0)
-			g.DrawRectangle(&(p[0]), uptomousex-topleft.x*15, uptomousey-topleft.y*15, mousex-uptomousex, mousey-uptomousey);
+			drawEmptyRect(uptomousex-topleft.x*15, uptomousey-topleft.y*15, mousex-uptomousex, mousey-uptomousey, black);
+			//g.DrawRectangle(&(p[0]), uptomousex-topleft.x*15, uptomousey-topleft.y*15, mousex-uptomousex, mousey-uptomousey);
 	}//end selection box
 	if(buildinghover==true)
-		g.FillRectangle(&hover,mouse.x-mouse.x%15,mouse.y-mouse.y%15,buildingwidth*15,buildingheight*15);
+		makeRect(currmousex-currmousex%15,currmousey-currmousey%15,buildingwidth*15,buildingheight*15, hoverColor);
+		//g.FillRectangle(&hover,mouse.x-mouse.x%15,mouse.y-mouse.y%15,buildingwidth*15,buildingheight*15);
 	//BitBlt(hdcBuf2,0,0,client.right,client.bottom,hdcBuf,0,0,SRCAND);
-	BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
+	//BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
+	glutSwapBuffers();
 }
 
 BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)

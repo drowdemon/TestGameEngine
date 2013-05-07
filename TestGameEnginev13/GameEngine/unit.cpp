@@ -1,8 +1,8 @@
-#include "stdafx.h"
 #include "unit.h"
 #include "building.h"
 #include "globals.h"
 #include "astarsearch.h"
+#include <cmath>
 
 //! \file unit.cpp This contains class unit
 
@@ -787,7 +787,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 	actspeed+=tilespeed[map[(unsigned int)y][(unsigned int)x].tilestyle-1]; //adjust speed for what tile the unit is standing on
 	if(sqrt(pow((movetox-x), 2)+pow((movetoy-y), 2))>actspeed+0.05)
 	{
-		if(abs(movetox-x)>=0.0001)//if the line isn't vert
+		if(abs((int)(movetox-x))>=0.0001)//if the line isn't vert
 		{
 			float slope=(movetoy-y)/(movetox-x); //slope
 			float b=y-(slope*x); //y-intercept

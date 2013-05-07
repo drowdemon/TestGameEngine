@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "data structures.h"
 
 //! \file "data structures.cpp"

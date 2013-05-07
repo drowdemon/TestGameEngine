@@ -1,7 +1,6 @@
-#include "stdafx.h"
 #include "report.h"
 #include "unit.h"
-#include "Resource.h"
+#include "resource.h"
 #include "globals.h"
 using namespace std;
 
@@ -44,14 +43,14 @@ void report::updatedkilledunits(short player, short index)
 }
 void report::give()
 {
-	reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
+	//reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
+	reportDialogWindow=glutCreateSubWindow(mainWindow, 30, 30, 300, 400);
 	updatetext(reportdialoghwnd,MSG_ONE,gentxtMyKilled());
 	currRep=this;
 	reportfuncs[0]=&report::gentxtMyKilled;
 	reportfuncs[1]=&report::gentxtEnemyKilled;
 	reportfuncs[2]=&report::gentxtSeen;
 	ShowWindow(reportdialoghwnd,SW_SHOW);
-	int ret=GetLastError();
 }
 char* report::gentxtMyKilled()
 {
@@ -127,7 +126,7 @@ char* report::gentxtEnemyKilled()
 		text.append(inttos((int)enemyseenunits[enemykilledids[i]].enemyseenloc.x));
 		text.append(",");
 		text.append(inttos((int)enemyseenunits[enemykilledids[i]].enemyseenloc.y));
-		text.append(").");
+		text.append(").\n");
 	}
 	char *ret=new char[text.size()+1];
 	for(unsigned int i=0; i<text.size(); i++)

@@ -1,22 +1,21 @@
-#include "stdafx.h"
+#include <cstdlib>
 #include "display functions.h"
 #include "globals.h"
 string inttochar(int conv)
 {
-	int num=conv;
-	int numdigits=0;
-	if(num==0)
-		numdigits++;
-	while(num>=1)
+	string ret;
+	if(conv==0)
 	{
-		num/=10;
-		numdigits++;
+		ret="0";
+		return ret;
 	}
-	numdigits++; //null terminator
-	char *buff=new char[numdigits];
-	itoa(conv,buff,10);
-	string ret=buff;
-	delete[] buff;
+	while(conv>=1)
+	{
+		ret.push_back(char((conv%10)+48));
+		conv/=10;
+	}
+	for(int i=0; i<ret.size()/2; i++)
+		swap(ret[i],ret[ret.size()-1-i]);
 	return ret;
 }
 string dispresourcesunit(int index)

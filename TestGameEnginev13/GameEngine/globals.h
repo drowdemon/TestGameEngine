@@ -40,8 +40,7 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define DIST_TO_REG 20 
 
 //forward declarations of functions
-VOID CALLBACK hourpassed(HWND hWnd, UINT msg, UINT_PTR idEvent, DWORD dwTime);
-DWORD WINAPI ThreadTimerProc(LPVOID lpParameter);
+void hourpassed(int arg);
 int threadgoaroundobstacle(obstaclethreadparam *param, short walkable[6], bool sotr); //used to be thread proc that returned DWORD WINAPI and took an LPVOID lpParameter as an argument
 bool pointonlinesegment(double x, double movetox, double newx);
 void attackmovement(int player, int index, bool unit);
@@ -88,16 +87,18 @@ extern vector <vector <vector <creationinfo> > > creationqueueunits;  //var[play
 extern vector <vector <vector <bool> > > minimapseen; //in form [player][y][x], if the specified player can see the tile, it is true, else false
 extern vector <vector <short> > newlybuiltbuildings; //var[player][index of built thing]
 extern bool lbuttondown;
-extern float mousex;
-extern float mousey;
-extern float uptomousex;
-extern float uptomousey;
+float mousex=0; //where the mouse was when clicked
+float mousey=0;
+float uptomousex=0; //where the mouse was when last held down
+float uptomousey=0;
+float currmousex=0; //where the mouse is currently
+float currmousey=0;
 extern vector <short> designatedunit; //!< To select the lieutenant in a regiment.
 
 //!< select the each player can designate one unit by ctrl-clicking. vector is of players. Stores the index in allunits
-extern HWND reportdialoghwnd;
-extern HWND hTabControl; // tab control handle
-extern HWND hCurrentTab; // tab dialog handle
+//extern HWND reportdialoghwnd;
+//extern HWND hTabControl; // tab control handle
+//extern HWND hCurrentTab; // tab dialog handle
 
 extern short numplayers; //this will later be made changeable, NOT FULLY IMPLEMENTED, CANT JUST CHANGE HERE
 extern short tilecameo[14];
@@ -116,6 +117,8 @@ extern bool redraw;
 extern char* (report::*reportfuncs[3])();
 extern report* currRep;
 extern int pagenum;
+extern int mainWindow;
+extern int reportDialogWindow;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;
