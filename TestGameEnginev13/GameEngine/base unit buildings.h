@@ -1,7 +1,7 @@
 #ifndef base_unit_buildings_h
 #define base_unit_buildings_h
 #include <vector>
-#include <string.h>
+#include <string>
 using namespace std;
 //! Data that every unit must have, and is not unique for each unit. 
 class baseunit

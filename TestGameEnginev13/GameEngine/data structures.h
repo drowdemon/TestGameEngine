@@ -2,6 +2,7 @@
 #define data_structures_h
 
 #include <vector>
+#include <string>
 using namespace std;
 
 //! \file "data structures.h"
@@ -140,6 +141,7 @@ public:
 };
 class RGB
 {
+public:
 	int r;
 	int g;
 	int b;
@@ -147,6 +149,7 @@ class RGB
 };
 class ARGB
 {
+public:
 	int a;
 	int r;
 	int g;

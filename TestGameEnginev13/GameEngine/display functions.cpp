@@ -14,7 +14,7 @@ string inttochar(int conv)
 		ret.push_back(char((conv%10)+48));
 		conv/=10;
 	}
-	for(int i=0; i<ret.size()/2; i++)
+	for(unsigned int i=0; i<ret.size()/2; i++)
 		swap(ret[i],ret[ret.size()-1-i]);
 	return ret;
 }

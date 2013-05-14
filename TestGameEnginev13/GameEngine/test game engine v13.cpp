@@ -1,4 +1,3 @@
-#include "test game engine v13.h"
 #include "globals.h"
 #include "data structures.h"
 #include "tile.h"
@@ -64,6 +63,10 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);*/
 void mainTimerProc(int arg);
 void renderScene();
 void initializeGameEngine();
+void changeSize(int w, int h);
+void processMouse(int button, int state, int x, int y);
+void processMouseMove(int x, int y);
+void processPassiveMouseMove(int x, int y);
 
 struct POINT
 {
@@ -895,16 +898,6 @@ string inttos(int num)
 	}
 	return ret;
 }
-void updatetext(HWND hDlg, int index, char text[]) 
-{
-	SetDlgItemText(hCurrentTab,index,text);
-	HWND hctrl = GetDlgItem(hCurrentTab, index);
-	RECT rect;
-	GetClientRect(hctrl, &rect);
-	InvalidateRect(hctrl, &rect, TRUE);
-	MapWindowPoints(hctrl, hDlg, (POINT *) &rect, 2);
-	RedrawWindow(hDlg, &rect, NULL, RDW_ERASE | RDW_INVALIDATE);
-}
 
 int main(int argc, char **argv)
 {
@@ -913,7 +906,7 @@ int main(int argc, char **argv)
 	glutInitWindowPosition(100,100);
 	glutInitWindowSize(WIDTH,HEIGHT);
 
-	mainWindow=glutCreateWindow("Lighthouse3D- GLUT Tutorial");
+	mainWindow=glutCreateWindow("Game Engine");
 
 	glutDisplayFunc(renderScene);
 	glutMouseFunc(processMouse);
@@ -937,19 +930,19 @@ void processPassiveMouseMove(int x, int y)
 		topleft.y-=.5;
 	else if(y>=(HEIGHT-20) && y<=HEIGHT+20 && topleft.y<((map.size()*15)-HEIGHT)/15)
 		topleft.y+=.5;//end scroll
-	currmousex=x;
-	currmousey=y;
-	currmousex+=(topleft.x*15);
-	currmousey+=(topleft.y*15);
+	currmousex2=x;
+	currmousey2=y;
+	currmousex2+=(topleft.x*15);
+	currmousey2+=(topleft.y*15);
 }
 void processMouseMove(int x, int y)
 {
-	if(mousex!=x && mousey!=y)
+	if(mousex2!=x && mousey2!=y)
 	{
-		uptomousex=(float)x;
-		uptomousey=(float)y;
-		uptomousex+=(topleft.x*15);
-		uptomousey+=(topleft.y*15);
+		uptomousex2=(float)x;
+		uptomousey2=(float)y;
+		uptomousex2+=(topleft.x*15);
+		uptomousey2+=(topleft.y*15);
 	}
 }
 
@@ -973,29 +966,29 @@ void processMouse(int button, int state, int x, int y)
 		{
 			//mousex=(float)GET_X_LPARAM(lParam);
 			//mousey=(float)GET_Y_LPARAM(lParam);
-			mousex=x;
-			mousey=y;
-			mousex+=(topleft.x*15);
-			mousey+=(topleft.y*15);
+			mousex2=x;
+			mousey2=y;
+			mousex2+=(topleft.x*15);
+			mousey2+=(topleft.y*15);
 			if(buildinghover==true)
 			{
-				build(0,buildingwhat,(int)mousex/15,(int)mousey/15);
+				build(0,buildingwhat,(int)mousex2/15,(int)mousey2/15);
 				buildinghover=false;
 				buildingwhat=-1;
 				buildingwidth=0;
 				buildingheight=0;
-				break; //don't do the below three lines
+				return;
 			}
 			lbuttondown=true;
-			uptomousex=mousex;
-			uptomousey=mousey;
+			uptomousex2=mousex2;
+			uptomousey2=mousey2;
 		}
 		else if(state==GLUT_UP)
 		{
 			if(dblclick==true)
 			{
 				dblclick=false; //makes sure this isn't called after a double click. It will be:  left down, left up, left down, double click, left up (ignored due to this) end
-				break;
+				return;
 			}
 			//RECT client;
 			//GetClientRect(hWnd, &client);
@@ -1014,51 +1007,51 @@ void processMouse(int button, int state, int x, int y)
 						}
 					}
 				}
-				break; //not selecting anything in the button area, so finished
+				return; //not selecting anything in the button area, so finished
 			}
-			else if(mousex==uptomousex && mousey==uptomousey)
+			else if(mousex2==uptomousex2 && mousey2==uptomousey2)
 			{
-				point p(mousex/15,mousey/15);
+				point p(mousex2/15,mousey2/15);
 				selectone(0, p);//point(mousex/15, mousey/15));
 			}
 			else
 			{
 				myrect clicked;
-				if(uptomousex-mousex>0 && uptomousey-mousey>0)
+				if(uptomousex2-mousex2>0 && uptomousey2-mousey2>0)
 				{
-					clicked.left=mousex;
-					clicked.top=mousey;
+					clicked.left=mousex2;
+					clicked.top=mousey2;
 					//clicked.right=uptomousex-mousex;
 					//clicked.bottom=uptomousey-mousey;
-					clicked.right=uptomousex;
-					clicked.bottom=uptomousey;
+					clicked.right=uptomousex2;
+					clicked.bottom=uptomousey2;
 				}
-				else if(uptomousex-mousex<0 && uptomousey-mousey>0)
+				else if(uptomousex2-mousex2<0 && uptomousey2-mousey2>0)
 				{
-					clicked.left=uptomousex;
-					clicked.top=mousey;
+					clicked.left=uptomousex2;
+					clicked.top=mousey2;
 					//clicked.right=mousex-uptomousex;
 					//clicked.bottom=uptomousey-mousey;
-					clicked.right=mousex;
-					clicked.bottom=uptomousey;
+					clicked.right=mousex2;
+					clicked.bottom=uptomousey2;
 				}
-				else if(uptomousex-mousex>0 && uptomousey-mousey<0)
+				else if(uptomousex2-mousex2>0 && uptomousey2-mousey2<0)
 				{
-					clicked.left=mousex;
-					clicked.top=uptomousey;
-					clicked.right=uptomousex;
-					clicked.bottom=mousey;
+					clicked.left=mousex2;
+					clicked.top=uptomousey2;
+					clicked.right=uptomousex2;
+					clicked.bottom=mousey2;
 					//clicked.right=uptomousex-mousex;
 					//clicked.bottom=mousey-uptomousey;
 				}
-				else if(uptomousex-mousex<0 && uptomousey-mousey<0)
+				else if(uptomousex2-mousex2<0 && uptomousey2-mousey2<0)
 				{
-					clicked.left=uptomousex;
-					clicked.top=uptomousey;
+					clicked.left=uptomousex2;
+					clicked.top=uptomousey2;
 					//clicked.right=mousex-uptomousex;
 					//clicked.bottom=mousey-uptomousey;
-					clicked.right=mousex;
-					clicked.bottom=mousey;
+					clicked.right=mousex2;
+					clicked.bottom=mousey2;
 				}
 				clicked.top/=15;
 				clicked.bottom/=15;
@@ -1066,17 +1059,17 @@ void processMouse(int button, int state, int x, int y)
 				clicked.right/=15;
 				selectmany(currplayer,clicked);
 			}
-			break;
+			return;
 		}
 		else if(state==DBL_CLICK)
 		{
 			dblclick=true;
 			dblclickglut=-1;
-			float mx=x;
-			float my=y;
+			//float mx=x;
+			//float my=y;
 			int reg=-1;
-			if(map[(int)(mousey/15)][(int)(mousex/15)].uniton==true)
-				reg=allunits[0][map[(int)(mousey/15)][(int)(mousex/15)].index]->regimentid;
+			if(map[(int)(mousey2/15)][(int)(mousex2/15)].uniton==true)
+				reg=allunits[0][map[(int)(mousey2/15)][(int)(mousex2/15)].index]->regimentid;
 			if(reg!=-1)
 			{
 				for(unsigned int i=0; i<selectedunits[0].size(); i++)
@@ -1088,7 +1081,7 @@ void processMouse(int button, int state, int x, int y)
 					selectedunits[0].push_back(allregiments[0][reg].unitids[i]);
 				}
 			}
-			break;
+			return;
 		}
 	}
 	else if(button==GLUT_RIGHT_BUTTON)
@@ -1099,13 +1092,13 @@ void processMouse(int button, int state, int x, int y)
 			p.x=x;
 			p.y=y;
 			if(p.y>HEIGHT-100)
-				break; //clicked in the 'button' area
+				return; //clicked in the 'button' area
 			p.x+=(topleft.x*15);
 			p.y+=(topleft.y*15);
 			p.x/=15;
 			p.y/=15;
 			move(currplayer, p);
-			break;
+			return;
 		}
 		else if(state==GLUT_UP)
 		{
@@ -1460,9 +1453,9 @@ void renderScene()
 
 	glLoadIdentity();
 		// Set the camera
-	gluLookAt(	500.0f, 500.0f, 1000.0f,
-			0.0f, 0.0f,  0.0f,
-			0.0f, 1.0f,  0.0f);
+	gluLookAt(	0.5f, 0.5f, 1.0f,
+			    0.5f, 0.5f, 0.0f,
+		     	0.0f, 1.0f, 0.0f);
 
 	glutSwapBuffers();
 }
@@ -1471,10 +1464,10 @@ void makeRect(int x, int y, int width, int height, RGB color)
 {
 	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
 	glBegin(GL_QUADS);
-		glVertex3f(x,y,0);
-		glVertex3f(x+width,y,0);
-		glVertex3f(x+width,y+height,0);
-		glVertex3f(x,y+height,0);
+		glVertex3f(x/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
+		glVertex3f(x/1000.0,(y+height)/1000.0,0);
 	glEnd();
 }
 
@@ -1482,10 +1475,10 @@ void makeRect(int x, int y, int width, int height, ARGB color)
 {
 	glColor4f(color.r/255.0, color.g/255.0, color.b/255.0, color.a/255.0); //rgba
 	glBegin(GL_QUADS);
-		glVertex3f(x,y,0);
-		glVertex3f(x+width,y,0);
-		glVertex3f(x+width,y+height,0);
-		glVertex3f(x,y+height,0);
+		glVertex3f(x/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
+		glVertex3f(x/1000.0,(y+height)/1000.0,0);
 	glEnd();
 }
 
@@ -1493,8 +1486,8 @@ void drawLine(int x, int y, int fx, int fy, RGB color)
 {
 	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
 	glBegin(GL_LINES);
-		glVertex3f(x,y,0);
-		glVertex3f(fx,fy,0);
+		glVertex3f(x/1000.0,y/1000.0,0);
+		glVertex3f(fx/1000.0,fy/1000.0,0);
 	glEnd();
 }
 
@@ -1502,17 +1495,17 @@ void drawEmptyRect(int x, int y, int width, int height, RGB color)
 {
 	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
 	glBegin(GL_LINE_LOOP);
-		glVertex3f(x,y,0);
-		glVertex3f(x+width,y,0);
-		glVertex3f(x+width,y+height,0);
-		glVertex3f(x,y+height,0);
+		glVertex3f(x/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,y/1000.0,0);
+		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
+		glVertex3f(x/1000.0,(y+height)/1000.0,0);
 	glEnd();
 }
 
 void renderBitmapString(float x,float y,float z,void *font,char *string)
 {
 	char *c;
-	glRasterPos3f(x,y,z);
+	glRasterPos3f(x/1000.0,y/1000.0,z/1000.0);
 	for (c=string; *c != '\0'; c++)
 	{
 		glutBitmapCharacter(font, *c);
@@ -1521,6 +1514,7 @@ void renderBitmapString(float x,float y,float z,void *font,char *string)
 
 void mainTimerProc(int arg)
 {
+	glutTimerFunc(50,mainTimerProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE, which is why it is called here. In effect, time delayed recursion.
 	frames++;
 	//RECT client;
 	//GetClientRect(hWnd, &client);
@@ -1569,9 +1563,9 @@ void mainTimerProc(int arg)
 	// Reset transformations
 	glLoadIdentity();
 	// Set the camera
-	gluLookAt(	500.0f, 500.0f, 1000.0f,
-			0.0f, 0.0f,  0.0f,
-			0.0f, 1.0f,  0.0f);
+	gluLookAt(0.5f, 0.5f, 1.0f,
+			  0.5f, 0.5f, 0.0f,
+			  0.0f, 1.0f, 0.0f);
 	//end setup
 
 	if(redraw==true) //TODO note that currently the whole screen is cleared each time. Fix this so it only clears the upper part.
@@ -1820,9 +1814,9 @@ void mainTimerProc(int arg)
 				//g.FillRectangle(&elevation,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f); //print elevation
 		}
 	}
-	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, to print, only print stuff for units and buildings
+	for(int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, to print, only print stuff for units and buildings
 	{
-		for(unsigned int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
+		for(int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
 		{
 			if(j>=MAPSIZE || i>=MAPSIZE || i<0 || j<0)
 				break;
@@ -1871,7 +1865,7 @@ void mainTimerProc(int arg)
 					if(allunits[player][index]->health>0)
 					{
 						char text=allunits[player][index]->veterancylvl;
-						glRasterPos3f((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,0);
+						glRasterPos3f((allunits[player][index]->x-topleft.x)*15/1000.0,(allunits[player][index]->y-topleft.y)*15/1000.0,0);
 						glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,text);
 						//g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
 						if(allunits[player][index]->selected==false)
@@ -1903,30 +1897,66 @@ void mainTimerProc(int arg)
 				//g.FillRectangle(&lightgrey, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 		}
 	}
-	if(mousex!=uptomousex && mousey!=uptomousey && lbuttondown==true)//selection box
+	if(mousex2!=uptomousex2 && mousey2!=uptomousey2 && lbuttondown==true)//selection box
 	{
-		if(uptomousex-mousex>0 && uptomousey-mousey>0)
-			drawEmptyRect(mousex-topleft.x*15, mousey-topleft.y*15, uptomousex-mousex, uptomousey-mousey, black);
+		if(uptomousex2-mousex2>0 && uptomousey2-mousey2>0)
+			drawEmptyRect(mousex2-topleft.x*15, mousey2-topleft.y*15, uptomousex2-mousex2, uptomousey2-mousey2, black);
 			//g.DrawRectangle(&(p[0]), mousex-topleft.x*15, mousey-topleft.y*15, uptomousex-mousex, uptomousey-mousey);
-		else if(uptomousex-mousex<0 && uptomousey-mousey>0)
-			drawEmptyRect(uptomousex-topleft.x*15, mousey-topleft.y*15, mousex-uptomousex, uptomousey-mousey, black);
+		else if(uptomousex2-mousex2<0 && uptomousey2-mousey2>0)
+			drawEmptyRect(uptomousex2-topleft.x*15, mousey2-topleft.y*15, mousex2-uptomousex2, uptomousey2-mousey2, black);
 			//g.DrawRectangle((&p[0]), uptomousex-topleft.x*15, mousey-topleft.y*15, mousex-uptomousex, uptomousey-mousey);
-		else if(uptomousex-mousex>0 && uptomousey-mousey<0)
-			drawEmptyRect(mousex-topleft.x*15, uptomousey-topleft.y*15, uptomousex-mousex, mousey-uptomousey, black);
+		else if(uptomousex2-mousex2>0 && uptomousey2-mousey2<0)
+			drawEmptyRect(mousex2-topleft.x*15, uptomousey2-topleft.y*15, uptomousex2-mousex2, mousey2-uptomousey2, black);
 			//g.DrawRectangle((&p[0]), mousex-topleft.x*15, uptomousey-topleft.y*15, uptomousex-mousex, mousey-uptomousey);
-		else if(uptomousex-mousex<0 && uptomousey-mousey<0)
-			drawEmptyRect(uptomousex-topleft.x*15, uptomousey-topleft.y*15, mousex-uptomousex, mousey-uptomousey, black);
+		else if(uptomousex2-mousex2<0 && uptomousey2-mousey2<0)
+			drawEmptyRect(uptomousex2-topleft.x*15, uptomousey2-topleft.y*15, mousex2-uptomousex2, mousey2-uptomousey2, black);
 			//g.DrawRectangle(&(p[0]), uptomousex-topleft.x*15, uptomousey-topleft.y*15, mousex-uptomousex, mousey-uptomousey);
 	}//end selection box
 	if(buildinghover==true)
-		makeRect(currmousex-currmousex%15,currmousey-currmousey%15,buildingwidth*15,buildingheight*15, hoverColor);
+		makeRect((int)(currmousex2-((int)currmousex2%15)),(int)(currmousey2-((int)currmousey2%15)),buildingwidth*15,buildingheight*15, hoverColor);
 		//g.FillRectangle(&hover,mouse.x-mouse.x%15,mouse.y-mouse.y%15,buildingwidth*15,buildingheight*15);
 	//BitBlt(hdcBuf2,0,0,client.right,client.bottom,hdcBuf,0,0,SRCAND);
 	//BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
 	glutSwapBuffers();
 }
 
-BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
+void renderReportDialog()
+{ //TODO Make this change the text when you click a 'button'
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glLoadIdentity();
+		// Set the camera
+	gluLookAt(	0.5f, 0.5f, 1.0f,
+				0.5f, 0.5f,  0.0f,
+				0.0f, 1.0f,  0.0f);
+
+	RGB black(0,0,0);
+	RGB blue(0,0,255);
+	RGB currColor=black;
+	if(currReportTab==0)
+		currColor=blue;
+	else
+		currColor=black;
+	drawEmptyRect(3,3,15,5,currColor); //buttons
+	renderBitmapString(5,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Units Lost");
+	if(currReportTab==1)
+		currColor=blue;
+	else
+		currColor=black;
+	drawEmptyRect(20,3,15,5,currColor);
+	renderBitmapString(22,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Enemies Killed");
+	if(currReportTab==2)
+		currColor=blue;
+	else
+		currColor=black;
+	drawEmptyRect(28,3,15,5,currColor);
+	renderBitmapString(30,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Surviving Enemies Seen");
+
+	renderBitmapString(25,25,0,GLUT_BITMAP_TIMES_ROMAN_10,(currRep->*reportfuncs[currReportTab])());
+	glutSwapBuffers();
+}
+
+/*BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	switch(Message)
     {
@@ -1983,4 +2013,4 @@ BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lP
             return FALSE;
     }
     return TRUE;
-}
+}*/

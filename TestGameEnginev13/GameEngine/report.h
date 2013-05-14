@@ -13,7 +13,6 @@ class unit;
 class report;
 
 string inttos(int num);
-void updatetext(HWND hDlg, int index, char text[]);
 
 extern vector <vector <unit*> > allunits;
 extern vector<basicunit> allbuildableunits;

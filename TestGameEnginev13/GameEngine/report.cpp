@@ -1,7 +1,8 @@
 #include "report.h"
 #include "unit.h"
-#include "resource.h"
 #include "globals.h"
+
+#include <GL/glut.h>
 using namespace std;
 
 //!	\file report.cpp This contains class report
@@ -45,12 +46,13 @@ void report::give()
 {
 	//reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
 	reportDialogWindow=glutCreateSubWindow(mainWindow, 30, 30, 300, 400);
-	updatetext(reportdialoghwnd,MSG_ONE,gentxtMyKilled());
+	glutSetWindow(reportDialogWindow);
+
 	currRep=this;
 	reportfuncs[0]=&report::gentxtMyKilled;
 	reportfuncs[1]=&report::gentxtEnemyKilled;
 	reportfuncs[2]=&report::gentxtSeen;
-	ShowWindow(reportdialoghwnd,SW_SHOW);
+	//ShowWindow(reportdialoghwnd,SW_SHOW);
 }
 char* report::gentxtMyKilled()
 {

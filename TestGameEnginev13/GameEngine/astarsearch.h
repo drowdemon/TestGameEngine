@@ -3,6 +3,7 @@
 
 #include "data structures.h"
 #include "unit.h"
+#include <cmath>
 //! This documents a problem that will be used by astar search. Used for obstacle avoidance.
 class problem
 {

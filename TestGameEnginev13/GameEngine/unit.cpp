@@ -3,6 +3,11 @@
 #include "globals.h"
 #include "astarsearch.h"
 #include <cmath>
+#include <stdio.h>
+#include <cstdlib>
+
+
+using namespace std;
 
 //! \file unit.cpp This contains class unit
 
@@ -226,20 +231,20 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 {
 	float attackx=0;
 	float attacky=0;
-	float attackh=0;
+	//float attackh=0;
 	float attackw=0;
 	if(attackingwhat==true)
 	{
 		attackx=allunits[attackingunitplayer][attackingunitindex]->x;
 		attacky=allunits[attackingunitplayer][attackingunitindex]->y;
-		attackh=allunits[attackingunitplayer][attackingunitindex]->height;
+		//attackh=allunits[attackingunitplayer][attackingunitindex]->height;
 		attackw=allunits[attackingunitplayer][attackingunitindex]->width;
 	}
 	else
 	{
 		attackx=allbuildings[attackingunitplayer][attackingunitindex].x;
 		attacky=allbuildings[attackingunitplayer][attackingunitindex].y;
-		attackh=allbuildings[attackingunitplayer][attackingunitindex].height;
+		//attackh=allbuildings[attackingunitplayer][attackingunitindex].height;
 		attackw=allbuildings[attackingunitplayer][attackingunitindex].width;
 	}
 	float attackcenterx=attackx+(attackw/2.0f);
@@ -504,7 +509,7 @@ void unit::revealmapcreation()
 			{
 				if(sqrt(pow(i,2)+pow(j,2))<los)
 				{
-					minimapseen[player][(unsigned int)(i+y)][unsigned int(j+x)]=true;
+					minimapseen[player][(unsigned int)(i+y)][(unsigned int)(j+x)]=true;
 				}
 			}
 		}
@@ -805,9 +810,11 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 			conditionsmet+=pointonlinesegment(x, movetox, newx2);
 			conditionsmet+=pointonlinesegment(y, movetoy, newy2);
 			if(conditionsmet==2 && firstoneisgood==true && newy1!=newy2) //if both are good
-				exit(-94);
+				printf("Major Error. Search -94");
+				//exit(-94);
 			else if(conditionsmet!=2 && firstoneisgood==false) //if neither is good
-				exit(-24);
+				printf("Major Error. Search -24");
+				//exit(-24);
 			if(firstoneisgood==true) // return the proper one
 			{
 				short ret=checkmove(point(newx1, newy1),actspeed);
@@ -1742,7 +1749,8 @@ bool unit::attackunitstance() //called when the unit is not doing anything, to c
 	else if(unitstance==US_DONOTHING && userordered==false)
 		return false;
 	else
-		exit(99999);
+		printf("Major Error. Search -99999");
+		//exit(99999);
 	if(garrisoned<=-1 && attackrange>MELEE)
 		cyclethrough=allbuildings[player][garrisoned-1].range;
 	else if(garrisoned<=-1 && attackrange<=MELEE)
@@ -2048,9 +2056,9 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 		conditionsmet+=pointonlinesegment(x, enemyx, newx2);
 		conditionsmet+=pointonlinesegment(y, enemyy, newy2);
 		if(conditionsmet==2 && firstoneisgood==true) //if both are good
-			exit(-74);
+			printf("Major Error. Search -74");//exit(-74);
 		else if(conditionsmet!=2 && firstoneisgood==false) //if neither is good
-			exit(-60);	
+			printf("Major Error. Search -60");//exit(-60);
 		if(firstoneisgood==true)
 		{
 			movetox=newx1;
@@ -2579,7 +2587,7 @@ point unit::checksurroundingarea(short cwidth, short cheight)
 		else
 			numbad++;
 		if(numbad==4)
-			return (-1.0f,-1.0f); //failed
+			return point(-1.0f,-1.0f); //failed
 		checkwidth++;
 	}
 }

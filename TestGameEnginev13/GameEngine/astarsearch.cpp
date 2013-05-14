@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "astarsearch.h"
 extern vector < vector<tile> > map;
 problem::problem(point gs, bool dx, bool dy)

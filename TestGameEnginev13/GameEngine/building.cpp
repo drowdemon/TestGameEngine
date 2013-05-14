@@ -292,7 +292,7 @@ point building::checksurroundingarea(short utype, short uwidth, short uheight)
 		else
 			numbad++;
 		if(numbad==4)
-			return (-1.0f,-1.0f); //failed
+			return point(-1.0f,-1.0f); //failed
 		checkwidth++;
 	}
 }

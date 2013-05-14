@@ -54,9 +54,7 @@ bool checkdisp(int player, unsigned long long dispwhen);
 void build(short player, short buildwhat, int x, int y);
 bool chkmvp1(tile &checkwhat, short player, short index, short utype);
 bool checktouchingland(int x, int y);
-BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 string inttos(int num);
-void updatetext(HWND hDlg, int index, char text[]);
 
 //declarations of global variables
 extern int countobstacle;//var to make sure that there are no infinite loops in threadgoaroundobstacle
@@ -87,12 +85,12 @@ extern vector <vector <vector <creationinfo> > > creationqueueunits;  //var[play
 extern vector <vector <vector <bool> > > minimapseen; //in form [player][y][x], if the specified player can see the tile, it is true, else false
 extern vector <vector <short> > newlybuiltbuildings; //var[player][index of built thing]
 extern bool lbuttondown;
-float mousex=0; //where the mouse was when clicked
-float mousey=0;
-float uptomousex=0; //where the mouse was when last held down
-float uptomousey=0;
-float currmousex=0; //where the mouse is currently
-float currmousey=0;
+extern float mousex2; //where the mouse was when clicked
+extern float mousey2;
+extern float uptomousex2; //where the mouse was when last held down
+extern float uptomousey2;
+extern float currmousex2; //where the mouse is currently
+extern float currmousey2;
 extern vector <short> designatedunit; //!< To select the lieutenant in a regiment.
 
 //!< select the each player can designate one unit by ctrl-clicking. vector is of players. Stores the index in allunits
@@ -119,6 +117,7 @@ extern report* currRep;
 extern int pagenum;
 extern int mainWindow;
 extern int reportDialogWindow;
+extern int currReportTab;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

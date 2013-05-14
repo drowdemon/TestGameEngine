@@ -93,7 +93,7 @@ public:
 	//! \param startx [in]
 	//! \param starty [in]
 	//! \param allseenunits [out]
-	void unit::checkrad(int cyclethrough, float startx, float starty, vector<pointex>& allseenunits);
+	void checkrad(int cyclethrough, float startx, float starty, vector<pointex>& allseenunits);
 protected:
 	pointex getcandidate(int x, int y, double dist);
 	bool pointonlinesegment(double x, double movetox, double newx);
