@@ -1460,52 +1460,52 @@ void renderScene()
 	glutSwapBuffers();
 }
 
-void makeRect(int x, int y, int width, int height, RGB color)
+void makeRect(float x, float y, float width, float height, RGB color)
 {
-	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
 	glBegin(GL_QUADS);
-		glVertex3f(x/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
-		glVertex3f(x/1000.0,(y+height)/1000.0,0);
+		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
 	glEnd();
 }
 
-void makeRect(int x, int y, int width, int height, ARGB color)
+void makeRect(float x, float y, float width, float height, ARGB color)
 {
 	glColor4f(color.r/255.0, color.g/255.0, color.b/255.0, color.a/255.0); //rgba
 	glBegin(GL_QUADS);
-		glVertex3f(x/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
-		glVertex3f(x/1000.0,(y+height)/1000.0,0);
+		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
 	glEnd();
 }
 
-void drawLine(int x, int y, int fx, int fy, RGB color)
+void drawLine(float x, float y, float fx, float fy, RGB color)
 {
-	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
 	glBegin(GL_LINES);
-		glVertex3f(x/1000.0,y/1000.0,0);
-		glVertex3f(fx/1000.0,fy/1000.0,0);
+		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)fx/WIDTH,(float)fy/HEIGHT,0);
 	glEnd();
 }
 
-void drawEmptyRect(int x, int y, int width, int height, RGB color)
+void drawEmptyRect(float x, float y, float width, float height, RGB color)
 {
 	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
 	glBegin(GL_LINE_LOOP);
-		glVertex3f(x/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,y/1000.0,0);
-		glVertex3f((x+width)/1000.0,(y+height)/1000.0,0);
-		glVertex3f(x/1000.0,(y+height)/1000.0,0);
+		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
+		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
 	glEnd();
 }
 
 void renderBitmapString(float x,float y,float z,void *font,char *string)
 {
 	char *c;
-	glRasterPos3f(x/1000.0,y/1000.0,z/1000.0);
+	glRasterPos3f((float)x/WIDTH,(float)y/HEIGHT,(float)z/1000.0);
 	for (c=string; *c != '\0'; c++)
 	{
 		glutBitmapCharacter(font, *c);
@@ -1566,8 +1566,8 @@ void mainTimerProc(int arg)
 	gluLookAt(0.5f, 0.5f, 1.0f,
 			  0.5f, 0.5f, 0.0f,
 			  0.0f, 1.0f, 0.0f);
-	//end setup
 
+	//end setup
 	if(redraw==true) //TODO note that currently the whole screen is cleared each time. Fix this so it only clears the upper part.
 	{
 		redraw=false;
@@ -1865,7 +1865,7 @@ void mainTimerProc(int arg)
 					if(allunits[player][index]->health>0)
 					{
 						char text=allunits[player][index]->veterancylvl;
-						glRasterPos3f((allunits[player][index]->x-topleft.x)*15/1000.0,(allunits[player][index]->y-topleft.y)*15/1000.0,0);
+						glRasterPos3f((allunits[player][index]->x-topleft.x)*15/WIDTH,(allunits[player][index]->y-topleft.y)*15/HEIGHT,0);
 						glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,text);
 						//g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
 						if(allunits[player][index]->selected==false)
@@ -1917,6 +1917,7 @@ void mainTimerProc(int arg)
 		//g.FillRectangle(&hover,mouse.x-mouse.x%15,mouse.y-mouse.y%15,buildingwidth*15,buildingheight*15);
 	//BitBlt(hdcBuf2,0,0,client.right,client.bottom,hdcBuf,0,0,SRCAND);
 	//BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
+
 	glutSwapBuffers();
 }
 
