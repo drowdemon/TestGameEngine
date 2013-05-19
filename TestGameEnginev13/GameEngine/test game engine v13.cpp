@@ -39,8 +39,8 @@ class siege;
 class regiment;
 class button;
 
-#define WIDTH 700 //temporary, I hope
-#define HEIGHT 700 //temporary, I hope
+int WIDTH=700; //temporary, I hope
+int HEIGHT=700; //temporary, I hope
 #define DBL_CLICK 3
 // Global Variables:
 int dblclickglut=-1;
@@ -903,10 +903,15 @@ int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(100,100);
-	glutInitWindowSize(WIDTH,HEIGHT);
+	glutInitWindowPosition(50,30);
+	glutInitWindowSize(glutGet(GLUT_SCREEN_WIDTH)-80,glutGet(GLUT_SCREEN_HEIGHT)-60);
+	//glutInitWindowSize(700,700);
 
 	mainWindow=glutCreateWindow("Game Engine");
+
+	//glutFullScreen();
+	WIDTH=glutGet(GLUT_WINDOW_WIDTH);
+	HEIGHT=glutGet(GLUT_WINDOW_HEIGHT);
 
 	glutDisplayFunc(renderScene);
 	glutMouseFunc(processMouse);
@@ -915,6 +920,8 @@ int main(int argc, char **argv)
 	glutPassiveMotionFunc(processPassiveMouseMove); //this is while mouse button is not pressed
 
 	initializeGameEngine();
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
 	glutMainLoop();
 
@@ -948,22 +955,26 @@ void processMouseMove(int x, int y)
 
 void dblClickTimer(int arg)
 {
-	dblclick=-1;
+	dblclickglut=-1;
 }
 
 void processMouse(int button, int state, int x, int y)
 {
 	if(button==GLUT_LEFT_BUTTON)
 	{
-		if(dblclickglut==-1)
-		{
-			glutTimerFunc(250,dblClickTimer,0);
-			dblclickglut=0;
-		}
-		else if(dblclickglut==0)
-			state=DBL_CLICK;
 		if(state==GLUT_DOWN)
 		{
+			if(dblclickglut==-1)
+			{
+				glutTimerFunc(250,dblClickTimer,0);
+				dblclickglut=0;
+			}
+			else if(dblclickglut==0)
+				state=DBL_CLICK;
+		}
+		if(state==GLUT_DOWN)
+		{
+			//printf("L button down\n");
 			//mousex=(float)GET_X_LPARAM(lParam);
 			//mousey=(float)GET_Y_LPARAM(lParam);
 			mousex2=x;
@@ -990,6 +1001,7 @@ void processMouse(int button, int state, int x, int y)
 				dblclick=false; //makes sure this isn't called after a double click. It will be:  left down, left up, left down, double click, left up (ignored due to this) end
 				return;
 			}
+			//printf("L button up\n");
 			//RECT client;
 			//GetClientRect(hWnd, &client);
 			//int currx=GET_X_LPARAM(lParam);
@@ -1063,6 +1075,7 @@ void processMouse(int button, int state, int x, int y)
 		}
 		else if(state==DBL_CLICK)
 		{
+			//printf("DBL click\n");
 			dblclick=true;
 			dblclickglut=-1;
 			//float mx=x;
@@ -1425,9 +1438,11 @@ void initializeGameEngine()
 
 void changeSize(int w, int h)
 {
+	HEIGHT=glutGet(GLUT_WINDOW_HEIGHT);
+	WIDTH=glutGet(GLUT_WINDOW_WIDTH);
 	// Prevent a divide by zero, when window is too short
 	// (you cant make a window of zero width).
-	if(h == 0)
+	/*if(h == 0)
 		h = 1;
 	float ratio = 1.0* w / h;
 
@@ -1444,7 +1459,7 @@ void changeSize(int w, int h)
 	gluPerspective(45,ratio,1,1000);
 
 	// Get Back to the Modelview
-	glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_MODELVIEW);*/
 }
 
 void renderScene()
@@ -1453,9 +1468,9 @@ void renderScene()
 
 	glLoadIdentity();
 		// Set the camera
-	gluLookAt(	0.5f, 0.5f, 1.0f,
-			    0.5f, 0.5f, 0.0f,
-		     	0.0f, 1.0f, 0.0f);
+	gluLookAt(1.0f, 1.0f, 1.0f,
+				  1.0f, 1.0f, 0.0f,
+				  0.0f, 1.0f, 0.0f);
 
 	glutSwapBuffers();
 }
@@ -1464,10 +1479,10 @@ void makeRect(float x, float y, float width, float height, RGB color)
 {
 	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
 	glBegin(GL_QUADS);
-		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
-		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
 	glEnd();
 }
 
@@ -1475,10 +1490,10 @@ void makeRect(float x, float y, float width, float height, ARGB color)
 {
 	glColor4f(color.r/255.0, color.g/255.0, color.b/255.0, color.a/255.0); //rgba
 	glBegin(GL_QUADS);
-		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
-		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
 	glEnd();
 }
 
@@ -1486,8 +1501,8 @@ void drawLine(float x, float y, float fx, float fy, RGB color)
 {
 	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
 	glBegin(GL_LINES);
-		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)fx/WIDTH,(float)fy/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)fx*2.0/WIDTH,2.0-(float)fy*2.0/HEIGHT,0);
 	glEnd();
 }
 
@@ -1495,21 +1510,24 @@ void drawEmptyRect(float x, float y, float width, float height, RGB color)
 {
 	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
 	glBegin(GL_LINE_LOOP);
-		glVertex3f((float)x/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)y/HEIGHT,0);
-		glVertex3f((float)(x+width)/WIDTH,(float)(y+height)/HEIGHT,0);
-		glVertex3f((float)x/WIDTH,(float)(y+height)/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
+		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
+		glVertex3f((float)x*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
 	glEnd();
 }
 
 void renderBitmapString(float x,float y,float z,void *font,char *string)
 {
 	char *c;
-	glRasterPos3f((float)x/WIDTH,(float)y/HEIGHT,(float)z/1000.0);
+	glDisable(GL_TEXTURE_2D);
+	glColor3f(0.0,0.0,0.0);
+	glRasterPos3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,(float)z);
 	for (c=string; *c != '\0'; c++)
 	{
 		glutBitmapCharacter(font, *c);
 	}
+	glEnable(GL_TEXTURE_2D);
 }
 
 void mainTimerProc(int arg)
@@ -1563,8 +1581,8 @@ void mainTimerProc(int arg)
 	// Reset transformations
 	glLoadIdentity();
 	// Set the camera
-	gluLookAt(0.5f, 0.5f, 1.0f,
-			  0.5f, 0.5f, 0.0f,
+	gluLookAt(1.0f, 1.0f, 1.0f,
+			  1.0f, 1.0f, 0.0f,
 			  0.0f, 1.0f, 0.0f);
 
 	//end setup
@@ -1582,7 +1600,7 @@ void mainTimerProc(int arg)
 			{
 				if(((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend) && alldisp[indexGarrisondisp+i-indexGarrisonbutton].func(indexGarrisondisp+i-indexGarrisonbutton)=="")
 					continue;
-				char *toprint=new char[allbuttons[i].text.size()];
+				char *toprint=new char[allbuttons[i].text.size()+1];
 				for(unsigned int j=0; j<allbuttons[i].text.size(); j++)
 				{
 					if(allbuttons[i].text[j]=='_')
@@ -1590,6 +1608,7 @@ void mainTimerProc(int arg)
 					else
 						toprint[j]=allbuttons[i].text[j];
 				}
+				toprint[allbuttons[i].text.size()]=0;
 				renderBitmapString(allbuttons[i].x,allbuttons[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
 				//temp.DrawString(toprint,allbuttons[i].text.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL(allbuttons[i].x), Gdiplus::REAL(allbuttons[i].y)),&black);
 				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
@@ -1602,7 +1621,7 @@ void mainTimerProc(int arg)
 			if(checkdisp(0,alldisp[i].dispwhen))
 			{
 				string var=alldisp[i].func(i);
-				char *toprint=new char[alldisp[i].text.size()+var.size()];
+				char *toprint=new char[alldisp[i].text.size()+var.size()+1];
 				for(unsigned int j=0; j<alldisp[i].text.size(); j++)
 				{
 					if(alldisp[i].text[j]=='_')
@@ -1617,6 +1636,7 @@ void mainTimerProc(int arg)
 					else
 						toprint[j+alldisp[i].text.size()]=var[j];
 				}
+				toprint[allbuttons[i].text.size()+var.size()]=0;
 				//temp.DrawString(toprint,alldisp[i].text.size()+var.size(), &bigfont, Gdiplus::PointF(Gdiplus::REAL(alldisp[i].x),Gdiplus::REAL(alldisp[i].y)),&black);
 				renderBitmapString(alldisp[i].x,alldisp[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
 				delete[] toprint;
@@ -1779,7 +1799,7 @@ void mainTimerProc(int arg)
 	}
 	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, print tiles
 	{
-		for(unsigned int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
+		for(unsigned int j=(int)topleft.x; j<topleft.x+WIDTH/15; j++)
 		{
 			if(j>=MAPSIZE)
 				break;
@@ -1816,7 +1836,7 @@ void mainTimerProc(int arg)
 	}
 	for(int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, to print, only print stuff for units and buildings
 	{
-		for(int j=(int)topleft.x; j<topleft.x+HEIGHT/15; j++)
+		for(int j=(int)topleft.x; j<topleft.x+WIDTH/15; j++)
 		{
 			if(j>=MAPSIZE || i>=MAPSIZE || i<0 || j<0)
 				break;
@@ -1829,7 +1849,7 @@ void mainTimerProc(int arg)
 				{
 					if(allbuildings[player][index].health>0)//don't print dead things
 					{
-						char *text=new char[allbuildablebuildings[allbuildings[player][index].id].name.size()];
+						char *text=new char[allbuildablebuildings[allbuildings[player][index].id].name.size()+1];
 						for(unsigned int k=0; k<allbuildablebuildings[allbuildings[player][index].id].name.size(); k++)
 						{
 							if(allbuildablebuildings[allbuildings[player][index].id].name[k]=='_')
@@ -1837,7 +1857,8 @@ void mainTimerProc(int arg)
 							else
 								text[k]=allbuildablebuildings[allbuildings[player][index].id].name[k];
 						}
-						renderBitmapString((j-topleft.x)*15+2, (i-topleft.y)*15+2,0,GLUT_BITMAP_TIMES_ROMAN_10,text);
+						text[allbuildablebuildings[allbuildings[player][index].id].name.size()]=0;
+						renderBitmapString((j-topleft.x)*15+2, (i-topleft.y)*15+7,0,GLUT_BITMAP_TIMES_ROMAN_10,text);
 						//g.DrawString(text,allbuildablebuildings[allbuildings[player][index].id].name.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL((j-topleft.x)*15+2), Gdiplus::REAL((i-topleft.y)*15+2)),&black);
 						if(allbuildings[player][index].beingbuilt<0)
 						{
@@ -1864,9 +1885,14 @@ void mainTimerProc(int arg)
 				{
 					if(allunits[player][index]->health>0)
 					{
-						char text=allunits[player][index]->veterancylvl;
-						glRasterPos3f((allunits[player][index]->x-topleft.x)*15/WIDTH,(allunits[player][index]->y-topleft.y)*15/HEIGHT,0);
+						char text=allunits[player][index]->veterancylvl+'0';
+						glColor3f(0.0,0.0,0.0);
+						glDisable(GL_TEXTURE_2D);
+						glRasterPos3f(((allunits[player][index]->x-topleft.x)*15.0+2)*2.0/WIDTH,2.0-((allunits[player][index]->y-topleft.y)*15.0+8)*2.0/HEIGHT,0);
+//						glRasterPos3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,(float)z);
+
 						glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,text);
+						glEnable(GL_TEXTURE_2D);
 						//g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
 						if(allunits[player][index]->selected==false)
 							drawEmptyRect((allunits[player][index]->x-topleft.x)*15,(allunits[player][index]->y-topleft.y)*15,allunits[player][index]->width*15,allunits[player][index]->height*15,colors[player]);
@@ -1918,6 +1944,14 @@ void mainTimerProc(int arg)
 	//BitBlt(hdcBuf2,0,0,client.right,client.bottom,hdcBuf,0,0,SRCAND);
 	//BitBlt(hdc,0,0,client.right,client.bottom,hdcBuf,0,0,SRCCOPY);
 
+/*	glColor3f(0.0, 255.0/255.0, 0);
+	glBegin(GL_QUADS);
+		glVertex3f( 0,  1,0);
+		glVertex3f( 2,  1,0);
+		glVertex3f( 2,  2,0);
+		glVertex3f( 0,  2,0);
+	glEnd();*/
+
 	glutSwapBuffers();
 }
 
@@ -1927,9 +1961,9 @@ void renderReportDialog()
 
 	glLoadIdentity();
 		// Set the camera
-	gluLookAt(	0.5f, 0.5f, 1.0f,
-				0.5f, 0.5f,  0.0f,
-				0.0f, 1.0f,  0.0f);
+	gluLookAt(1.0f, 1.0f, 1.0f,
+				  1.0f, 1.0f, 0.0f,
+				  0.0f, 1.0f, 0.0f);
 
 	RGB black(0,0,0);
 	RGB blue(0,0,255);
@@ -1939,19 +1973,19 @@ void renderReportDialog()
 	else
 		currColor=black;
 	drawEmptyRect(3,3,15,5,currColor); //buttons
-	renderBitmapString(5,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Units Lost");
+	renderBitmapString(5,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Units Lost\0");
 	if(currReportTab==1)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(20,3,15,5,currColor);
-	renderBitmapString(22,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Enemies Killed");
+	renderBitmapString(22,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Enemies Killed\0");
 	if(currReportTab==2)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(28,3,15,5,currColor);
-	renderBitmapString(30,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Surviving Enemies Seen");
+	renderBitmapString(30,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Surviving Enemies Seen\0");
 
 	renderBitmapString(25,25,0,GLUT_BITMAP_TIMES_ROMAN_10,(currRep->*reportfuncs[currReportTab])());
 	glutSwapBuffers();
