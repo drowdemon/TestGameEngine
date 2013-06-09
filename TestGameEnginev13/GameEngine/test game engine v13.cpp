@@ -1874,6 +1874,7 @@ void mainTimerProc(int arg)
 						else
 							drawEmptyRect((j-topleft.x)*15,(i-topleft.y)*15,allbuildings[player][index].width*15, allbuildings[player][index].height*15,yellow);
 							//g.DrawRectangle(&(p[5]), (Gdiplus::REAL)(j-topleft.x)*15, (Gdiplus::REAL)(i-topleft.y)*15, (Gdiplus::REAL)allbuildings[player][index].width*15, (Gdiplus::REAL)allbuildings[player][index].height*15);
+						delete[] text;
 					}
 				}
 			}//end print buildings

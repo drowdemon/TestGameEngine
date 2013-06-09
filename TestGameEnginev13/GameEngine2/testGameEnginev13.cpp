@@ -1635,7 +1635,7 @@ void mainTimerProc(int arg)
 					else
 						toprint[j+alldisp[i].text.size()]=var[j];
 				}
-				toprint[allbuttons[i].text.size()+var.size()]=0;
+				toprint[alldisp[i].text.size()+var.size()]=0;
 				//temp.DrawString(toprint,alldisp[i].text.size()+var.size(), &bigfont, Gdiplus::PointF(Gdiplus::REAL(alldisp[i].x),Gdiplus::REAL(alldisp[i].y)),&black);
 				renderBitmapString(alldisp[i].x,alldisp[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
 				delete[] toprint;
