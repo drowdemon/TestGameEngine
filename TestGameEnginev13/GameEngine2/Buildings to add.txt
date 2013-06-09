@@ -1,0 +1,2 @@
+Bushes //Listed as building: plant, and becomes TS_BUSHES. Idea: You plant bushes around your roads so that enemies have only one good way to get to you - your fortified road
+Bridge

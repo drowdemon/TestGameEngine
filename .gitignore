@@ -8,3 +8,7 @@
 .project
 .gitignore~
 Debug/
+/TestGameEnginev13/GameEngine2/build/
+/TestGameEnginev13/GameEngine2/dist/
+/TestGameEnginev13/GameEngine2/nbproject/
+/TestGameEnginev13/GameEngine2/.dep.inc
