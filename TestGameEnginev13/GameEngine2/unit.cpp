@@ -74,6 +74,7 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
 	garrisoned=0;
 	gatheringx=-1;
 	gatheringy=-1;
+	gatheringwhat=-1;
 	nearesthold=-1;
 	for(int i=0; i<4; i++)
 		holding[i]=0;
@@ -154,6 +155,7 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	garrisoned=0;
 	gatheringx=-1;
 	gatheringy=-1;
+	gatheringwhat=-1;
 	nearesthold=-1;
 	for(int i=0; i<4; i++)
 		holding[i]=hlding[i];
@@ -209,6 +211,7 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
 	garrisoned=0;
 	gatheringx=-1;
 	gatheringy=-1;
+	gatheringwhat=-1;
 	nearesthold=-1;
 	for(int i=0; i<4; i++)
 		holding[i]=0;
@@ -280,7 +283,7 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 		{
 			if(map[(int)j][(int)i].uniton==true)
 				continue;
-			if(map[(int)j][(int)i].tilestyle==canmoveto[k] || (map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]))
+			if(map[(int)j][(int)i].tilestyle==canmoveto[k] || (map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].buildingplayer==players[player]))
 			{
 				movetox=i;
 				movetoy=j;
@@ -442,11 +445,11 @@ bool unit::chkmvp1(tile &checkwhat, bool checkelev)
 			break;//stop
 		}
 	}
-	if(checkwhat.tilestyle==TS_GATE && checkwhat.player==players[player])
+	if(checkwhat.tilestyle==TS_GATE && checkwhat.buildingplayer==players[player])
 		good=true;
-	if(checkwhat.player==player && allunits[checkwhat.player][checkwhat.index]->whatisit==3 && checkwhat.uniton==true)
+	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true)
 		return true;
-	if(good==true && checkwhat.uniton==true && (checkwhat.index!=index || checkwhat.player!=player))
+	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
 		good=false;	
 	return good;
 }
@@ -488,8 +491,8 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 				for(float h=allbuildings[player][bindex].x; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width; h+=.25)
 				{
 					map[(int)k][(int)h].tilestyle=ts;
-					map[(int)k][(int)h].player=player;
-					map[(int)k][(int)h].index=bindex;
+					map[(int)k][(int)h].buildingplayer=player;
+					map[(int)k][(int)h].buildingindex=bindex;
 					map[(int)k][(int)h].whichplayer.set(false, (unsigned char)player);
 					map[(int)k][(int)h].whichplayer.set(true, players[player]);
 				}
@@ -522,18 +525,18 @@ pointex unit::getcandidate(int x, int y, double dist)
 	tile temp(map[y][x]);
 	if(temp.uniton==true)//if the space in question has a unit
 	{
-		if(players[temp.player]!=players[player]) //if this object is not allied to the player whose unit this is
+		if(players[temp.unitplayer]!=players[player]) //if this object is not allied to the player whose unit this is
 		{
-			if(dist<=los-allunits[temp.player][temp.index]->camouflage-tilecameo[temp.tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-				return pointex(x,y, dist, true,temp.player,temp.index); //record its position and that its a unit(true)
+			if(dist<=los-allunits[temp.unitplayer][temp.unitindex]->camouflage-tilecameo[temp.tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+				return pointex(x,y, dist, true,temp.unitplayer,temp.unitindex); //record its position and that its a unit(true)
 		}
 	}
 	else if(temp.tilestyle==TS_BUILDING || temp.tilestyle==TS_WATERBUILDING)//if the space in question has a building
 	{
-		if(players[temp.player]!=players[player]) //if this object is not allied to the player whose building this is
+		if(players[temp.buildingplayer]!=players[player]) //if this object is not allied to the player whose building this is
 		{
 			if(dist<=los) //if we can actually see the enemy building, after camouflage from it and the map
-				return pointex(x,y, dist, false,temp.player,temp.index); //record its position and that its a building(false)
+				return pointex(x,y, dist, false,temp.buildingplayer,temp.buildingindex); //record its position and that its a building(false)
 		}
 	}
 	return pointex(-1, -1);
@@ -600,17 +603,20 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 			if(sum<maxhold)
 			{
 				map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]--;
-				if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]==0)
+				if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]==0) //no more resources on that tile
 				{
-					if(gatheringwhat==0)
+					int ts=map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle;
+					if(gatheringwhat==0 && ts==TS_BERRIES)
 						map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=TS_BUSHES;
 					else if(gatheringwhat==1)
-						map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=TS_TREE;
-					gatheringx=-1;
-					gatheringy=-1;
-					return;
+						map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=TS_GRASS;
+					//now, search 7 by 7 square and pick nearest
+					searchresources();
 				}
 				holding[gatheringwhat]++;
+				if(selected==true) //this unit is selected, so how much stuff it is carrying needs to be displayed
+					redraw=true;
+				sum++;
 			}
 			if(sum>=maxhold)//go to nearest storage building (basically else)
 			{
@@ -634,14 +640,14 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 						{
 							if(x+j>=0 && x+j<MAPSIZE && (unsigned int)(y-(i/2))>=0 && (unsigned int)(y-(i/2))<MAPSIZE)
 							{
-								if(map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].tilestyle==TS_BUILDING && map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].player==player && allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].player][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].index].beingbuilt<=0) //searches above the unit
+								if(map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].tilestyle==TS_BUILDING && map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].buildingplayer==player && allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].buildingplayer][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].buildingindex].beingbuilt<=0) //searches above the unit
 								{
 									int sum=0;
 									for(int k=0; k<4; k++)
-										sum+=allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].player][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].index].holding[k];
-									if(sum<allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)x+j].player][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].index].maxhold)
+										sum+=allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)(x+j)].buildingplayer][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].buildingindex].holding[k];
+									if(sum<allbuildings[map[(unsigned int)(y-(i/2))][(unsigned int)x+j].buildingplayer][map[(unsigned int)(y-(i/2))][(unsigned int)x+j].buildingindex].maxhold)
 									{
-										nearesthold=map[(unsigned int)(y-(i/2))][(unsigned int)x+j].index;
+										nearesthold=map[(unsigned int)(y-(i/2))][(unsigned int)x+j].buildingindex;
 										good=true;
 										break;
 									}
@@ -649,14 +655,14 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 							}
 							if(x+j>=0 && x+j<MAPSIZE && (unsigned int)(y+(i/2))>=0 && (unsigned int)(y+(i/2))<MAPSIZE)
 							{
-								if(map[(unsigned int)(y+(i/2))][(unsigned int)x+j].tilestyle==TS_BUILDING && map[(unsigned int)(y+(i/2))][(unsigned int)x+j].player==player && allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].player][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].index].beingbuilt<=0) //below the unit
+								if(map[(unsigned int)(y+(i/2))][(unsigned int)x+j].tilestyle==TS_BUILDING && map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingplayer==player && allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingplayer][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingindex].beingbuilt<=0) //below the unit
 								{
 									int sum=0;
 									for(int k=0; k<4; k++)
-										sum+=allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].player][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].index].holding[k];
-									if(sum<allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].player][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].index].maxhold)
+										sum+=allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingplayer][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingindex].holding[k];
+									if(sum<allbuildings[map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingplayer][map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingindex].maxhold)
 									{
-										nearesthold=map[(unsigned int)(y+(i/2))][(unsigned int)x+j].index;
+										nearesthold=map[(unsigned int)(y+(i/2))][(unsigned int)x+j].buildingindex;
 										good=true;
 										break;
 									}
@@ -664,14 +670,14 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 							}
 							if(y+j>=0 && y+j<MAPSIZE && (unsigned int)(x-(i/2))>=0 && (unsigned int)(x-(i/2))<MAPSIZE)
 							{
-								if(map[(unsigned int)y+j][(unsigned int)(x-(i/2))].tilestyle==TS_BUILDING && map[(unsigned int)y+j][(unsigned int)(x-(i/2))].player==player && allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].index].beingbuilt<=0) //left of the unit
+								if(map[(unsigned int)y+j][(unsigned int)(x-(i/2))].tilestyle==TS_BUILDING && map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingplayer==player && allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingindex].beingbuilt<=0) //left of the unit
 								{
 									int sum=0;
 									for(int k=0; k<4; k++)
-										sum+=allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].index].holding[k];
-									if(sum<allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].index].maxhold)
+										sum+=allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingindex].holding[k];
+									if(sum<allbuildings[map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingindex].maxhold)
 									{
-										nearesthold=map[(unsigned int)y+j][(unsigned int)(x-(i/2))].index;
+										nearesthold=map[(unsigned int)y+j][(unsigned int)(x-(i/2))].buildingindex;
 										good=true;
 										break;
 									}
@@ -679,14 +685,14 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 							}
 							if(y+j>=0 && y+j<MAPSIZE && (unsigned int)(x+(i/2))>=0 && (unsigned int)(x+(i/2))<MAPSIZE)
 							{
-								if(map[(unsigned int)y+j][(unsigned int)(x+(i/2))].tilestyle==TS_BUILDING && map[(unsigned int)y+j][(unsigned int)(x+(i/2))].player==player && allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].index].beingbuilt<=0) //right of the unit
+								if(map[(unsigned int)y+j][(unsigned int)(x+(i/2))].tilestyle==TS_BUILDING && map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingplayer==player && allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingindex].beingbuilt<=0) //right of the unit
 								{
 									int sum=0;
 									for(int k=0; k<4; k++)
-										sum+=allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].index].holding[k];
-									if(sum<allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].player][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].index].maxhold)
+										sum+=allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingindex].holding[k];
+									if(sum<allbuildings[map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingplayer][map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingindex].maxhold)
 									{
-										nearesthold=map[(unsigned int)y+j][(unsigned int)(x+(i/2))].index;
+										nearesthold=map[(unsigned int)y+j][(unsigned int)(x+(i/2))].buildingindex;
 										good=true;
 										break;
 									}
@@ -711,50 +717,52 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 			}
 		}
 	}
+	else
+		searchresources();
 }
 void unit::movement(bool siegesent) //the first time I put a class function outside of the class definition, this happened because it needed the definition of both unit and siege to function
 {
 	if(checknomove(siegesent)==false) //already done
 		return;
-	if(whatisit!=3 && map[(int)movetoy][(int)movetox].player==player && allunits[player][map[(int)movetoy][(int)movetox].index]->whatisit==3 && allunits[player][map[(int)movetoy][(int)movetox].index]->unitsinside.size()<allunits[player][map[(int)movetoy][(int)movetox].index]->maxgarrison)//if garrisonning ship, do so
+	if(whatisit!=3 && map[(int)movetoy][(int)movetox].unitplayer==player && allunits[player][map[(int)movetoy][(int)movetox].unitindex]->whatisit==3 && allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.size()<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->maxgarrison)//if garrisonning ship, do so
 	{
 		bool good=false;
-		for(int i=0; i<allunits[player][map[(int)movetoy][(int)movetox].index]->width; i++)
+		for(int i=0; i<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width; i++)
 		{
-			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].index]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].index]->y-y,2))<1.414f)
+			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y-y,2))<1.414f)
 			{
 				x=movetox;
 				y=movetoy;
-				allunits[player][map[(int)movetoy][(int)movetox].index]->unitsinside.push_back(index);
+				allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
 				good=true;
 				break;
 			}
-			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].index]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].index]->y+allunits[player][map[(int)movetoy][(int)movetox].index]->height-y,2))<1.414f)
+			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height-y,2))<1.414f)
 			{
 				x=movetox;
 				y=movetoy;
-				allunits[player][map[(int)movetoy][(int)movetox].index]->unitsinside.push_back(index);
+				allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
 				good=true;
 				break;
 			}
 		}
 		if(good==false)
 		{
-			for(int j=0; j<allunits[player][map[(int)movetoy][(int)movetox].index]->height; j++)
+			for(int j=0; j<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height; j++)
 			{
-				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].index]->x-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].index]->y+j-y,2))<1.414f)
+				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
 				{
 					x=movetox;
 					y=movetoy;
-					allunits[player][map[(int)movetoy][(int)movetox].index]->unitsinside.push_back(index);
+					allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
 					good=true;
 					break;
 				}
-				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].index]->x+allunits[player][map[(int)movetoy][(int)movetox].index]->width-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].index]->y+j-y,2))<1.414f)
+				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
 				{
 					x=movetox;
 					y=movetoy;
-					allunits[player][map[(int)movetoy][(int)movetox].index]->unitsinside.push_back(index);
+					allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
 					good=true;
 					break;
 				}
@@ -821,25 +829,25 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				if(ret==1)//all clear
 				{
 					//revealmapmvmt(newx1, newy1, actspeed);
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //leave old tile
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=false;
-							map[(int)k][(int)h].index=0;
-							map[(int)k][(int)h].player=0;
+							map[(int)k][(int)h].unitindex=0;
+							map[(int)k][(int)h].unitplayer=0;
 						}
 					}
 					x=newx1;
 					y=newy1;
 					revealmapcreation();
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //step on new tile
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=true;
-							map[(int)k][(int)h].index=index;
-							map[(int)k][(int)h].player=player;
+							map[(int)k][(int)h].unitindex=index;
+							map[(int)k][(int)h].unitplayer=player;
 						}
 					}
 					boundingbox.top=y;
@@ -928,25 +936,25 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				if(ret==1)//all clear
 				{
 					//revealmapmvmt(newx2, newy2, actspeed);
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //leave old spot
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=false;
-							map[(int)k][(int)h].index=0;
-							map[(int)k][(int)h].player=0;
+							map[(int)k][(int)h].unitindex=0;
+							map[(int)k][(int)h].unitplayer=0;
 						}
 					}
 					x=newx2;
 					y=newy2;
 					revealmapcreation();
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //walk onto new spot
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=true;
-							map[(int)k][(int)h].index=index;
-							map[(int)k][(int)h].player=player;
+							map[(int)k][(int)h].unitindex=index;
+							map[(int)k][(int)h].unitplayer=player;
 						}
 					}
 					boundingbox.top=y;
@@ -1016,24 +1024,24 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				if(ret==1)
 				{
 					//revealmapmvmt(x, y+speed, actspeed);
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //leave old tile
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=false;
-							map[(int)k][(int)h].index=0;
-							map[(int)k][(int)h].player=0;
+							map[(int)k][(int)h].unitindex=0;
+							map[(int)k][(int)h].unitplayer=0;
 						}
 					}
 					y+=actspeed;
 					revealmapcreation();
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //walk onto new tile
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=true;
-							map[(int)k][(int)h].index=index;
-							map[(int)k][(int)h].player=player;
+							map[(int)k][(int)h].unitindex=index;
+							map[(int)k][(int)h].unitplayer=player;
 						}
 					}
 					boundingbox.top=y;
@@ -1100,13 +1108,13 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				if(/*(int)(y-speed)==(int)y || */ret==1)
 				{
 					//revealmapmvmt(x, y-speed, actspeed);
-					for(float k=y; k<y+height; k+=.25)
+					for(float k=y; k<y+height; k+=.25) //leave old tile
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=false;
-							map[(int)k][(int)h].index=0;
-							map[(int)k][(int)h].player=0;
+							map[(int)k][(int)h].unitindex=0;
+							map[(int)k][(int)h].unitplayer=0;
 						}
 					}
 					y-=actspeed;
@@ -1116,8 +1124,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 						for(float h=x; h<x+width; h+=.25)
 						{
 							map[(int)k][(int)h].uniton=true;
-							map[(int)k][(int)h].index=index;
-							map[(int)k][(int)h].player=player;
+							map[(int)k][(int)h].unitindex=index;
+							map[(int)k][(int)h].unitplayer=player;
 						}
 					}
 					boundingbox.top=y;
@@ -1190,8 +1198,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				for(float h=x; h<x+width; h+=.25)
 				{
 					map[(int)k][(int)h].uniton=false;
-					map[(int)k][(int)h].index=0;
-					map[(int)k][(int)h].player=0;
+					map[(int)k][(int)h].unitindex=0;
+					map[(int)k][(int)h].unitplayer=0;
 				}
 			}
 			x=movetox;
@@ -1202,8 +1210,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				for(float h=x; h<x+width; h+=.25)
 				{
 					map[(int)k][(int)h].uniton=true;
-					map[(int)k][(int)h].index=index;
-					map[(int)k][(int)h].player=player;
+					map[(int)k][(int)h].unitindex=index;
+					map[(int)k][(int)h].unitplayer=player;
 				}
 			}
 			boundingbox.top=y;
@@ -1287,6 +1295,7 @@ bool unit::checknomove(bool siegesent)
 	}
 	if(movetox==x && movetoy==y)//if I have to stay in place
 	{
+		bool didsomething=false;
 		if(allobstacles[player][index].size()!=0) // if I didn't finish not actually staying in place
 		{
 			movetox=x+allobstacles[player][index][0].x;//move towards the next spot specified by obstacle avoidance
@@ -1322,6 +1331,7 @@ bool unit::checknomove(bool siegesent)
 				attackingunitplayer=-1;
 				attackunitstance();
 			}
+			didsomething=true;
 		}
 		else if(whatisit!=2 && siegeindex==-1 && prevsiegeindex!=-1) //if a unit used to man a siege unit and is in sight of that siege unit and isnt doing anything else, man it
 		{
@@ -1336,6 +1346,7 @@ bool unit::checknomove(bool siegesent)
 				else
 					prevsiegeindex=-1;
 			}
+			didsomething=true;
 		}
 		else if(garrisoned>0) //garrisoning/building
 		{
@@ -1376,9 +1387,9 @@ bool unit::checknomove(bool siegesent)
 			{
 				if(((x>=allbuildings[player][garrisoned-1].x-1 && x<allbuildings[player][garrisoned-1].x) || (x>allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width && x<=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+1)) && ((y>=allbuildings[player][garrisoned-1].y+1 && y<allbuildings[player][garrisoned-1].y) || (y>allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height && y<=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height-1)))
 				{
-					map[(int)y][(int)x].uniton=false;
-					map[(int)y][(int)x].player=0;
-					map[(int)y][(int)x].index=0;
+					map[(int)y][(int)x].uniton=false; //garrisoning: remove unit
+					map[(int)y][(int)x].unitplayer=0;
+					map[(int)y][(int)x].unitindex=0;
 					x=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width/2;//make the unit not appear in this case.
 					y=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height/2;
 					movetox=x;
@@ -1388,15 +1399,19 @@ bool unit::checknomove(bool siegesent)
 					selected=false;
 				}
 			}
+			didsomething=true;
 		}
-		else if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && sqrt(pow(gatheringx-x,2)+pow(gatheringy-y,2))<=1.75)
+		else if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && sqrt(pow(gatheringx-x,2)+pow(gatheringy-y,2))<=2.1)
 		{
 			if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_BERRIES)
 				gather(0);
 			else if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_TREE)
 				gather(1);
+			else if(gatheringwhat!=map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle)
+				searchresources();
+			didsomething=true;
 		}
-		else if(gatheringx!=-1 && gatheringy!=-1 && nearesthold!=-1 && whatisit==1)
+		if(gatheringx!=-1 && gatheringy!=-1 && nearesthold!=-1 && whatisit==1)
 		{
 			int sumbuilding=0;
 			int sumunit=0;
@@ -1407,7 +1422,7 @@ bool unit::checknomove(bool siegesent)
 			}
 			if(sumbuilding+sumunit<=allbuildings[player][nearesthold].maxhold)
 			{
-				if(sqrt(pow(x-allbuildings[player][nearesthold].x+(allbuildings[player][nearesthold].width/2),2)+pow(y-allbuildings[player][nearesthold].y+(allbuildings[player][nearesthold].height/2), 2))<=25)
+				if(pow(x-allbuildings[player][nearesthold].x+(allbuildings[player][nearesthold].width/2),2)+pow(y-allbuildings[player][nearesthold].y+(allbuildings[player][nearesthold].height/2), 2)<=9) //If close enough to deposit into building, do it. Note its d^2 on the right.
 				{
 					for(int i=0; i<4; i++)
 					{
@@ -1415,12 +1430,15 @@ bool unit::checknomove(bool siegesent)
 						allbuildings[player][nearesthold].holding[i]+=holding[i];
 						holding[i]=0;
 					}
+					if(selected==true || allbuildings[player][nearesthold].selected==true)
+						redraw=true;
 					movetox=gatheringx;
 					movetoy=gatheringy;
 				}
 			}
+			didsomething=true;
 		}
-		else
+		if(didsomething==false)
 		{
 			if(dstancecoox==-1 || dstancecooy==-1)
 			{
@@ -1472,9 +1490,9 @@ bool unit::checknomove(bool siegesent)
 		{
 			if(x>=allbuildings[player][garrisoned-1].x-1 && x<allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+1 && y>=allbuildings[player][garrisoned-1].y-1 && y<=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height+1)
 			{
-				map[(int)y][(int)x].uniton=false;
-				map[(int)y][(int)x].player=0;
-				map[(int)y][(int)x].index=0;
+				map[(int)y][(int)x].uniton=false;//garrisoning: remove unit
+				map[(int)y][(int)x].unitplayer=0;
+				map[(int)y][(int)x].unitindex=0;
 				x=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width/2;//make the unit not appear in this case.
 				y=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height/2;
 				movetox=x;
@@ -1514,22 +1532,22 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 	bool good6=true;
 	bool good7=true;
 	bool good8=true;
-	if(map[(int)movetoy][(int)movetox].player!=-1 && map[(int)movetoy][(int)movetox].index!=-1)
+	if(map[(int)movetoy][(int)movetox].unitplayer!=-1 && map[(int)movetoy][(int)movetox].unitindex!=-1)
 	{
-		good6=chkmvp1(map[(int)movetoy][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].player][map[(int)movetoy][(int)movetox].index]->width-.001f)], false);
-		good7=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].player][map[(int)movetoy][(int)movetox].index]->height-.001f)][(int)movetox], false);
-		good8=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].player][map[(int)movetoy][(int)movetox].index]->height-.001f)][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].player][map[(int)movetoy][(int)movetox].index]->width-.001f)], false);
+		good6=chkmvp1(map[(int)movetoy][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
+		good7=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)movetox], false);
+		good8=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
 	}
 	if(good5==false || good6==false || good7==false || good8==false)
 	{
 		if(map[(int)movetoy][(int)movetox].tilestyle==TS_BUILDING)
 		{
-			if(map[(int)movetoy][(int)movetox].player==player && map[(int)movetoy][(int)movetox].index==garrisoned-1)
+			if(map[(int)movetoy][(int)movetox].buildingplayer==player && map[(int)movetoy][(int)movetox].buildingindex==garrisoned-1)
 			{
 				;//Just a placeholder, intended to be blank
 			}
 		}
-		else if(allunits[map[(int)movetoy][(int)movetox].player][map[(int)movetoy][(int)movetox].index]->whatisit==3)
+		else if(allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->whatisit==3)
 			;//Just a placeholder, intended to be blank
 		else
 		{
@@ -1541,11 +1559,11 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 	bool good2=true;
 	bool good3=true;
 	bool good4=true;
-	if(map[(int)checkwhat.y][(int)checkwhat.x].player!=-1 && map[(int)checkwhat.y][(int)checkwhat.x].index!=-1)
+	if(map[(int)checkwhat.y][(int)checkwhat.x].unitplayer!=-1 && map[(int)checkwhat.y][(int)checkwhat.x].unitindex!=-1)
 	{
-		good2=chkmvp1(map[(int)checkwhat.y][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].player][map[(int)checkwhat.y][(int)checkwhat.x].index]->width-.001f)]);
-		good3=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].player][map[(int)checkwhat.y][(int)checkwhat.x].index]->height-.001f)][(int)(checkwhat.x)]);
-		good4=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].player][map[(int)checkwhat.y][(int)checkwhat.x].index]->height-.001f)][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].player][map[(int)checkwhat.y][(int)checkwhat.x].index]->width-.001f)]);
+		good2=chkmvp1(map[(int)checkwhat.y][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
+		good3=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x)]);
+		good4=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
 	}
 	if(good1==false || good2==false || good3==false || good4==false)
 	{
@@ -1598,6 +1616,7 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 
 		float dirx=movetox-checkwhat.x;
 		float diry=movetoy-checkwhat.y;
+		vector<point> temp=allobstacles[player][index];
 		allobstacles[player][index]=astarsearch(problem(point(checkwhat.x,checkwhat.y),dirx>0,diry>0),actspeed,this);
 		float difx=0;
 		float dify=0;
@@ -1612,6 +1631,8 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 			float toaddy=movetoy-(y+dify);
 			if(((toaddx+.0001)/abs(toaddx+.0001)==(toaddx/abs(toaddx)) && (toaddx-.0001)/abs(toaddx-.0001)==(toaddx/abs(toaddx))) || ((toaddy+.0001)/abs(toaddy+.0001)==(toaddy/abs(toaddy)) && (toaddy-.0001)/abs(toaddy-.0001)==(toaddy/abs(toaddy)))) //toadd is not approximately 0
 				allobstacles[player][index].push_back(point(toaddx,toaddy));
+			for(unsigned int i=0; i<temp.size(); i++)
+				allobstacles[player][index].push_back(temp[i]);
 		}
 		else //failed
 			firstobstacleattempt=false;
@@ -1824,16 +1845,16 @@ bool unit::attackunitstance() //called when the unit is not doing anything, to c
 	}
 	if(lowestindexunit!=-1)
 	{//attack unit
-		attackingunitindex=map[(unsigned int)allseenunits[lowestindexunit].y][(unsigned int)allseenunits[lowestindexunit].x].index;
-		attackingunitplayer=map[(unsigned int)allseenunits[lowestindexunit].y][(unsigned int)allseenunits[lowestindexunit].x].player;
+		attackingunitindex=map[(unsigned int)allseenunits[lowestindexunit].y][(unsigned int)allseenunits[lowestindexunit].x].unitindex;
+		attackingunitplayer=map[(unsigned int)allseenunits[lowestindexunit].y][(unsigned int)allseenunits[lowestindexunit].x].unitplayer;
 		attackingwhat=true;
 		attackmovement();
 		return true;
 	}
 	else if(lowestindexbuilding!=-1 && allunits[player][index]->buildingattack!=0)
 	{//attack building
-		attackingunitindex=map[(unsigned int)allseenunits[lowestindexbuilding].y][(unsigned int)allseenunits[lowestindexbuilding].x].index;
-		attackingunitplayer=map[(unsigned int)allseenunits[lowestindexbuilding].y][(unsigned int)allseenunits[lowestindexbuilding].x].player;
+		attackingunitindex=map[(unsigned int)allseenunits[lowestindexbuilding].y][(unsigned int)allseenunits[lowestindexbuilding].x].buildingindex;
+		attackingunitplayer=map[(unsigned int)allseenunits[lowestindexbuilding].y][(unsigned int)allseenunits[lowestindexbuilding].x].buildingplayer;
 		attackingwhat=false;
 		attackmovement();
 		return true;
@@ -2020,14 +2041,16 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 			movetoy=dstancecooy;
 			if(whatisit!=3)//check if that is valid (if its a land unit)
 			{
-				if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GRASS && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_ROAD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GOLD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_STONE && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATERBUILDING && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BERRIES && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BUSHES && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]) && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]))
+				//if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GRASS && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_ROAD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GOLD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_STONE && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATERBUILDING && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BERRIES && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BUSHES && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]) && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]))
+				if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GRASS && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_ROAD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GOLD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_STONE && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATERBUILDING && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BERRIES && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BUSHES && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].buildingplayer==players[player]))
 				{
 					goingtobstacle();
 				}
 			}
 			else
 			{
-				if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATER && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_FISH && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]) && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]))
+				//if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATER && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_FISH && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]) && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].player==players[player]))
+				if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATER && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_FISH && !(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].buildingplayer==players[player]))
 				{
 					goingtobstacle();
 				}
@@ -2221,7 +2244,9 @@ void unit::fight()
 				if(rndnum<chance)
 				{
 					allunits[attackingunitplayer][attackingunitindex]->health-=dmg;
-					if(allunits[attackingunitplayer][attackingunitindex]->health<=0)
+					if(attackingunitplayer==0 && allunits[0][attackingunitindex]->selected==true) //its selected - update its health in disp
+						redraw=true;
+					if(allunits[attackingunitplayer][attackingunitindex]->health<=0) //killed it
 					{
 						if(regimentid!=-1 && allregiments[player][regimentid].recording==true)
 							allregiments[player][regimentid].rep.updatedkilledunits(attackingunitplayer, attackingunitindex);
@@ -2242,9 +2267,21 @@ void unit::fight()
 							for(float h=allunits[attackingunitplayer][attackingunitindex]->x; h<allunits[attackingunitplayer][attackingunitindex]->x+allunits[attackingunitplayer][attackingunitindex]->width; h+=.25)
 							{
 								map[(int)k][(int)h].uniton=false;
-								map[(int)k][(int)h].index=0;
-								map[(int)k][(int)h].player=0;
+								map[(int)k][(int)h].unitindex=0;
+								map[(int)k][(int)h].unitplayer=0;
 							}
+						}
+						if(allunits[attackingunitplayer][attackingunitindex]->selected==true) //deselect is required
+						{
+							for(unsigned int i=0; i<selectedunits[attackingunitplayer].size(); i++)
+							{
+								if(selectedunits[attackingunitplayer][i]==attackingunitindex)
+								{
+									selectedunits[attackingunitplayer].erase(selectedunits[attackingunitplayer].begin()+i);
+									break;
+								}
+							}
+							allunits[attackingunitplayer][attackingunitindex]->selected=false;
 						}
 						attackingunitplayer=-1;
 						attackingunitindex=-1;
@@ -2304,6 +2341,8 @@ void unit::fight()
 				if(dmg<=0) //if its <=25, will go here, dmg is 0
 					return;
 				allbuildings[attackingunitplayer][attackingunitindex].health-=(short)dmg;
+				if(allbuildings[attackingunitplayer][attackingunitindex].selected==true)
+					redraw=true;
 				if(allbuildings[attackingunitplayer][attackingunitindex].health<=0)
 				{
 					overwritebuildings[attackingunitplayer].push_back(attackingunitindex);//it died, say its rewritable
@@ -2352,10 +2391,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		{
 			if(map[(unsigned int)y][(unsigned int)x+i].uniton==true)//if the space in question has a unit
 			{
-				if(map[(unsigned int)y][(unsigned int)x+i].player==player) //if this object is the players
+				if(map[(unsigned int)y][(unsigned int)x+i].unitplayer==player) //if this object is the players
 				{
 					if(i<=los-tilecameo[map[(unsigned int)y][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x+i].index, i, allunits[player][map[(unsigned int)y][(unsigned int)x+i].index]->holding[0])); //record its position and that its a unit(true)
+						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x+i].unitindex, i, allunits[player][map[(unsigned int)y][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
 		}
@@ -2363,10 +2402,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		{
 			if(map[(unsigned int)y+i][(unsigned int)x].uniton==true)//if the space in question has a unit
 			{
-				if(map[(unsigned int)y+i][(unsigned int)x].player==player) //if this object is the players
+				if(map[(unsigned int)y+i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
 					if(i<=los-tilecameo[map[(unsigned int)y+i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-						allseenunits.push_back(pointex2(map[(unsigned int)y+i][(unsigned int)x].index, i, allunits[player][map[(unsigned int)y+i][(unsigned int)x].index]->holding[0])); //record its position and that its a unit(true)
+						allseenunits.push_back(pointex2(map[(unsigned int)y+i][(unsigned int)x].unitindex, i, allunits[player][map[(unsigned int)y+i][(unsigned int)x].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
 		}
@@ -2374,10 +2413,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		{
 			if(map[(unsigned int)y][(unsigned int)x-i].uniton==true)//if the space in question has a unit
 			{
-				if(map[(unsigned int)y][(unsigned int)x-i].player==player) //if this object is the players
+				if(map[(unsigned int)y][(unsigned int)x-i].unitplayer==player) //if this object is the players
 				{
 					if(i<=los-tilecameo[map[(unsigned int)y][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x-i].index, i, allunits[player][map[(unsigned int)y][(unsigned int)x-i].index]->holding[0])); //record its position and that its a unit(true)
+						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x-i].unitindex, i, allunits[player][map[(unsigned int)y][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
 		}
@@ -2385,10 +2424,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		{
 			if(map[(unsigned int)y-i][(unsigned int)x].uniton==true)//if the space in question has a unit
 			{
-				if(map[(unsigned int)y-i][(unsigned int)x].player==player) //if this object is the players
+				if(map[(unsigned int)y-i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
 					if(i<=los-tilecameo[map[(unsigned int)y-i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-						allseenunits.push_back(pointex2(map[(unsigned int)y-1][(unsigned int)x].index, i, allunits[player][map[(unsigned int)y-i][(unsigned int)x].index]->holding[0])); //record its position and that its a unit(true)
+						allseenunits.push_back(pointex2(map[(unsigned int)y-1][(unsigned int)x].unitindex, i, allunits[player][map[(unsigned int)y-i][(unsigned int)x].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
 		}
@@ -2403,10 +2442,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					{
 						if(map[(unsigned int)y+j][(unsigned int)x+i].uniton==true)//if the space in question has a unit
 						{
-							if(map[(unsigned int)y+j][(unsigned int)x+i].player==player) //if this object is the players
+							if(map[(unsigned int)y+j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
 								if(dist<=los-tilecameo[map[(unsigned int)y+j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x+i].index, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x+i].index]->holding[0])); //record its position and that its a unit(true)
+									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x+i].unitindex, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
 					}
@@ -2414,10 +2453,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					{
 						if(map[(unsigned int)y+j][(unsigned int)x-i].uniton==true)//if the space in question has a unit
 						{
-							if(map[(unsigned int)y+j][(unsigned int)x-i].player==player) //if this object is the players
+							if(map[(unsigned int)y+j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{
 								if(dist<=los-tilecameo[map[(unsigned int)y+j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x-i].index, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x-i].index]->holding[0])); //record its position and that its a unit(true)
+									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x-i].unitindex, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
 					}
@@ -2428,10 +2467,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					{
 						if(map[(unsigned int)y-j][(unsigned int)x+i].uniton==true)//if the space in question has a unit
 						{
-							if(map[(unsigned int)y-j][(unsigned int)x+i].player==player) //if this object is the players
+							if(map[(unsigned int)y-j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
 								if(dist<=los-tilecameo[map[(unsigned int)y-j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x+i].index, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x+i].index]->holding[0])); //record its position and that its a unit(true)
+									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x+i].unitindex, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
 					}
@@ -2439,10 +2478,10 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					{
 						if(map[(unsigned int)y-j][(unsigned int)x-i].uniton==true)//if the space in question has a unit
 						{
-							if(map[(unsigned int)y-j][(unsigned int)x-i].player==player) //if this object is the players
+							if(map[(unsigned int)y-j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{
 								if(dist<=los-tilecameo[map[(unsigned int)y-j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
-									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x-i].index, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x-i].index]->holding[0])); //record its position and that its a unit(true)
+									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x-i].unitindex, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
 					}
@@ -2590,4 +2629,25 @@ point unit::checksurroundingarea(short cwidth, short cheight)
 			return point(-1.0f,-1.0f); //failed
 		checkwidth++;
 	}
+}
+void unit::searchresources()
+{
+	double mindist=99999999;
+	int minx=-1;
+	int miny=-1;
+	for(int i=-3; i<=3; i++)
+	{
+		for(int j=-3; j<=3; j++)
+		{
+			double dist=99999999;
+			if(map[(int)(gatheringy+i)][(int)(gatheringx+j)].tilestyle==gatheringwhat && (dist=sqrt(double(j*j+i*i)))<mindist)
+			{
+				mindist=dist;
+				minx=j;
+				miny=i;
+			}
+		}
+	}
+	gatheringx+=minx;
+	gatheringy+=miny;
 }

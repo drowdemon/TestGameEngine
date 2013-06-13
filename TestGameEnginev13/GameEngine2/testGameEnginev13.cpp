@@ -143,7 +143,7 @@ vector<point> astarsearch(problem p, float speed, unit *u)
 void hourpassed(int arg)
 {
 	hours+=hourspersecond;//goes off every 1 sec.
-	if((int)hours%24==0 && abs((long)(hours-int(hours+0.00001)))<=0.0001) //one day passed
+	if((int)hours%24==0 && abs((long double)(hours-int(hours+0.00001)))<=0.0001) //one day passed
 	{
 		for(unsigned int i=0; i<allunits.size(); i++)//loops through all the players
 		{
@@ -219,9 +219,9 @@ void hourpassed(int arg)
 							{
 								for(float h=allunits[i][j]->x; h<allunits[i][j]->x+allunits[i][j]->width; h+=.25)
 								{
-									map[(int)k][(int)h].uniton=false;
-									map[(int)k][(int)h].index=0;
-									map[(int)k][(int)h].player=0;
+									map[(int)k][(int)h].uniton=false; //marks it dead
+									map[(int)k][(int)h].unitindex=0;
+									map[(int)k][(int)h].unitplayer=0;
 								}
 							}
 						}
@@ -258,7 +258,7 @@ void hourpassed(int arg)
 }*/
 void selectone(int player, point &clicked) //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
 {
-	redraw=true;//mod buttons likely
+	redraw=1;//mod buttons likely
 	if(sqrt(pow(clicked.x-allunits[player][generals[player]]->x,2)+pow(clicked.y-allunits[player][generals[player]]->y,2))>allunits[player][generals[player]]->los) //out of range
 	{
 		if(whatsselected[player]==true)
@@ -273,13 +273,14 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 		}
 		selectedunits[player].clear();
 	}
-	else if(map[(int)clicked.y][(int)clicked.x].uniton==true)
+	else if(map[(int)clicked.y][(int)clicked.x].uniton==true) //there is a unit on it
 	{
-		if(clicked.y<allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->boundingbox.bottom && clicked.y>allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->boundingbox.top && clicked.x>allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->boundingbox.left && clicked.x<allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->boundingbox.right) //if the user clicked on the unit (within the 2d bouding box)
+		if(clicked.y<allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.bottom && clicked.y>allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.top && clicked.x>allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.left && clicked.x<allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.right) //if the user clicked on the unit (within the 2d bouding box)
 		{
-			if(player==map[(int)clicked.y][(int)clicked.x].player)
+			if(player==map[(int)clicked.y][(int)clicked.x].unitplayer)
 			{
-				if(allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->selected==true)
+				//if(allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->selected==true)
+				if(allunits[player][map[(int)clicked.y][(int)clicked.x].unitindex]->selected==true)
 				{
 					for(unsigned int i=0; i<selectedunits[player].size(); i++)
 					{
@@ -292,9 +293,9 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 				}
 				else
 				{
-					if(allunits[player][map[(int)clicked.y][(int)clicked.x].index]->health<=0)
+					if(allunits[player][map[(int)clicked.y][(int)clicked.x].unitindex]->health<=0)
 						return;
-					allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->selected=true;
+					allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->selected=true;
 					for(unsigned int i=0; i<selectedunits[player].size(); i++)
 					{
 						if(whatsselected[player]==true)
@@ -304,13 +305,13 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 					}
 					selectedunits[player].clear();
 					whatsselected[player]=true;
-					selectedunits[player].push_back(map[(int)clicked.y][(int)clicked.x].index);
-					if(allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->whatisit==2) //if its a siege unit
+					selectedunits[player].push_back(map[(int)clicked.y][(int)clicked.x].unitindex);
+					if(allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->whatisit==2) //if its a siege unit
 					{
-						for(unsigned int i=0; i<allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->siegeindex].manning.size(); i++)
+						for(unsigned int i=0; i<allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->siegeindex].manning.size(); i++)
 						{
-							allunits[player][allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->siegeindex].manning[i]]->selected=true;
-							selectedunits[player].push_back(allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index]->siegeindex].manning[i]);
+							allunits[player][allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->siegeindex].manning[i]]->selected=true;
+							selectedunits[player].push_back(allsiegeunits[player][allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->siegeindex].manning[i]);
 						}
 					}
 				}
@@ -325,26 +326,26 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 						allbuildings[player][selectedunits[player][i]].selected=false;
 				}
 				selectedunits[player].clear();
-				//some sort of show info thing.
+				//some sort of show info thing. for enemy units
 			}
 		}
 	}
-	else if(map[(int)clicked.y][(int)clicked.x].tilestyle==TS_BUILDING || map[(int)clicked.y][(int)clicked.x].tilestyle==TS_WATERBUILDING)
+	else if(map[(int)clicked.y][(int)clicked.x].tilestyle==TS_BUILDING || map[(int)clicked.y][(int)clicked.x].tilestyle==TS_WATERBUILDING) //selecting a building
 	{
-		if(clicked.y<allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].boundingbox.bottom && clicked.y>allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].boundingbox.top && clicked.x>allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].boundingbox.left && clicked.x<allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].boundingbox.right) //if the user clicked on the building (within the 2d bouding box)
+		if(clicked.y<allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].boundingbox.bottom && clicked.y>allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].boundingbox.top && clicked.x>allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].boundingbox.left && clicked.x<allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].boundingbox.right) //if the user clicked on the building (within the 2d bouding box)
 		{
-			if(player==map[(int)clicked.y][(int)clicked.x].player)
+			if(player==map[(int)clicked.y][(int)clicked.x].buildingplayer)
 			{
-				if(allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].selected==true)
+				if(allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].selected==true)
 				{
-					allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].selected=false;
+					allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].selected=false;
 					selectedunits[player].clear();
 				}
 				else
 				{
-					if(allbuildings[player][map[(int)clicked.y][(int)clicked.x].index].health<0)
+					if(allbuildings[player][map[(int)clicked.y][(int)clicked.x].buildingindex].health<0)
 						return;
-					allbuildings[map[(int)clicked.y][(int)clicked.x].player][map[(int)clicked.y][(int)clicked.x].index].selected=true;
+					allbuildings[map[(int)clicked.y][(int)clicked.x].buildingplayer][map[(int)clicked.y][(int)clicked.x].buildingindex].selected=true;
 					for(unsigned int i=0; i<selectedunits[player].size(); i++)
 					{
 						if(whatsselected[player]==true)
@@ -354,7 +355,7 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 					}
 					selectedunits[player].clear();
 					whatsselected[player]=false;
-					selectedunits[player].push_back(map[(int)clicked.y][(int)clicked.x].index);
+					selectedunits[player].push_back(map[(int)clicked.y][(int)clicked.x].buildingindex);
 				}
 			}
 			else
@@ -367,7 +368,7 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 						allbuildings[player][selectedunits[player][i]].selected=false;
 				}
 				selectedunits[player].clear();
-				//some sort of show info thing.
+				//some sort of show info thing for enemy building
 			}
 		}
 	}
@@ -388,7 +389,7 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 }
 void selectmany(int player, myrect &clicked)//select all the units in a box made by clicking and holding and dragging
 {
-	redraw=true; //mod buttons likely
+	redraw=1; //mod buttons likely
 	if(whatsselected[player]==true)
 	{
 		for(unsigned int i=0; i<selectedunits[player].size(); i++)
@@ -447,66 +448,68 @@ void move(int player, POINT &gowhere)
 			allunits[player][selectedunits[player][i]]->dstancecooy=-1;
 			allunits[player][selectedunits[player][i]]->gatheringx=-1;
 			allunits[player][selectedunits[player][i]]->gatheringy=-1;
+			allunits[player][selectedunits[player][i]]->gatheringwhat=-1; //TODO CHECK IF LEGIT
 			allunits[player][selectedunits[player][i]]->firstobstacleattempt=true; // at this point, definitely haven't tried to avoid an obstacle
 			if(map[(int)gowhere.y][(int)gowhere.x].uniton==true) //if there is a unit on the square where we are going
 			{
-				if(gowhere.x>allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->boundingbox.left && gowhere.x<allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->boundingbox.right && gowhere.y>allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->boundingbox.top && gowhere.y<allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->boundingbox.bottom) //if the current unit is going to be attacked
+				if(gowhere.x>allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.left && gowhere.x<allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.right && gowhere.y>allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.top && gowhere.y<allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.bottom) //if the current unit is going to be attacked
 				{
-					if(map[(int)gowhere.y][(int)gowhere.x].player!=players[player])
+					if(map[(int)gowhere.y][(int)gowhere.x].unitplayer!=players[player])
 					{
-						if(allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->whatisit==2)//its a siege unit
+						if(allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->whatisit==2)//its a siege unit
 						{
-							if(allsiegeunits[map[(int)gowhere.y][(int)gowhere.x].player][allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()==0)
+							if(allsiegeunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()==0)
 							{ //its unmanned
 								//make this push back a new unit into whatever stores the actual units for the current player, making sure the new unit has the same exact stats as this one. xp, loc etc. then 'kill this unit'
 								//in effect, once this is done, the siege unit has been 'captured' by the attacking player.
 								//then say that they are manning the siege unit.
+								//Call capture() ????
 							}
 							else
 							{
-								for(unsigned int j=0; j<allsiegeunits[map[(int)gowhere.y][(int)gowhere.x].player][allunits[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size(); j++)
+								for(unsigned int j=0; j<allsiegeunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size(); j++)
 								{
 									//same as above, BUT says if they are out of LOS range, then capture, else can't, must attack
 								}
 							}
 						}
-						allunits[player][selectedunits[player][i]]->attackingunitplayer=map[(int)gowhere.y][(int)gowhere.x].player; //record which unit is being attacked
-						allunits[player][selectedunits[player][i]]->attackingunitindex=map[(int)gowhere.y][(int)gowhere.x].index;
+						allunits[player][selectedunits[player][i]]->attackingunitplayer=map[(int)gowhere.y][(int)gowhere.x].unitplayer; //record which unit is being attacked
+						allunits[player][selectedunits[player][i]]->attackingunitindex=map[(int)gowhere.y][(int)gowhere.x].unitindex;
 						allunits[player][selectedunits[player][i]]->attackingwhat=true;
 						allunits[player][selectedunits[player][i]]->attackmovement(); //figure out how far to go to be in range
 						continue;
 					}
 					else
 					{
-						if(player==map[(int)gowhere.y][(int)gowhere.x].player)
+						if(player==map[(int)gowhere.y][(int)gowhere.x].unitplayer)
 						{
-							if(allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->whatisit==2) //going to my siege unit, so man it if neccesary
+							if(allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->whatisit==2) //going to my siege unit, so man it if neccesary
 							{
 								if(allunits[player][selectedunits[player][i]]->siegeindex==-1 && allunits[player][selectedunits[player][i]]->whatisit!=2 && allunits[player][selectedunits[player][i]]->whatisit!=3)//not already manning anything, and its not a siege unit, and its not a ship
 								{
-									if(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()<(unsigned int)allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].maxmanning) //needs to be manned by more units
+									if(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()<(unsigned int)allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].maxmanning) //needs to be manned by more units
 									{
-										switch((allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()%4)+1)
+										switch((allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()%4)+1)
 										{
 										case 1: //first unit to man
-											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->x+(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()/4);
-											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->y-allunits[player][selectedunits[player][i]]->height;
+											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->x+(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()/4);
+											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->y-allunits[player][selectedunits[player][i]]->height;
 											break;
 										case 2:
-											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->x+allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->width-allunits[player][selectedunits[player][i]]->width-(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()/4);
-											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->y-allunits[player][selectedunits[player][i]]->height;
+											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->x+allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->width-allunits[player][selectedunits[player][i]]->width-(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()/4);
+											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->y-allunits[player][selectedunits[player][i]]->height;
 											break;
 										case 3:
-											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->x+(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()/4);
-											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->y+allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->height;
+											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->x+(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()/4);
+											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->y+allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->height;
 											break;
 										case 4:
-											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->x+allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->width-allunits[player][selectedunits[player][i]]->width-(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.size()/4);
-											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->y+allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->height;
+											allunits[player][selectedunits[player][i]]->movetox=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->x+allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->width-allunits[player][selectedunits[player][i]]->width-(int)(allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.size()/4);
+											allunits[player][selectedunits[player][i]]->movetoy=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->y+allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->height;
 											break;
 										};
-										allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex].manning.push_back(selectedunits[player][i]);
-										allunits[player][selectedunits[player][i]]->siegeindex=allunits[player][map[(int)gowhere.y][(int)gowhere.x].index]->siegeindex;
+										allsiegeunits[player][allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex].manning.push_back(selectedunits[player][i]);
+										allunits[player][selectedunits[player][i]]->siegeindex=allunits[player][map[(int)gowhere.y][(int)gowhere.x].unitindex]->siegeindex;
 										continue;
 									}
 								}
@@ -525,14 +528,14 @@ void move(int player, POINT &gowhere)
 			}
 			else if(map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_BUILDING || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_WATERBUILDING)
 			{
-				if(gowhere.x>allbuildings[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index].boundingbox.left && gowhere.x<allbuildings[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index].boundingbox.right && gowhere.y>allbuildings[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index].boundingbox.top && gowhere.y<allbuildings[map[(int)gowhere.y][(int)gowhere.x].player][map[(int)gowhere.y][(int)gowhere.x].index].boundingbox.bottom) //if the current unit is going to be attacked
+				if(gowhere.x>allbuildings[map[(int)gowhere.y][(int)gowhere.x].buildingplayer][map[(int)gowhere.y][(int)gowhere.x].buildingindex].boundingbox.left && gowhere.x<allbuildings[map[(int)gowhere.y][(int)gowhere.x].buildingplayer][map[(int)gowhere.y][(int)gowhere.x].buildingindex].boundingbox.right && gowhere.y>allbuildings[map[(int)gowhere.y][(int)gowhere.x].buildingplayer][map[(int)gowhere.y][(int)gowhere.x].buildingindex].boundingbox.top && gowhere.y<allbuildings[map[(int)gowhere.y][(int)gowhere.x].buildingplayer][map[(int)gowhere.y][(int)gowhere.x].buildingindex].boundingbox.bottom) //if the current unit is going to be attacked
 				{
-					if(map[(int)gowhere.y][(int)gowhere.x].player!=players[player])
+					if(map[(int)gowhere.y][(int)gowhere.x].buildingplayer!=players[player])
 					{
 						if(allunits[player][selectedunits[player][i]]->buildingattack!=0)
 						{
-							allunits[player][selectedunits[player][i]]->attackingunitindex=map[(int)gowhere.y][(int)gowhere.x].index;
-							allunits[player][selectedunits[player][i]]->attackingunitplayer=map[(int)gowhere.y][(int)gowhere.y].player;
+							allunits[player][selectedunits[player][i]]->attackingunitindex=map[(int)gowhere.y][(int)gowhere.x].buildingindex;
+							allunits[player][selectedunits[player][i]]->attackingunitplayer=map[(int)gowhere.y][(int)gowhere.y].buildingplayer;
 							allunits[player][selectedunits[player][i]]->attackingwhat=false;
 							allunits[player][selectedunits[player][i]]->attackmovement();
 							continue;
@@ -540,8 +543,8 @@ void move(int player, POINT &gowhere)
 					}
 					else
 					{
-						if(allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].index].garrison-allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].index].garrisoned.size()>0 || allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].index].beingbuilt>0)
-							allunits[player][selectedunits[player][i]]->garrisoned=1+map[(int)gowhere.y][(int)gowhere.x].index;//garrisoning/building
+						if(allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].buildingindex].garrison-allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].buildingindex].garrisoned.size()>0 || allbuildings[player][map[(int)gowhere.y][(int)gowhere.x].buildingindex].beingbuilt>0)
+							allunits[player][selectedunits[player][i]]->garrisoned=1+map[(int)gowhere.y][(int)gowhere.x].buildingindex;//garrisoning/building
 					}
 				}
 			}
@@ -549,6 +552,7 @@ void move(int player, POINT &gowhere)
 			{
 				allunits[player][selectedunits[player][i]]->gatheringx=(short)gowhere.x;
 				allunits[player][selectedunits[player][i]]->gatheringy=(short)gowhere.y;
+				allunits[player][selectedunits[player][i]]->gatheringwhat=map[(int)gowhere.y][(int)gowhere.x].tilestyle; //TODO: check
 			}
 			if(allunits[player][selectedunits[player][i]]->whatisit==2) //its a siege unit
 			{
@@ -636,7 +640,7 @@ void capture(int player, point &clicked)
 		return;
 	if(map[(unsigned int)clicked.y][(unsigned int)clicked.x].tilestyle==TS_BUILDING)
 	{
-		if(allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].player][map[(unsigned int)clicked.y][(unsigned int)clicked.x].index].garrisoned.size()==0)
+		if(allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer][map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex].garrisoned.size()==0)
 		{
 			if(sqrt(pow(allunits[player][selectedunits[player][0]]->x-(unsigned int)clicked.x,2)+pow(allunits[player][selectedunits[player][0]]->y-(unsigned int)clicked.y, 2))<allunits[player][selectedunits[player][0]]->los-tilecameo[map[(unsigned int)clicked.y][(unsigned int)clicked.x].tilestyle])
 			{
@@ -648,15 +652,15 @@ void capture(int player, point &clicked)
 				}
 				else
 				{
-					allbuildings[player].push_back(allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].player][map[(unsigned int)clicked.y][(unsigned int)clicked.x].index]);
+					allbuildings[player].push_back(allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer][map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex]);
 					bindex=allbuildings[player].size()-1;
 				}
-				allbuildings[player][bindex]=allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].player][map[(unsigned int)clicked.y][(unsigned int)clicked.x].index];//building(allbuildablebuildings[buildwhat], x+1, y+1, player, overwritebuildings[player][overwritebuildings[player].size()-1], y+1+allbuildablebuildings[buildwhat].height, y+1, x+1, x+1+allbuildablebuildings[buildwhat].width,0,0,0,0,allbuildablebuildings[buildwhat].timetobuild); //CHANGE y+1 and the like to something from GUI, so that you can specify where you want it
+				allbuildings[player][bindex]=allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer][map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex];//building(allbuildablebuildings[buildwhat], x+1, y+1, player, overwritebuildings[player][overwritebuildings[player].size()-1], y+1+allbuildablebuildings[buildwhat].height, y+1, x+1, x+1+allbuildablebuildings[buildwhat].width,0,0,0,0,allbuildablebuildings[buildwhat].timetobuild);
 				allbuildings[player][bindex].index=bindex;
 				allbuildings[player][bindex].player=player;
 				allbuildings[player][bindex].selected=false;
-				allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].player][map[(unsigned int)clicked.y][(unsigned int)clicked.x].index].health=0;
-				overwritebuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].player].push_back(map[(unsigned int)clicked.y][(unsigned int)clicked.x].index);
+				allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer][map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex].health=0;
+				overwritebuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer].push_back(map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex);
 				for(float k=allbuildings[player][bindex].y-allbuildings[player][bindex].radiustodistribute; k<allbuildings[player][bindex].y+allbuildings[player][bindex].height+allbuildings[player][bindex].radiustodistribute; k+=.25)
 				{
 					for(float h=allbuildings[player][bindex].x-allbuildings[player][bindex].radiustodistribute; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width+allbuildings[player][bindex].radiustodistribute; h+=.25)
@@ -681,8 +685,8 @@ void capture(int player, point &clicked)
 				{
 					for(float h=allbuildings[player][bindex].x; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width; h+=.25)
 					{
-						map[(int)k][(int)h].player=player;
-						map[(int)k][(int)h].index=bindex;
+						map[(int)k][(int)h].buildingplayer=player;
+						map[(int)k][(int)h].buildingindex=bindex;
 						map[(int)k][(int)h].whichplayer.set(false, (unsigned char)player);
 						map[(int)k][(int)h].whichplayer.set(true, players[player]);
 					}
@@ -850,11 +854,11 @@ bool chkmvp1(tile &checkwhat, short player, short index, short utype)
 			break;//stop
 		}
 	}
-	if(checkwhat.tilestyle==TS_GATE && checkwhat.player==players[player])
+	if(checkwhat.tilestyle==TS_GATE && checkwhat.buildingplayer==players[player])
 		good=true;
-	if(checkwhat.player==player && allunits[checkwhat.player][checkwhat.index]->whatisit==3 && checkwhat.uniton==true)
+	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true) // It is 1 or 3 - there is a unit
 		return true;
-	if(good==true && checkwhat.uniton==true && (checkwhat.index!=index || checkwhat.player!=player))
+	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
 		good=false;	
 	return good;
 }
@@ -1081,7 +1085,7 @@ void processMouse(int button, int state, int x, int y)
 			//float my=y;
 			int reg=-1;
 			if(map[(int)(mousey2/15)][(int)(mousex2/15)].uniton==true)
-				reg=allunits[0][map[(int)(mousey2/15)][(int)(mousex2/15)].index]->regimentid;
+				reg=allunits[0][map[(int)(mousey2/15)][(int)(mousex2/15)].unitindex]->regimentid;
 			if(reg!=-1)
 			{
 				for(unsigned int i=0; i<selectedunits[0].size(); i++)
@@ -1142,6 +1146,7 @@ void processMouse(int button, int state, int x, int y)
 void initializeGameEngine()
 {
 	srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
+	redraw=2;
 	map.resize(MAPSIZE);
 	minimapseen.resize(numplayers);
 	overwriteunits.resize(numplayers);
@@ -1280,11 +1285,11 @@ void initializeGameEngine()
 	alldisp.push_back(display("Gold: ", WIDTH/3+5, 615+2*18, YOUR_BUILDING, dispresourcesbuilding));
 	alldisp.push_back(display("Stone: ", WIDTH/3+5, 615+3*18, YOUR_BUILDING, dispresourcesbuilding));
 
-	alldisp.push_back(display("Health: ", WIDTH/3+5+370, 615, YOUR_UNIT, disphealth));
+	alldisp.push_back(display("Health: ", WIDTH/3+5+358, 615, YOUR_UNIT, disphealth));
 	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_UNIT, dispname));
-	alldisp.push_back(display("Moral: ", WIDTH/3+5+373, 635, YOUR_UNIT, dispmoral));
+	alldisp.push_back(display("Moral: ", WIDTH/3+5+361, 635, YOUR_UNIT, dispmoral));
 	alldisp.push_back(display("Food Required: ", WIDTH/3+5+320, 655, YOUR_UNIT, dispfoodrequired));
-	alldisp.push_back(display("Health: ", WIDTH/3+5+370, 615, YOUR_BUILDING, dispbuildinghealth));
+	alldisp.push_back(display("Health: ", WIDTH/3+5+358, 615, YOUR_BUILDING, dispbuildinghealth));
 	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_BUILDING, dispbuildingname));
 
 	indexGarrisondisp=alldisp.size();
@@ -1389,8 +1394,8 @@ void initializeGameEngine()
 		for(float h=allbuildings[0][0].x; h<allbuildings[0][0].x+allbuildings[0][0].width; h+=.25)
 		{
 			map[(int)k][(int)h].tilestyle=TS_BUILDING;
-			map[(int)k][(int)h].player=0;
-			map[(int)k][(int)h].index=0;
+			map[(int)k][(int)h].buildingplayer=0;
+			map[(int)k][(int)h].buildingindex=0;
 			map[(int)k][(int)h].whichplayer.set(false, (unsigned char)0);
 			map[(int)k][(int)h].whichplayer.set(true, players[0]);
 		}
@@ -1419,8 +1424,8 @@ void initializeGameEngine()
 				for(float h=actallunits[i][j].x; h<actallunits[i][j].x+actallunits[i][j].width; h+=.25)
 				{
 					map[(int)k][(int)h].uniton=true;
-					map[(int)k][(int)h].index=actallunits[i][j].index;
-					map[(int)k][(int)h].player=actallunits[i][j].player;
+					map[(int)k][(int)h].unitindex=actallunits[i][j].index;
+					map[(int)k][(int)h].unitplayer=actallunits[i][j].player;
 				}
 			}
 		}
@@ -1485,6 +1490,15 @@ void makeRect(float x, float y, float width, float height, RGB color)
 	glEnd();
 }
 
+void makeEllipse(float x, float y, float radiusx, float radiusy, RGB color)
+{
+	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
+	glBegin(GL_POLYGON);
+		for(double i = 0; i < 2 * PI; i += PI / 24) //The 6 is the smoothness, basically. Higher number makes it smoother.
+			glVertex3f((float)(cos(i)*radiusx+x)*2.0/WIDTH, 2.0-(float)(sin(i)*radiusy+y)*2.0/HEIGHT, 0.0);
+	glEnd();
+}
+
 void makeRect(float x, float y, float width, float height, ARGB color)
 {
 	glColor4f(color.r/255.0, color.g/255.0, color.b/255.0, color.a/255.0); //rgba
@@ -1493,6 +1507,15 @@ void makeRect(float x, float y, float width, float height, ARGB color)
 		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,0);
 		glVertex3f((float)(x+width)*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
 		glVertex3f((float)x*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
+	glEnd();
+}
+
+void makeEllipse(float x, float y, float radiusx, float radiusy, ARGB color)
+{
+	glColor4f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0, color.a/255.0);
+	glBegin(GL_POLYGON);
+		for(double i = 0; i < 2 * PI; i += PI / 24) //The 6 is the smoothness, basically. Higher number makes it smoother.
+			glVertex3f((float)(cos(i)*radiusx+x)*2.0/WIDTH, 2.0-(float)(sin(i)*radiusy+y)*2.0/HEIGHT, 0.0);
 	glEnd();
 }
 
@@ -1575,8 +1598,10 @@ void mainTimerProc(int arg)
 	ARGB hoverColor(100,200,200,200);
 	//Setting up openGL
 	// Clear Color and Depth Buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clears the whole screen
-
+	glEnable(GL_SCISSOR_TEST);
+	glScissor(0,100,WIDTH,HEIGHT-100);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clears the upper part of the screen
+	glScissor(0,0,WIDTH,HEIGHT);
 	// Reset transformations
 	glLoadIdentity();
 	// Set the camera
@@ -1585,14 +1610,15 @@ void mainTimerProc(int arg)
 			  0.0f, 1.0f, 0.0f);
 
 	//end setup
-	if(redraw==true) //TODO note that currently the whole screen is cleared each time. Fix this so it only clears the upper part.
+	if(redraw>0) 
 	{
-		redraw=false;
+		glScissor(0,0,WIDTH,100);
+		redraw--;
 		
-		makeRect(0,HEIGHT-70,WIDTH,70,yelloworange);
+		makeRect(0,HEIGHT-100,WIDTH,100,yelloworange);
 
-		drawLine(WIDTH/3,HEIGHT-70,WIDTH/3,HEIGHT,black);
-		drawLine(WIDTH*2/3,HEIGHT-70,WIDTH*2/3,HEIGHT,black);
+		drawLine(WIDTH/3,HEIGHT-100,WIDTH/3,HEIGHT,black);
+		drawLine(WIDTH*2/3,HEIGHT-100,WIDTH*2/3,HEIGHT,black);
 		for(unsigned int i=0; i<allbuttons.size(); i++) // Print buttons
 		{
 			if(checkdisp(0,allbuttons[i].dispwhen))
@@ -1608,7 +1634,7 @@ void mainTimerProc(int arg)
 						toprint[j]=allbuttons[i].text[j];
 				}
 				toprint[allbuttons[i].text.size()]=0;
-				renderBitmapString(allbuttons[i].x,allbuttons[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
+				renderBitmapString(allbuttons[i].x,allbuttons[i].y+12,0,GLUT_BITMAP_HELVETICA_12,toprint);
 				//temp.DrawString(toprint,allbuttons[i].text.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL(allbuttons[i].x), Gdiplus::REAL(allbuttons[i].y)),&black);
 				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
 				drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
@@ -1637,7 +1663,7 @@ void mainTimerProc(int arg)
 				}
 				toprint[alldisp[i].text.size()+var.size()]=0;
 				//temp.DrawString(toprint,alldisp[i].text.size()+var.size(), &bigfont, Gdiplus::PointF(Gdiplus::REAL(alldisp[i].x),Gdiplus::REAL(alldisp[i].y)),&black);
-				renderBitmapString(alldisp[i].x,alldisp[i].y,0,GLUT_BITMAP_TIMES_ROMAN_10,toprint);
+				renderBitmapString(alldisp[i].x,alldisp[i].y+12,0,GLUT_BITMAP_HELVETICA_12,toprint);
 				delete[] toprint;
 			}
 		}
@@ -1658,6 +1684,7 @@ void mainTimerProc(int arg)
 	//Graphics g2(hdcBuf2);
 	//FillRect(hdcBuf, &client, (HBRUSH)GetStockObject(WHITE_BRUSH)); //Add optimization code: if most of screen must be black, fill with black and color rest white. Else do this.
 	//g.FillRectangle(&white,0,0,client.right,client.bottom);
+	glScissor(0,100,WIDTH,HEIGHT-100);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
 	{
 		for(unsigned int h=0; h<creationqueueunits[g].size(); h++)
@@ -1800,6 +1827,8 @@ void mainTimerProc(int arg)
 	{
 		for(unsigned int j=(int)topleft.x; j<topleft.x+WIDTH/15; j++)
 		{
+			if(minimapseen[0][i][j]==false)//unknown part of the map
+				continue; //don't bother printing the tile
 			if(j>=MAPSIZE)
 				break;
 			if(i>=MAPSIZE)
@@ -1839,11 +1868,17 @@ void mainTimerProc(int arg)
 		{
 			if(j>=MAPSIZE || i>=MAPSIZE || i<0 || j<0)
 				break;
+			if(minimapseen[0][i][j]==false)//color unknown parts of map
+			{
+				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,black);
+				//g.FillRectangle(&black, Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
+				continue; //Its unknown, so don't print stuff over this
+			}//end color unknown parts of map
 			float dist=sqrt(pow(allunits[0][generals[0]]->x-j,2)+pow(allunits[0][generals[0]]->y-i,2));
 			if((map[i][j].tilestyle==TS_WATERBUILDING || map[i][j].tilestyle==TS_BUILDING) && minimapseen[0][i][j]==true)//print buildings, only if visible
 			{	
-				int index=map[i][j].index;
-				int player=map[i][j].player;
+				int index=map[i][j].buildingindex;
+				int player=map[i][j].buildingplayer;
 				if((int)allbuildings[player][index].x==j && (int)allbuildings[player][index].y==i)//print only once
 				{
 					if(allbuildings[player][index].health>0)//don't print dead things
@@ -1857,11 +1892,12 @@ void mainTimerProc(int arg)
 								text[k]=allbuildablebuildings[allbuildings[player][index].id].name[k];
 						}
 						text[allbuildablebuildings[allbuildings[player][index].id].name.size()]=0;
-						renderBitmapString((j-topleft.x)*15+2, (i-topleft.y)*15+7,0,GLUT_BITMAP_TIMES_ROMAN_10,text);
+						renderBitmapString((j-topleft.x)*15+2, (i-topleft.y)*15+9,0,GLUT_BITMAP_HELVETICA_12,text);
 						//g.DrawString(text,allbuildablebuildings[allbuildings[player][index].id].name.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL((j-topleft.x)*15+2), Gdiplus::REAL((i-topleft.y)*15+2)),&black);
 						if(allbuildings[player][index].beingbuilt<0)
 						{
 							//TODO Figure out the below ellipse
+							makeEllipse((float)(j+allbuildings[player][index].width/2-topleft.x)*15, (float)(i+allbuildings[player][index].height/2-topleft.y)*15, ((allbuildings[player][index].width)/2+allbuildings[player][index].radiustodistribute)*15, ((allbuildings[player][index].height)/2+allbuildings[player][index].radiustodistribute)*15, softyellow);
 							//g.FillEllipse(&softyellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
 							if(allbuildings[player][index].selected==false && player==0)
 								drawEmptyRect((j-topleft.x)*15,(i-topleft.y)*15,allbuildings[player][index].width*15, allbuildings[player][index].height*15,magenta);
@@ -1877,10 +1913,10 @@ void mainTimerProc(int arg)
 					}
 				}
 			}//end print buildings
-			else if(map[i][j].uniton==true && allunits[0][generals[0]]->los>dist)//print units
+			if(map[i][j].tilestyle!=TS_BUILDING && map[i][j].uniton==true && allunits[0][generals[0]]->los>dist)//print units
 			{
-				int index=map[i][j].index;
-				int player=map[i][j].player;
+				int index=map[i][j].unitindex;
+				int player=map[i][j].unitplayer;
 				if((int)allunits[player][index]->x==j && (int)allunits[player][index]->y==i)
 				{
 					if(allunits[player][index]->health>0)
@@ -1888,10 +1924,10 @@ void mainTimerProc(int arg)
 						char text=allunits[player][index]->veterancylvl+'0';
 						glColor3f(0.0,0.0,0.0);
 						glDisable(GL_TEXTURE_2D);
-						glRasterPos3f(((allunits[player][index]->x-topleft.x)*15.0+2)*2.0/WIDTH,2.0-((allunits[player][index]->y-topleft.y)*15.0+8)*2.0/HEIGHT,0);
+						glRasterPos3f(((allunits[player][index]->x-topleft.x)*15.0+2)*2.0/WIDTH,2.0-((allunits[player][index]->y-topleft.y)*15.0+10)*2.0/HEIGHT,0);
 //						glRasterPos3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,(float)z);
 
-						glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,text);
+						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12,text);
 						glEnable(GL_TEXTURE_2D);
 						//g.DrawString(text, 1, &font, PointF((Gdiplus::REAL)(allunits[player][index]->x-topleft.x)*15, (Gdiplus::REAL)(allunits[player][index]->y-topleft.y)*15), &black);
 						if(allunits[player][index]->selected==false)
@@ -1951,7 +1987,7 @@ void mainTimerProc(int arg)
 		glVertex3f( 2,  2,0);
 		glVertex3f( 0,  2,0);
 	glEnd();*/
-
+	glScissor(0,0,WIDTH,HEIGHT);
 	glutSwapBuffers();
 }
 
@@ -1973,21 +2009,21 @@ void renderReportDialog()
 	else
 		currColor=black;
 	drawEmptyRect(3,3,15,5,currColor); //buttons
-	renderBitmapString(5,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Units Lost\0");
+	renderBitmapString(5,5,0,GLUT_BITMAP_HELVETICA_12,"Units Lost\0");
 	if(currReportTab==1)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(20,3,15,5,currColor);
-	renderBitmapString(22,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Enemies Killed\0");
+	renderBitmapString(22,5,0,GLUT_BITMAP_HELVETICA_12,"Enemies Killed\0");
 	if(currReportTab==2)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(28,3,15,5,currColor);
-	renderBitmapString(30,5,0,GLUT_BITMAP_TIMES_ROMAN_10,"Surviving Enemies Seen\0");
+	renderBitmapString(30,5,0,GLUT_BITMAP_HELVETICA_12,"Surviving Enemies Seen\0");
 
-	renderBitmapString(25,25,0,GLUT_BITMAP_TIMES_ROMAN_10,(currRep->*reportfuncs[currReportTab])());
+	renderBitmapString(25,25,0,GLUT_BITMAP_HELVETICA_12,(currRep->*reportfuncs[currReportTab])());
 	glutSwapBuffers();
 }
 

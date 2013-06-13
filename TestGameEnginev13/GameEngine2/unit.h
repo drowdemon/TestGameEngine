@@ -51,6 +51,7 @@ public:
 	float specexperience[8];  //there experience in each of the above specialties
 	float gatheringx; //The coordinates of the square from which the player is gathering
 	float gatheringy; //ditto
+	int gatheringwhat; //!< stores the tilestyle of the thing the unit is gathering
 	short holding[4]; // how many resources a unit is holding, 0=food, 1=wood, 2=gold, 3=stone
 	short nearesthold; //the index in allbuildings that is nearest to the unit
 	int regimentid; //which regiment is it in, for 2d array allregiments[player][regimentid]
@@ -100,5 +101,6 @@ protected:
 	//void revealmapmvmt(double newx, double newy, double actspeed); //this reveals the new land that the player can see on the mini map and actual map
 	void gather(char gatheringwhat);
 	bool checknomove(bool siegesent);
+	void searchresources();
 };
 #endif

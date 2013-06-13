@@ -56,7 +56,7 @@ bool buildinghover=false;
 int buildingheight=0;
 int buildingwidth=0;
 int buildingwhat=-1;
-bool redraw=true;
+int redraw=2;
 /*HWND reportdialoghwnd;
 HWND hTabControl; // tab control handle
 HWND hCurrentTab; // tab dialog handle*/

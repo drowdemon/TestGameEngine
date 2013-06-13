@@ -1,8 +1,10 @@
 #include "tile.h"
-tile::tile(short i, short p, int ts, int lt, int f, int w, int g, int s, /*float c,*/ bool uo, short ibr, unsigned char wpf, unsigned char wpt, char elev)
+tile::tile(short iunit, short punit, short ibuilding, short pbuilding, int ts, int lt, int f, int w, int g, int s, /*float c,*/ bool uo, short ibr, unsigned char wpf, unsigned char wpt, char elev)
 {
-	index=i;
-	player=p;
+	unitindex=iunit;
+	unitplayer=punit;
+	buildingindex=ibuilding;
+	buildingplayer=pbuilding;
 	tilestyle=ts;
 	locoftunnel=lt;
 	resources[0]=f;

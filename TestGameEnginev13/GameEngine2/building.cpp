@@ -82,8 +82,8 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 					else
 						allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->movetoy=y+height+1;
 				}
-				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].player=player;
-				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].index=overwriteunits[player].size()-1;
+				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].unitplayer=player;
+				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].unitindex=overwriteunits[player].size()-1;
 				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].uniton=true;
 				overwriteunits[player].pop_back();
 			}
@@ -115,8 +115,8 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 				{
 					for(int j=0; j<allbuildableunits[createwhat].height; j++)
 					{
-						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].player=player;
-						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].index=allunits[player].size()-1;
+						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].unitplayer=player;
+						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].unitindex=allunits[player].size()-1;
 						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].uniton=true;
 					}
 				}
