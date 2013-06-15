@@ -428,7 +428,7 @@ void selectmany(int player, myrect &clicked)//select all the units in a box made
 		}
 	}
 }
-void move(int player, POINT &gowhere)
+void move(int player, POINT &gowhere, bool waypoint=false)
 {
 	if(whatsselected[player]==true)
 	{
@@ -438,11 +438,41 @@ void move(int player, POINT &gowhere)
 				continue;
 			if(allunits[player][selectedunits[player][i]]->health<=0) //if its dead, it shouldn't be allowed to move
 				continue;
-			allunits[player][selectedunits[player][i]]->movetox=(float)gowhere.x; //tell it to go to the passed point
+			if(waypoint==false)
+			{
+				allobstacles[player][selectedunits[player][i]].clear();
+				//if(!calcmove(allunits[player][selectedunits[player][i]],point((float)gowhere.x,(float)gowhere.y))) //try to calculate the whole move. if failed:
+				{
+					allunits[player][selectedunits[player][i]]->movetox=(float)gowhere.x; //tell it to go to the passed point without precalculation
 			allunits[player][selectedunits[player][i]]->movetoy=(float)gowhere.y;
-			allobstacles[player][selectedunits[player][i]].clear();
-			//allunits[player][selectedunits[player][i]]->actualtomovex=-1;
-			//allunits[player][selectedunits[player][i]]->actualtomovey=-1;
+				}
+				/*else //all good, clear what its doing now
+				{
+					allunits[player][selectedunits[player][i]]->movetox=allunits[player][selectedunits[player][i]]->x;
+					allunits[player][selectedunits[player][i]]->movetoy=allunits[player][selectedunits[player][i]]->y;
+				}*/
+			}
+			else //add it as a waypoint instead //NOTE: waypoints are almost certain not to work for siege units
+			{
+				if(allobstacles[player][selectedunits[player][i]].size()==0 && (allunits[player][selectedunits[player][i]]->movetox==allunits[player][selectedunits[player][i]]->x && allunits[player][selectedunits[player][i]]->movetoy==allunits[player][selectedunits[player][i]]->y)) //no other waypoints/commands and standing still
+					allobstacles[player][selectedunits[player][i]].push_back(point(gowhere.x-allunits[player][selectedunits[player][i]]->x,gowhere.y-allunits[player][selectedunits[player][i]]->y));
+				else if(allobstacles[player][selectedunits[player][i]].size()==0 && !(allunits[player][selectedunits[player][i]]->movetox==allunits[player][selectedunits[player][i]]->x && allunits[player][selectedunits[player][i]]->movetoy==allunits[player][selectedunits[player][i]]->y)) //no other waypoints/command, and moving
+					allobstacles[player][selectedunits[player][i]].push_back(point(gowhere.x-allunits[player][selectedunits[player][i]]->movetox,gowhere.y-allunits[player][selectedunits[player][i]]->movetoy));
+				else if(allobstacles[player][selectedunits[player][i]].size()!=0)//other waypoints/commands
+				{
+					float sumx=0;
+					float sumy=0;
+					for(unsigned int k=0; k<allobstacles[player][selectedunits[player][i]].size(); k++)
+					{
+						sumx+=allobstacles[player][selectedunits[player][i]][k].x;
+						sumy+=allobstacles[player][selectedunits[player][i]][k].y;
+					}
+					if(allunits[player][selectedunits[player][i]]->movetox==allunits[player][selectedunits[player][i]]->x && allunits[player][selectedunits[player][i]]->movetoy==allunits[player][selectedunits[player][i]]->y) //standing still
+						allobstacles[player][selectedunits[player][i]].push_back(point(gowhere.x-(allunits[player][selectedunits[player][i]]->x+sumx),gowhere.y-(allunits[player][selectedunits[player][i]]->y+sumy)));
+					else //moving
+						allobstacles[player][selectedunits[player][i]].push_back(point(gowhere.x-(allunits[player][selectedunits[player][i]]->movetox+sumx),gowhere.y-(allunits[player][selectedunits[player][i]]->movetoy+sumy)));
+				}
+			}
 			allunits[player][selectedunits[player][i]]->userordered=true;
 			allunits[player][selectedunits[player][i]]->dstancecoox=-1;
 			allunits[player][selectedunits[player][i]]->dstancecooy=-1;
@@ -942,8 +972,8 @@ void processPassiveMouseMove(int x, int y)
 		topleft.y+=.5;//end scroll
 	currmousex2=x;
 	currmousey2=y;
-	currmousex2+=(topleft.x*15);
-	currmousey2+=(topleft.y*15);
+	//currmousex2+=(topleft.x*15);
+	//currmousey2+=(topleft.y*15);
 }
 void processMouseMove(int x, int y)
 {
@@ -1113,7 +1143,10 @@ void processMouse(int button, int state, int x, int y)
 			p.y+=(topleft.y*15);
 			p.x/=15;
 			p.y/=15;
-			move(currplayer, p);
+			if((glutGetModifiers()&GLUT_ACTIVE_SHIFT)>0) //shift pressed
+				move(0,p,true);
+			else
+				move(currplayer, p);
 			return;
 		}
 		else if(state==GLUT_UP)
