@@ -55,6 +55,7 @@ void build(short player, short buildwhat, int x, int y);
 bool chkmvp1(tile &checkwhat, short player, short index, short utype);
 bool checktouchingland(int x, int y);
 string inttos(int num);
+bool transferResources(int player, string input, int bindex1, int bindex2);
 
 //declarations of global variables
 extern int countobstacle;//var to make sure that there are no infinite loops in threadgoaroundobstacle
@@ -118,6 +119,10 @@ extern int pagenum;
 extern int mainWindow;
 extern int reportDialogWindow;
 extern int currReportTab;
+extern int transferResourcesPressed;
+extern string transferResourcesTyped;
+extern string transferInput;
+extern int transferBuilding1;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

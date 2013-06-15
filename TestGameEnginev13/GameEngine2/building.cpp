@@ -21,6 +21,7 @@ building::building(short h, short ma, short a, short g, short hh, short garmu, s
 	createatx=createaty=-1;
 	numtrainsimultaneously=nts;
 	beingbuilt=beingb;
+	transfer[0]=transfer[1]=transfer[2]=transfer[3]=0;
 }
 building::building(basebuilding b, float px, float py, short p, short i, float bbb, float bbt, float bbl, float bbr,  short food, short wood, short gold, short stone, short beingb) : basebuilding(b.health, b.armor, b.garrison, b.healhealth, b.garrisonedarmorup, b.chanceofbeinghit, b.garrisonedrangedattack, b.garrisonedmeleeattack, b.range, b.id, b.maxhold, b.width, b.height, b.radiustodistribute, b.numtrainsimultaneously,b.landorwater)
 {
@@ -40,6 +41,7 @@ building::building(basebuilding b, float px, float py, short p, short i, float b
 	holding[3]=stone;
 	createatx=createaty=-1;
 	beingbuilt=beingb;
+	transfer[0]=transfer[1]=transfer[2]=transfer[3]=0;
 }
 void building::createunit(short createwhat, short pindex, short creating) //createwhat is the index of the unit to be created in unitsmade, creating is the index in creationqueueunits if it is time to actually create the unit
 {

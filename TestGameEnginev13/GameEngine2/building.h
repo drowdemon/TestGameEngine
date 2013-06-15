@@ -18,6 +18,7 @@ public:
 	float createatx; //where the created units should go
 	float createaty;
 	short beingbuilt;
+	short transfer[4]; //!< How much of each resource to transfer: 0=food, 1=wood, 2=gold, 3=stone
 	building(short h=0, short ma=0, short a=0, short g=0, short hh=0, short garmu=0, short ch=0, short gra=0, short gma=0, short r=0, short pid=0, float px=0, float py=0, short p=0, float bbb=0, float bbt=0, float bbl=0, float bbr=0, short i=0, short mxhld=0, short food=0, short wood=0, short gold=0, short stone=0, float w=1, float pheight=1, short radd=0, short nts=1, short beingb=-1);
 	building(basebuilding b, float px=0, float py=0, short p=0, short i=0, float bbb=0, float bbt=0, float bbl=0, float bbr=0,  short food=0, short wood=0, short gold=0, short stone=0, short beingb=-1);
 	void createunit(short createwhat, short unitindex, short creating=-1);

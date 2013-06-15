@@ -56,7 +56,7 @@ bool buildinghover=false;
 int buildingheight=0;
 int buildingwidth=0;
 int buildingwhat=-1;
-int redraw=2;
+int redraw=5;
 /*HWND reportdialoghwnd;
 HWND hTabControl; // tab control handle
 HWND hCurrentTab; // tab dialog handle*/
@@ -64,6 +64,10 @@ char* (report::*reportfuncs[3])();
 report *currRep=NULL;
 int pagenum=0; //!< The page that the user is on, in the general menu of buttons
 int currReportTab=0; //!< What tab in the report dialog the user is on
+int transferResourcesPressed=0; //!< Whether the user has clicked the transfer resources button: If so, display the input screen.
+string transferResourcesTyped="";
+string transferInput="";
+int transferBuilding1=-1;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;

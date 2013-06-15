@@ -67,6 +67,7 @@ void changeSize(int w, int h);
 void processMouse(int button, int state, int x, int y);
 void processMouseMove(int x, int y);
 void processPassiveMouseMove(int x, int y);
+void processKeys(unsigned char key, int x, int y);
 
 struct POINT
 {
@@ -245,17 +246,6 @@ void hourpassed(int arg)
 	}
 	glutTimerFunc(1000,hourpassed,0);
 }
-/*DWORD WINAPI ThreadTimerProc(LPVOID lpParameter) // thread data
-{
-	UINT uiTimer = SetTimer(NULL, 1234, 1000, hourpassed);		
-	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		// TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	return 0;
-}*/
 void selectone(int player, point &clicked) //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
 {
 	redraw=1;//mod buttons likely
@@ -444,7 +434,7 @@ void move(int player, POINT &gowhere, bool waypoint=false)
 				//if(!calcmove(allunits[player][selectedunits[player][i]],point((float)gowhere.x,(float)gowhere.y))) //try to calculate the whole move. if failed:
 				{
 					allunits[player][selectedunits[player][i]]->movetox=(float)gowhere.x; //tell it to go to the passed point without precalculation
-			allunits[player][selectedunits[player][i]]->movetoy=(float)gowhere.y;
+					allunits[player][selectedunits[player][i]]->movetoy=(float)gowhere.y;
 				}
 				/*else //all good, clear what its doing now
 				{
@@ -952,6 +942,7 @@ int main(int argc, char **argv)
 	glutReshapeFunc(changeSize);
 	glutMotionFunc(processMouseMove); //this is while mouse button pressed
 	glutPassiveMotionFunc(processPassiveMouseMove); //this is while mouse button is not pressed
+	glutKeyboardFunc(processKeys);
 
 	initializeGameEngine();
 	glEnable(GL_BLEND);
@@ -968,7 +959,7 @@ void processPassiveMouseMove(int x, int y)
 		topleft.x+=1;
 	if(y<=40 && topleft.y>0)
 		topleft.y-=.5;
-	else if(y>=(HEIGHT-20) && y<=HEIGHT+20 && topleft.y<((map.size()*15)-HEIGHT)/15)
+	else if(y>=(HEIGHT-140) && y<=HEIGHT-100 && topleft.y<((map.size()*15)-HEIGHT)/15)
 		topleft.y+=.5;//end scroll
 	currmousex2=x;
 	currmousey2=y;
@@ -1033,6 +1024,35 @@ void processMouse(int button, int state, int x, int y)
 			{
 				dblclick=false; //makes sure this isn't called after a double click. It will be:  left down, left up, left down, double click, left up (ignored due to this) end
 				return;
+			}
+			if(transferResourcesPressed==1)
+			{
+				transferResourcesPressed=0;
+				transferResourcesTyped.clear();
+			}
+			else if(transferResourcesPressed>1)
+			{
+				if(mousex2==uptomousex2 && mousey2==uptomousey2) //A click not a box
+				{
+					point p(mousex2/15,mousey2/15);
+					if((map[(int)p.y][(int)p.x].tilestyle==TS_BUILDING || map[(int)p.y][(int)p.x].tilestyle==TS_WATERBUILDING) && map[(int)p.y][(int)p.x].buildingindex!=-1 && map[(int)p.y][(int)p.x].buildingplayer==0)
+					{
+						if(transferResourcesPressed==2)
+						{
+							transferBuilding1=map[(int)p.y][(int)p.x].buildingindex;
+							transferResourcesPressed=3;
+							transferResourcesTyped="Now click on the building to transfer to";
+						}
+						else if(transferResourcesPressed==3)
+						{
+							transferResources(0, transferInput, transferBuilding1, map[(int)p.y][(int)p.x].buildingindex);
+							transferResourcesTyped="";
+							transferResourcesPressed=0;
+						}
+						redraw=1;
+					}
+				}
+				return; //Processed - Done!
 			}
 			//printf("L button up\n");
 			//RECT client;
@@ -1109,6 +1129,11 @@ void processMouse(int button, int state, int x, int y)
 		else if(state==DBL_CLICK)
 		{
 			//printf("DBL click\n");
+			if(transferResourcesPressed!=0)
+			{
+				transferResourcesPressed=0;
+				transferResourcesTyped.clear();
+			}
 			dblclick=true;
 			dblclickglut=-1;
 			//float mx=x;
@@ -1268,6 +1293,7 @@ void initializeGameEngine()
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22, 70, 18, "Designate",designate,YOUR_UNIT));
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22*3, 70, 18, "Record", beginrecordreport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
 	allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
+	allbuttons.push_back(button(WIDTH*2/3+5+300, 615+22*3, 113, 18, "Transfer Resources", transferResourcesButton, YOUR_UNIT | YOUR_MULT_UNITS));	
 
 	for(unsigned int i=1; i<allbuildablebuildings.size(); i++) //starting with 1 skips the pile
 	{
@@ -1585,6 +1611,19 @@ void renderBitmapString(float x,float y,float z,void *font,char *string)
 	glEnable(GL_TEXTURE_2D);
 }
 
+void renderBitmapString(float x,float y,float z,void *font,char *string,RGB color)
+{
+	char *c;
+	glDisable(GL_TEXTURE_2D);
+	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glRasterPos3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,(float)z);
+	for (c=string; *c != '\0'; c++)
+	{
+		glutBitmapCharacter(font, *c);
+	}
+	glEnable(GL_TEXTURE_2D);
+}
+
 void mainTimerProc(int arg)
 {
 	glutTimerFunc(50,mainTimerProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE, which is why it is called here. In effect, time delayed recursion.
@@ -1629,6 +1668,8 @@ void mainTimerProc(int arg)
 	RGB colors[]={black,red};
 	ARGB lightgrey(50,230,230,230);
 	ARGB hoverColor(100,200,200,200);
+	RGB terminalColor(48,10,36);
+	RGB white(255,255,255);
 	//Setting up openGL
 	// Clear Color and Depth Buffers
 	glEnable(GL_SCISSOR_TEST);
@@ -1700,23 +1741,17 @@ void mainTimerProc(int arg)
 				delete[] toprint;
 			}
 		}
-		/*RECT topaint;
-		topaint.left=0;
-		topaint.top=client.bottom;
-		topaint.right=client.right;
-		topaint.top=client.bottom+100;*/
-		//HBRUSH b=CreateSolidBrush(RGB(250,225,65));
-		//FillRect(hdcBuf,&topaint,b);
-		//DeleteObject(b);
-		//ShowWindow(buttons[0], SW_SHOWNORMAL);
-		//buttons[0]=CreateWindowEx(NULL, "button","makereg", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 630, 60, 20, hWnd, HMENU(IDB_MAKEREG), NULL, NULL);
-		//buttons[0]=CreateWindow("button","makereg", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 630, 60, 20, hWnd, HMENU(IDB_MAKEREG), NULL, NULL);
-		//buttons[1]=CreateWindow("button","destroyreg", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 670, 80, 20, hWnd, HMENU(IDB_MAKEREG), NULL, NULL);
+		if(transferResourcesPressed>0)
+		{
+			makeRect(0,HEIGHT-16,WIDTH,16,terminalColor);
+			char *toprint=new char[transferResourcesTyped.length()+1];
+			for(int i=0; i<transferResourcesTyped.length(); i++)
+				toprint[i]=transferResourcesTyped[i];
+			toprint[transferResourcesTyped.length()]=0;
+			renderBitmapString(5,HEIGHT-3,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
+			delete[] toprint;
+		}
 	}
-	//Graphics g(hdcBuf);
-	//Graphics g2(hdcBuf2);
-	//FillRect(hdcBuf, &client, (HBRUSH)GetStockObject(WHITE_BRUSH)); //Add optimization code: if most of screen must be black, fill with black and color rest white. Else do this.
-	//g.FillRectangle(&white,0,0,client.right,client.bottom);
 	glScissor(0,100,WIDTH,HEIGHT-100);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
 	{
@@ -2042,19 +2077,19 @@ void renderReportDialog()
 	else
 		currColor=black;
 	drawEmptyRect(3,3,15,5,currColor); //buttons
-	renderBitmapString(5,5,0,GLUT_BITMAP_HELVETICA_12,"Units Lost\0");
+	renderBitmapString(5,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Units Lost\0");
 	if(currReportTab==1)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(20,3,15,5,currColor);
-	renderBitmapString(22,5,0,GLUT_BITMAP_HELVETICA_12,"Enemies Killed\0");
+	renderBitmapString(22,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Enemies Killed\0");
 	if(currReportTab==2)
 		currColor=blue;
 	else
 		currColor=black;
 	drawEmptyRect(28,3,15,5,currColor);
-	renderBitmapString(30,5,0,GLUT_BITMAP_HELVETICA_12,"Surviving Enemies Seen\0");
+	renderBitmapString(30,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Surviving Enemies Seen\0");
 
 	renderBitmapString(25,25,0,GLUT_BITMAP_HELVETICA_12,(currRep->*reportfuncs[currReportTab])());
 	glutSwapBuffers();
@@ -2118,3 +2153,108 @@ void renderReportDialog()
     }
     return TRUE;
 }*/
+
+void processKeys(unsigned char key, int x, int y)
+{
+	if(transferResourcesPressed>0)
+	{
+		if(key==8 || key==127) //delete or backspace
+		{	
+			if(transferResourcesTyped.length()!=0)
+				transferResourcesTyped.erase(transferResourcesTyped.end()-1);
+		}
+		else if(key==27) //escape
+		{
+			transferResourcesTyped.clear();
+			transferResourcesPressed=0;
+		}
+		else if(key==10 || key==13) //enter?
+		{
+			transferInput=transferResourcesTyped;
+			transferResourcesTyped="Now, click on the building to transfer from";
+			transferResourcesPressed=2;
+		}
+		else
+			transferResourcesTyped+=key;
+		redraw=1;
+	}
+}
+
+int processResources(string input, char search, int len)
+{
+	for(int i=0; i<input.length(); i++)
+	{
+		if(input[i]==search || input[i]==search+32) //search is uppercase, checks lowercase too
+		{
+			if(i+len<input.length() && (input[i+1]<'0' || input[i+1]>'9')) //word, i.e. food/wood/gold/stone, in range
+			{
+				i+=len; //go to where number should be.
+				string num;
+				for(int j=i; j<input.length(); j++)
+				{
+					if(input[j]>='0' && input[j]<='9') //number
+						num+=input[j];
+					else
+						break;
+				}
+				if(num.length()==0)
+					return 0;
+				else
+					return atoi(num.c_str());
+			}
+			else if(i+1<input.length() && (input[i+1]>='0' && input[i+1]<='9')) //letter followed by number
+			{
+				i+=1;
+				string num;
+				for(int j=i; j<input.length(); j++)
+				{
+					if(input[j]>='0' && input[j]<='9') //number
+						num+=input[j];
+					else
+						break;
+				}
+				if(num.length()==0)
+					return 0;
+				else
+					return atoi(num.c_str());
+			}
+		}
+	}
+	return 0;
+}
+
+bool transferResources(int player, string input, int bindex1, int bindex2)
+{
+	if(bindex1==bindex2) //transfering to self
+		return false;
+	if(input.length()==0) //null string
+		return false;
+	short totrans[4];
+	int sumtrans=0;
+	int sumheld=0;
+	printf("%i\n",totrans[0]=processResources(input,'F',4));
+	printf("%i\n",totrans[1]=processResources(input,'W',4));
+	printf("%i\n",totrans[2]=processResources(input,'G',4));
+	printf("%i\n",totrans[3]=processResources(input,'S',5));
+	for(int i=0; i<4; i++)
+	{
+		if(allbuildings[player][bindex1].holding[i]>totrans[i]) //enough stored to transfer that much
+			sumtrans+=totrans[i];
+		else
+			return false; //Cannot transfer that much: failed
+		sumheld+=allbuildings[player][bindex2].holding[i];
+	}
+	if(sumheld+sumtrans>allbuildings[player][bindex2].maxhold) //The resources to be stored will not fit in the destination building
+		return false; //failed
+	for(int i=0; i<4; i++)
+		allbuildings[player][bindex1].transfer[i]=totrans[i];
+	for(int i=0; i<selectedunits[player].size(); i++)
+	{
+		allunits[player][selectedunits[player][i]]->transferring=1;
+		allunits[player][selectedunits[player][i]]->transferfrom=bindex1;
+		allunits[player][selectedunits[player][i]]->transferto=bindex2;
+		allunits[player][selectedunits[player][i]]->movetox=allbuildings[player][bindex1].x;
+		allunits[player][selectedunits[player][i]]->movetoy=allbuildings[player][bindex1].y;
+	}
+	return true;
+}

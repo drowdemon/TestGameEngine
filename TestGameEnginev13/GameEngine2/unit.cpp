@@ -91,6 +91,9 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
 	lieutexp=0;
 	lieuttrain=false;
 	recording=false;
+	transferring=0;
+	transferfrom=-1;
+	transferto=-1;
 }
 unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, /*short ft, short wt, short gt, short st, short tt, */short sn, float px, float py, float ar, short pid, float c, short p, short i, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg)
 {
@@ -168,6 +171,9 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	lieutexp=0;
 	lieuttrain=false;
 	recording=false;
+	transferring=0;
+	transferfrom=-1;
+	transferto=-1;
 }
 unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison)
 {
@@ -229,6 +235,9 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
 	lieutexp=0;
 	lieuttrain=false;
 	recording=false;
+	transferring=0;
+	transferfrom=-1;
+	transferto=-1;
 }
 void unit::attackgoingtobstacle(char canmoveto[6])
 {
@@ -593,7 +602,7 @@ bool unit::pointonlinesegment(double x, double movetox, double newx) //checks wh
 //}
 void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 {
-	if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]>0)
+	if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[(unsigned int)gatheringwhat]>0)
 	{
 		if(frames%GATHERING_RATE==0)//time to gather
 		{
@@ -602,8 +611,8 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 				sum+=holding[i];
 			if(sum<maxhold)
 			{
-				map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]--;
-				if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[gatheringwhat]==0) //no more resources on that tile
+				map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[(unsigned int)gatheringwhat]--;
+				if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[(unsigned int)gatheringwhat]==0) //no more resources on that tile
 				{
 					int ts=map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle;
 					if(gatheringwhat==0 && ts==TS_BERRIES)
@@ -613,7 +622,7 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 					//now, search 7 by 7 square and pick nearest
 					searchresources();
 				}
-				holding[gatheringwhat]++;
+				holding[(unsigned int)gatheringwhat]++;
 				if(selected==true) //this unit is selected, so how much stuff it is carrying needs to be displayed
 					redraw=true;
 				sum++;
@@ -771,6 +780,123 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 		if(good==true)
 			return;
 	}
+	
+	if(transferring==1 && (pow(x-allbuildings[player][transferfrom].x,2)+pow(y-allbuildings[player][transferfrom].y,2))<pow(allbuildings[player][transferfrom].radiustodistribute,2)) //transferring and within transfer radius of building to transfer from
+	{
+		int sum=0;
+		int tosend=0;
+		for(int i=0; i<4; i++)
+		{
+			sum+=holding[i];
+			tosend+=allbuildings[player][transferfrom].transfer[i];
+		}
+		if(tosend==0) //Done!
+		{
+			movetox=x;
+			movetoy=y;
+			allobstacles[player][index].clear();
+			transferring=0;
+		}
+		else
+		{
+			bool somethingsent=false;
+			for(int i=0; i<4; i++)
+			{
+				if(allbuildings[player][transferfrom].transfer[i]>0 && allbuildings[player][transferfrom].holding[i]>=0) //Need to transfer this resource and have this resource
+				{
+					if(allbuildings[player][transferfrom].holding[i]>=maxhold-sum) //enough of this resource to fill units holding
+					{
+						if(allbuildings[player][transferfrom].transfer[i]>=maxhold-sum) //need to transfer more than can hold, transfer as much as possible
+						{
+							allbuildings[player][transferfrom].holding[i]-=(maxhold-sum);
+							allbuildings[player][transferfrom].transfer[i]-=(maxhold-sum);
+							holding[i]+=(maxhold-sum);
+							transferring=2;
+							movetox=allbuildings[player][transferto].x;
+							movetoy=allbuildings[player][transferto].y;
+							allobstacles[player][index].clear();
+							somethingsent=false; //no need
+							redraw=1;
+							break;
+						}
+						else //need to transfer less than can hold
+						{
+							allbuildings[player][transferfrom].holding[i]-=allbuildings[player][transferfrom].transfer[i];
+							holding[i]+=allbuildings[player][transferfrom].transfer[i];
+							sum+=allbuildings[player][transferfrom].transfer[i];
+							somethingsent=true;
+							allbuildings[player][transferfrom].transfer[i]=0;
+							redraw=1;
+						}
+					}
+					else //not enough, fill as much as I can and empty the building
+					{
+						if(allbuildings[player][transferfrom].transfer[i]>=allbuildings[player][transferfrom].holding[i]) //need to transfer more than I have
+						{
+							holding[i]+=allbuildings[player][transferfrom].holding[i];
+							sum+=allbuildings[player][transferfrom].holding[i];
+							allbuildings[player][transferfrom].transfer[i]-=allbuildings[player][transferfrom].holding[i];
+							allbuildings[player][transferfrom].holding[i]=0;
+							somethingsent=true;
+							redraw=1;
+						}
+						else
+						{
+							allbuildings[player][transferfrom].holding[i]-=allbuildings[player][transferfrom].transfer[i];
+							holding[i]+=allbuildings[player][transferfrom].transfer[i];
+							sum+=allbuildings[player][transferfrom].transfer[i];
+							somethingsent=true;
+							allbuildings[player][transferfrom].transfer[i]=0;
+							redraw=1;
+						}
+					}
+				}
+			}
+			if(somethingsent)
+			{
+				transferring=2;
+				movetox=allbuildings[player][transferto].x;
+				movetoy=allbuildings[player][transferto].y;
+				allobstacles[player][index].clear();
+			}
+		}
+	}
+	if(transferring==2 && (pow(x-allbuildings[player][transferto].x,2)+pow(y-allbuildings[player][transferto].y,2))<pow(allbuildings[player][transferto].radiustodistribute,2)) //transferring and within transfer radius of building to transfer from
+	{
+		bool success=true;
+		int sum=0;
+		for(int i=0; i<4; i++)
+			sum+=allbuildings[player][transferto].holding[i];
+		for(int i=0; i<4; i++)
+		{
+			if(holding[i]+sum<allbuildings[player][transferto].maxhold)
+			{
+				allbuildings[player][transferto].holding[i]+=holding[i];
+				sum+=holding[i];
+				holding[i]=0;
+				redraw=1;
+			}
+			else
+			{
+				if(allbuildings[player][transferto].maxhold-sum>0)
+				{
+					holding[i]-=(allbuildings[player][transferto].maxhold-sum);
+					allbuildings[player][transferto].holding[i]+=(allbuildings[player][transferto].maxhold-sum);
+					redraw=1;
+				}
+				success=false; //failed
+				break; //failed
+			}
+		}
+		if(success)
+		{
+			transferring=1; //turn around
+			movetox=allbuildings[player][transferfrom].x;
+			movetoy=allbuildings[player][transferfrom].y;
+			allobstacles[player][index].clear();
+		} //else keep trying to deposit
+	}
+	
 	float actspeed=speed; //actual speed
 	if((int)(movetox+0.00001f)!=(int)(movetox))
 		movetox+=0.00001f;
@@ -798,7 +924,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 		decreaseby=0;
 	actspeed*=float(1-(.01*decreaseby)); //decreased speed for low health
 	actspeed+=tilespeed[map[(unsigned int)y][(unsigned int)x].tilestyle-1]; //adjust speed for what tile the unit is standing on
-	if(sqrt(pow((movetox-x), 2)+pow((movetoy-y), 2))>actspeed+0.05)
+	if(sqrt(pow((movetox-x), 2)+pow((movetoy-y), 2))>actspeed+0.05) //start moving
 	{
 		if(abs((double)(movetox-x))>=0.0001)//if the line isn't vert
 		{

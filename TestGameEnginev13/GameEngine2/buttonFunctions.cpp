@@ -9,6 +9,7 @@ void makereg(buttonparam b)
 		allregiments[b.player].push_back(regiment(designatedunit[b.player],b.player,allregiments[b.player].size()));
 		if(!allregiments[b.player][allregiments[b.player].size()-1].addunits(selectedunits[b.player])) //add the selected units to the regiment, if failed delete regiment
 			allregiments[b.player].pop_back();
+		redraw=1;
 	}
 }
 void setstance(buttonparam b)
@@ -154,4 +155,10 @@ void nextpage(buttonparam b)
 	else if(pagenum==1)
 		pagenum=0;
 	redraw=true;
+}
+//! This allows one to transfer resources from one building to another
+void transferResourcesButton(buttonparam b)
+{
+	transferResourcesPressed=1;
+	redraw=1;
 }
