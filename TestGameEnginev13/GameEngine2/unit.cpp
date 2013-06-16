@@ -509,6 +509,14 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 			return bindex;
 		}
 	}
+	else
+	{
+		if(player==0)
+		{
+			currErr=allErr[NORESOURCELOC];
+			redraw=1;
+		}
+	}
 	return -1;
 }
 void unit::revealmapcreation()

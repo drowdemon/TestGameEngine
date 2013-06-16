@@ -826,20 +826,41 @@ void build(short player, short buildwhat, int x, int y)
 			if(allbuildablebuildings[buildwhat].landorwater==true) //land
 			{
 				if((map[i][j].tilestyle!=TS_GRASS && map[i][j].tilestyle!=TS_GOLD && map[i][j].tilestyle!=TS_STONE && map[i][j].tilestyle!=TS_ROAD) || map[i][j].elevation!=buildelev)
+				{
+					if(player==0)
+					{
+						currErr=allErr[ILLEGALLOC];
+						redraw=1;
+					}
 					return;
+				}
 				touchland=true;
 			}
 			else //water
 			{
 				if((map[i][j].tilestyle!=TS_WATER && map[i][j].tilestyle!=TS_FISH) || map[i][j].elevation!=buildelev)
+				{
+					if(player==0)
+					{
+						currErr=allErr[ILLEGALLOC];
+						redraw=1;
+					}
 					return;
+				}
 				if(checktouchingland(j,i))
 					touchland=true;
 			}
 		}
 	}
 	if(touchland==false)
+	{
+		if(player==0)
+		{
+			currErr=allErr[ILLEGALLOC];
+			redraw=1;
+		}
 		return;
+	}
 	short bindex=allunits[player][selectedunits[player][0]]->build(buildwhat,x,y);
 	if(bindex==-1)
 		return;
@@ -1369,6 +1390,15 @@ void initializeGameEngine()
 			alldisp.push_back(display("", WIDTH/3+5+j*80, 615+22*i, YOUR_UNIT | YOUR_SHIP, dispsailors));
 		}
 	}
+	allErr.push_back(ErrorMSG("Not Enough Resources",WIDTH/3+5+80,HEIGHT-16,2.5*FPS));
+	allErr.push_back(ErrorMSG("Invalid String",WIDTH/3+5+80,HEIGHT-16,2.5*FPS));
+	allErr.push_back(ErrorMSG("Cannot Place Building There",WIDTH/3+5+80,HEIGHT-16,3*FPS));
+	allErr.push_back(ErrorMSG("Not Enough Men to Form Regiment",WIDTH/5+80,HEIGHT-16,3.5*FPS));
+	allErr.push_back(ErrorMSG("Too Many Men for One Regiment",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
+	allErr.push_back(ErrorMSG("Cannot Transfer to Self",WIDTH/3+5+80,HEIGHT-16,2.5*FPS));
+	allErr.push_back(ErrorMSG("Too Many Resources to Transfer",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
+	allErr.push_back(ErrorMSG("Nowhere to Retrieve Resources From",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
+	
 	for(int i=0; i<numplayers; i++)
 		generals[i]=0;
 	int ts=0;
@@ -1672,6 +1702,7 @@ void mainTimerProc(int arg)
 	ARGB hoverColor(100,200,200,200);
 	RGB terminalColor(48,10,36);
 	RGB white(255,255,255);
+	RGB darkRed(150,0,0);
 	//Setting up openGL
 	// Clear Color and Depth Buffers
 	glEnable(GL_SCISSOR_TEST);
@@ -1753,6 +1784,20 @@ void mainTimerProc(int arg)
 			renderBitmapString(5,HEIGHT-3,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
 			delete[] toprint;
 		}
+		if(currErr.msg!="" && currErr.time>0)
+		{
+			char *toprint=new char[currErr.msg.length()+1];
+			for(unsigned int i=0; i<currErr.msg.length(); i++)
+				toprint[i]=currErr.msg[i];
+			toprint[currErr.msg.length()]=0;
+			renderBitmapString(currErr.x, currErr.y+13, 0, GLUT_BITMAP_HELVETICA_12, toprint, darkRed);
+		}
+	}
+	if(currErr.msg!="" && currErr.time>0)
+	{
+		currErr.time--;
+		if(currErr.time<=0)
+			redraw=1;
 	}
 	glScissor(0,100,WIDTH,HEIGHT-100);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
@@ -2228,26 +2273,63 @@ int processResources(string input, char search, int len)
 bool transferResources(int player, string input, int bindex1, int bindex2)
 {
 	if(bindex1==bindex2) //transfering to self
+	{
+		if(player==0)
+		{
+			currErr=allErr[SELFTRANSFER];
+			redraw=1;
+		}
 		return false;
+	}
 	if(input.length()==0) //null string
+	{
+		if(player==0)
+		{
+			currErr=allErr[INVALIDSTRING];
+			redraw=1;
+		}
 		return false;
+	}
 	short totrans[4];
 	int sumtrans=0;
 	int sumheld=0;
-	printf("%i\n",totrans[0]=processResources(input,'F',4));
-	printf("%i\n",totrans[1]=processResources(input,'W',4));
-	printf("%i\n",totrans[2]=processResources(input,'G',4));
-	printf("%i\n",totrans[3]=processResources(input,'S',5));
+	totrans[0]=processResources(input,'F',4);
+	totrans[1]=processResources(input,'W',4);
+	totrans[2]=processResources(input,'G',4);
+	totrans[3]=processResources(input,'S',5);
 	for(int i=0; i<4; i++)
 	{
 		if(allbuildings[player][bindex1].holding[i]>totrans[i]) //enough stored to transfer that much
 			sumtrans+=totrans[i];
 		else
+		{
+			if(player==0)
+			{
+				currErr=allErr[FEWRESOURCES];
+				redraw=1;
+			}
 			return false; //Cannot transfer that much: failed
+		}	
 		sumheld+=allbuildings[player][bindex2].holding[i];
 	}
+	if(sumtrans==0) //trying to transfer 0
+	{
+		if(player==0)
+		{
+			currErr=allErr[INVALIDSTRING];
+			redraw=1;
+		}
+		return false;
+	}
 	if(sumheld+sumtrans>allbuildings[player][bindex2].maxhold) //The resources to be stored will not fit in the destination building
+	{
+		if(player==0)
+		{
+			currErr=allErr[TOOBIGTRANSFER];
+			redraw=1;
+		}
 		return false; //failed
+	}
 	for(int i=0; i<4; i++)
 		allbuildings[player][bindex1].transfer[i]=totrans[i];
 	for(unsigned int i=0; i<selectedunits[player].size(); i++)

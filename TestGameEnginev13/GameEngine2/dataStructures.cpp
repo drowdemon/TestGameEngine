@@ -129,3 +129,17 @@ ARGB::ARGB(int pa, int pr, int pg, int pb)
 	g=pg;
 	b=pb;
 }
+ErrorMSG::ErrorMSG(string m, int px, int py, int t)
+{
+	msg=m;
+	x=px;
+	y=py;
+	time=t;
+}
+ErrorMSG::ErrorMSG()
+{
+	msg="";
+	x=-1;
+	y=-1;
+	time=-1;
+}

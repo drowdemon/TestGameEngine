@@ -7,6 +7,7 @@
 #include "regiment.h"
 #include "button.h"
 #include "astarsearch.h"
+#include "dataStructures.h"
 
 //NOTE TO SELF: THIS FILE MAY ONLY HAVE extern VARIABLES, AND EXTERN VARIABLE MAY NOT BE DEFINED HERE i.e NO EQUALS SIGNS. THOSE GO IN globals.cpp!
 
@@ -123,6 +124,8 @@ extern int transferResourcesPressed;
 extern string transferResourcesTyped;
 extern string transferInput;
 extern int transferBuilding1;
+extern ErrorMSG currErr;
+extern vector<ErrorMSG> allErr;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

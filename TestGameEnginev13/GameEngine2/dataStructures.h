@@ -157,4 +157,24 @@ public:
 	ARGB(int pa, int pr, int pg, int pb);
 };
 
+#define FEWRESOURCES     0
+#define INVALIDSTRING	 1
+#define ILLEGALLOC       2
+#define FEWMENREG        3
+#define MANYMENREG	     4
+#define SELFTRANSFER	 5
+#define TOOBIGTRANSFER   6
+#define NORESOURCELOC    7
+
+class ErrorMSG
+{
+public:
+	string msg;
+	int x;
+	int y;
+	int time; //In frames. When creating do sec*FPS
+	ErrorMSG(string m, int px, int py, int t);
+	ErrorMSG();
+};
+
 #endif

@@ -68,6 +68,8 @@ int transferResourcesPressed=0; //!< Whether the user has clicked the transfer r
 string transferResourcesTyped="";
 string transferInput="";
 int transferBuilding1=-1;
+ErrorMSG currErr;
+vector<ErrorMSG> allErr;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
