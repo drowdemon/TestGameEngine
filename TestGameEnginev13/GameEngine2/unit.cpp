@@ -623,7 +623,7 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 					searchresources();
 				}
 				holding[(unsigned int)gatheringwhat]++;
-				if(selected==true) //this unit is selected, so how much stuff it is carrying needs to be displayed
+				if(selected==true && player==0) //this unit is selected, so how much stuff it is carrying needs to be displayed
 					redraw=true;
 				sum++;
 			}
@@ -816,7 +816,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 							movetoy=allbuildings[player][transferto].y;
 							allobstacles[player][index].clear();
 							somethingsent=false; //no need
-							redraw=1;
+							if(player==0)
+								redraw=1;
 							break;
 						}
 						else //need to transfer less than can hold
@@ -826,7 +827,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 							sum+=allbuildings[player][transferfrom].transfer[i];
 							somethingsent=true;
 							allbuildings[player][transferfrom].transfer[i]=0;
-							redraw=1;
+							if(player==0)
+								redraw=1;
 						}
 					}
 					else //not enough, fill as much as I can and empty the building
@@ -838,7 +840,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 							allbuildings[player][transferfrom].transfer[i]-=allbuildings[player][transferfrom].holding[i];
 							allbuildings[player][transferfrom].holding[i]=0;
 							somethingsent=true;
-							redraw=1;
+							if(player==0)
+								redraw=1;
 						}
 						else
 						{
@@ -847,7 +850,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 							sum+=allbuildings[player][transferfrom].transfer[i];
 							somethingsent=true;
 							allbuildings[player][transferfrom].transfer[i]=0;
-							redraw=1;
+							if(player==0)	
+								redraw=1;
 						}
 					}
 				}
@@ -874,7 +878,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				allbuildings[player][transferto].holding[i]+=holding[i];
 				sum+=holding[i];
 				holding[i]=0;
-				redraw=1;
+				if(player==0)
+					redraw=1;
 			}
 			else
 			{
@@ -882,7 +887,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 				{
 					holding[i]-=(allbuildings[player][transferto].maxhold-sum);
 					allbuildings[player][transferto].holding[i]+=(allbuildings[player][transferto].maxhold-sum);
-					redraw=1;
+					if(player==0)
+						redraw=1;
 				}
 				success=false; //failed
 				break; //failed
@@ -1028,7 +1034,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 								break;
 							}
 						}
-						redraw=true;
+						redraw=1;
 					}
 					return;
 				}
@@ -1113,7 +1119,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 								break;
 							}
 						}
-						redraw=true;
+						redraw=1;
 					}
 					return;
 				}
@@ -1200,7 +1206,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 								break;
 							}
 						}
-						redraw=true;
+						redraw=1;
 					}
 					return;
 				}
@@ -1284,7 +1290,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 								break;
 							}
 						}
-						redraw=true;
+						redraw=1;
 					}
 					return;
 				}
@@ -1370,7 +1376,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 						break;
 					}
 				}
-				redraw=true;
+				redraw=1;
 			}
 			return;
 		}
@@ -1556,7 +1562,7 @@ bool unit::checknomove(bool siegesent)
 						allbuildings[player][nearesthold].holding[i]+=holding[i];
 						holding[i]=0;
 					}
-					if(selected==true || allbuildings[player][nearesthold].selected==true)
+					if(player==0 && (selected==true || allbuildings[player][nearesthold].selected==true))
 						redraw=true;
 					movetox=gatheringx;
 					movetoy=gatheringy;

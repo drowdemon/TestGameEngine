@@ -248,7 +248,8 @@ void hourpassed(int arg)
 }
 void selectone(int player, point &clicked) //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
 {
-	redraw=1;//mod buttons likely
+	if(player==0)
+		redraw=1;//mod buttons likely
 	if(sqrt(pow(clicked.x-allunits[player][generals[player]]->x,2)+pow(clicked.y-allunits[player][generals[player]]->y,2))>allunits[player][generals[player]]->los) //out of range
 	{
 		if(whatsselected[player]==true)
@@ -379,7 +380,8 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 }
 void selectmany(int player, myrect &clicked)//select all the units in a box made by clicking and holding and dragging
 {
-	redraw=1; //mod buttons likely
+	if(player==0)
+		redraw=1; //mod buttons likely
 	if(whatsselected[player]==true)
 	{
 		for(unsigned int i=0; i<selectedunits[player].size(); i++)
@@ -968,7 +970,7 @@ void processPassiveMouseMove(int x, int y)
 }
 void processMouseMove(int x, int y)
 {
-	if(mousex2!=x && mousey2!=y)
+	if(mousex2!=x && mousey2!=y && lbuttondown)
 	{
 		uptomousex2=(float)x;
 		uptomousey2=(float)y;
@@ -1012,7 +1014,7 @@ void processMouse(int button, int state, int x, int y)
 				buildingwhat=-1;
 				buildingwidth=0;
 				buildingheight=0;
-				return;
+				//return; //Fixed bug where units would be selected if building placed in invalid square
 			}
 			lbuttondown=true;
 			uptomousex2=mousex2;
@@ -1020,6 +1022,7 @@ void processMouse(int button, int state, int x, int y)
 		}
 		else if(state==GLUT_UP)
 		{
+			lbuttondown=false;
 			if(dblclick==true)
 			{
 				dblclick=false; //makes sure this isn't called after a double click. It will be:  left down, left up, left down, double click, left up (ignored due to this) end
@@ -1059,7 +1062,6 @@ void processMouse(int button, int state, int x, int y)
 			//GetClientRect(hWnd, &client);
 			//int currx=GET_X_LPARAM(lParam);
 			//int curry=GET_Y_LPARAM(lParam);
-			lbuttondown=false;
 			if(y>=HEIGHT-100)//buttons
 			{
 				for(unsigned int i=0; i<allbuttons.size(); i++)
@@ -1204,7 +1206,7 @@ void processMouse(int button, int state, int x, int y)
 void initializeGameEngine()
 {
 	srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
-	redraw=2;
+	redraw=5;
 	map.resize(MAPSIZE);
 	minimapseen.resize(numplayers);
 	overwriteunits.resize(numplayers);
@@ -1339,16 +1341,16 @@ void initializeGameEngine()
 	alldisp.push_back(display("Gold: ", WIDTH/3+5, 615+2*18, YOUR_UNIT, dispresourcesunit));
 	alldisp.push_back(display("Stone: ", WIDTH/3+5, 615+3*18, YOUR_UNIT, dispresourcesunit));
 	indexResourcedispbuilding=alldisp.size();
-	alldisp.push_back(display("Food: ", WIDTH/3+5, 615+0*18, YOUR_BUILDING, dispresourcesbuilding));
-	alldisp.push_back(display("Wood: ", WIDTH/3+5, 615+1*18, YOUR_BUILDING, dispresourcesbuilding));
-	alldisp.push_back(display("Gold: ", WIDTH/3+5, 615+2*18, YOUR_BUILDING, dispresourcesbuilding));
-	alldisp.push_back(display("Stone: ", WIDTH/3+5, 615+3*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Food: ", WIDTH/3+5+355, 615+1*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Wood: ", WIDTH/3+5+355, 615+2*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Gold: ", WIDTH/3+5+355, 615+3*18, YOUR_BUILDING, dispresourcesbuilding));
+	alldisp.push_back(display("Stone: ", WIDTH/3+5+355, 615+4*18, YOUR_BUILDING, dispresourcesbuilding));
 
 	alldisp.push_back(display("Health: ", WIDTH/3+5+358, 615, YOUR_UNIT, disphealth));
 	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_UNIT, dispname));
 	alldisp.push_back(display("Moral: ", WIDTH/3+5+361, 635, YOUR_UNIT, dispmoral));
 	alldisp.push_back(display("Food Required: ", WIDTH/3+5+320, 655, YOUR_UNIT, dispfoodrequired));
-	alldisp.push_back(display("Health: ", WIDTH/3+5+358, 615, YOUR_BUILDING, dispbuildinghealth));
+	alldisp.push_back(display("Health: ", WIDTH/3+5+355, 615, YOUR_BUILDING, dispbuildinghealth));
 	alldisp.push_back(display("", WIDTH/3+5+275, 615, YOUR_BUILDING, dispbuildingname));
 
 	indexGarrisondisp=alldisp.size();
@@ -1745,7 +1747,7 @@ void mainTimerProc(int arg)
 		{
 			makeRect(0,HEIGHT-16,WIDTH,16,terminalColor);
 			char *toprint=new char[transferResourcesTyped.length()+1];
-			for(int i=0; i<transferResourcesTyped.length(); i++)
+			for(unsigned int i=0; i<transferResourcesTyped.length(); i++)
 				toprint[i]=transferResourcesTyped[i];
 			toprint[transferResourcesTyped.length()]=0;
 			renderBitmapString(5,HEIGHT-3,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
@@ -2182,7 +2184,7 @@ void processKeys(unsigned char key, int x, int y)
 
 int processResources(string input, char search, int len)
 {
-	for(int i=0; i<input.length(); i++)
+	for(unsigned int i=0; i<input.length(); i++)
 	{
 		if(input[i]==search || input[i]==search+32) //search is uppercase, checks lowercase too
 		{
@@ -2190,7 +2192,7 @@ int processResources(string input, char search, int len)
 			{
 				i+=len; //go to where number should be.
 				string num;
-				for(int j=i; j<input.length(); j++)
+				for(unsigned int j=i; j<input.length(); j++)
 				{
 					if(input[j]>='0' && input[j]<='9') //number
 						num+=input[j];
@@ -2206,7 +2208,7 @@ int processResources(string input, char search, int len)
 			{
 				i+=1;
 				string num;
-				for(int j=i; j<input.length(); j++)
+				for(unsigned int j=i; j<input.length(); j++)
 				{
 					if(input[j]>='0' && input[j]<='9') //number
 						num+=input[j];
@@ -2248,7 +2250,7 @@ bool transferResources(int player, string input, int bindex1, int bindex2)
 		return false; //failed
 	for(int i=0; i<4; i++)
 		allbuildings[player][bindex1].transfer[i]=totrans[i];
-	for(int i=0; i<selectedunits[player].size(); i++)
+	for(unsigned int i=0; i<selectedunits[player].size(); i++)
 	{
 		allunits[player][selectedunits[player][i]]->transferring=1;
 		allunits[player][selectedunits[player][i]]->transferfrom=bindex1;

@@ -9,7 +9,8 @@ void makereg(buttonparam b)
 		allregiments[b.player].push_back(regiment(designatedunit[b.player],b.player,allregiments[b.player].size()));
 		if(!allregiments[b.player][allregiments[b.player].size()-1].addunits(selectedunits[b.player])) //add the selected units to the regiment, if failed delete regiment
 			allregiments[b.player].pop_back();
-		redraw=1;
+		if(b.player==0)
+			redraw=1;
 	}
 }
 void setstance(buttonparam b)
@@ -53,7 +54,8 @@ void selectgarrison(buttonparam b)
 }
 void ungarrisonall(buttonparam b)
 {
-	redraw=true;
+	if(b.player==0)
+		redraw=true;
 	for(unsigned int i=0; i<allbuildings[b.player][selectedunits[b.player][0]].garrisoned.size(); i++)
 	{
 		allunits[b.player][allbuildings[b.player][selectedunits[b.player][0]].garrisoned[i]]->garrisoned=0;
@@ -82,7 +84,8 @@ void ungarrisonall(buttonparam b)
 }
 void ungarrison(buttonparam b)
 {
-	redraw=true;
+	if(b.player==0)
+		redraw=true;
 	allunits[b.player][allbuildings[b.player][selectedunits[b.player][0]].garrisoned[b.index-indexGarrisonbutton]]->garrisoned=0;
 	point p=allbuildings[b.player][selectedunits[b.player][0]].checksurroundingarea(allunits[b.player][allbuildings[b.player][selectedunits[b.player][0]].garrisoned[b.index-indexGarrisonbutton]]->whatisit,allunits[b.player][allbuildings[b.player][selectedunits[b.player][0]].garrisoned[b.index-indexGarrisonbutton]]->width,allunits[b.player][allbuildings[b.player][selectedunits[b.player][0]].garrisoned[b.index-indexGarrisonbutton]]->height);
 	if(p.x==-1 && p.y==-1)
@@ -109,7 +112,8 @@ void ungarrison(buttonparam b)
 }
 void leaveship(buttonparam b)
 {
-	redraw=true;
+	if(b.player==0)
+		redraw=true;
 	point p=allunits[b.player][allunits[b.player][selectedunits[b.player][0]]->unitsinside[b.index-indexSailorsbutton]]->checksurroundingarea(allunits[b.player][allunits[b.player][selectedunits[b.player][0]]->unitsinside[b.index-indexSailorsbutton]]->width,allunits[b.player][allunits[b.player][selectedunits[b.player][0]]->unitsinside[b.index-indexSailorsbutton]]->height);
 	if(p.x==-1 && p.y==-1)
 		return; //fail PRINT MESSAGE
