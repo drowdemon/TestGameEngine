@@ -186,5 +186,10 @@ public:
 	string (*func)(int); //!< To print variable text
 	mouseOver(string txt, int p_x, int p_y, unsigned long long dw, string (*f)(int));
 };
+struct POINT
+{
+	int x;
+	int y;
+};
 
 #endif

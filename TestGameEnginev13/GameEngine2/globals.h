@@ -57,6 +57,12 @@ bool chkmvp1(tile &checkwhat, short player, short index, short utype);
 bool checktouchingland(int x, int y);
 string inttos(int num);
 bool transferResources(int player, string input, int bindex1, int bindex2);
+void mainTimerProc(int arg);
+void initializeGameEngine();
+void selectone(int player, point &clicked); //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
+void selectmany(int player, myrect &clicked); //select all the units in a box made by clicking and holding and dragging
+void move(int player, POINT &gowhere, bool waypoint=false);
+void capture(int player, point &clicked);
 
 //declarations of global variables
 extern int countobstacle;//var to make sure that there are no infinite loops in threadgoaroundobstacle
@@ -129,6 +135,8 @@ extern int transferBuilding1;
 extern ErrorMSG currErr;
 extern vector<ErrorMSG> allErr;
 extern vector<mouseOver> allMouseOver;
+extern int WIDTH; 
+extern int HEIGHT;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

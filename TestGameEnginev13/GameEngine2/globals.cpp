@@ -73,6 +73,8 @@ int transferBuilding1=-1;
 ErrorMSG currErr;
 vector<ErrorMSG> allErr;
 vector<mouseOver> allMouseOver;
+int WIDTH=700;
+int HEIGHT=700;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
