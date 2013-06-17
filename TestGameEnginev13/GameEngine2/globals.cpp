@@ -75,6 +75,7 @@ vector<ErrorMSG> allErr;
 vector<mouseOver> allMouseOver;
 int WIDTH=700;
 int HEIGHT=700;
+unsigned int scrollDir=0;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;

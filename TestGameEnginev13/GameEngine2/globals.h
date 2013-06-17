@@ -39,6 +39,11 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define MAPSIZE 200 //will be 1000
 //! Distance that a unit can be from the lieutenant of a regiment before it no longer recieves/updates report
 #define DIST_TO_REG 20 
+//! The 4 directions, for scrolling
+#define LEFT  1
+#define RIGHT 2
+#define UP    4
+#define DOWN  8
 
 //forward declarations of functions
 void hourpassed(int arg);
@@ -137,6 +142,7 @@ extern vector<ErrorMSG> allErr;
 extern vector<mouseOver> allMouseOver;
 extern int WIDTH; 
 extern int HEIGHT;
+extern unsigned int scrollDir; //The scroll direction. Possibilities are LEFT RIGHT UP DOWN, which are |'d together
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

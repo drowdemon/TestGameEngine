@@ -911,7 +911,6 @@ string inttos(int num)
 	}
 	return ret;
 }
-
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -940,7 +939,6 @@ int main(int argc, char **argv)
 	glutMainLoop();
 	return 0;
 }
-
 void initializeGameEngine()
 {
 	srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
@@ -1251,7 +1249,6 @@ void initializeGameEngine()
 	//CreateThread(NULL, 0, ThreadTimerProc, NULL, 0, NULL);
 	glutTimerFunc(1000,hourpassed,0);
 }
-
 void mainTimerProc(int arg)
 {
 	glutTimerFunc(50,mainTimerProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE, which is why it is called here. In effect, time delayed recursion.
@@ -1408,12 +1405,20 @@ void mainTimerProc(int arg)
 			renderBitmapString(currErr.x, currErr.y+13, 0, GLUT_BITMAP_HELVETICA_12, toprint, darkRed);
 		}
 	}
-	if(currErr.msg!="" && currErr.time>0)
+	if(currErr.msg!="" && currErr.time>0) //update time left for error message
 	{
 		currErr.time--;
 		if(currErr.time<=0)
 			redraw=1;
 	}
+    if((scrollDir&LEFT)==LEFT) //scroll
+        topleft.x-=1;
+    else if((scrollDir&RIGHT)==RIGHT)
+        topleft.x+=1;
+    if((scrollDir&DOWN)==DOWN)
+        topleft.y-=.5;
+    else if((scrollDir&UP)==UP)
+        topleft.y+= .5; //end scroll
 	glScissor(0,100,WIDTH,HEIGHT-100);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
 	{
@@ -1747,7 +1752,6 @@ void mainTimerProc(int arg)
 	glScissor(0,0,WIDTH,HEIGHT);
 	glutSwapBuffers();
 }
-
 void renderReportDialog()
 { //TODO Make this change the text when you click a 'button'
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1885,7 +1889,6 @@ int processResources(string input, char search, int len)
 	}
 	return 0;
 }
-
 bool transferResources(int player, string input, int bindex1, int bindex2)
 {
 	if(bindex1==bindex2) //transfering to self

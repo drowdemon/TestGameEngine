@@ -9,23 +9,39 @@ int dblclickglut=-1;
 
 void processPassiveMouseMove(int x, int y)
 {
-	if(x<=20 && topleft.x>0)
+    scrollDir=0;
+    if(x<=20 && topleft.x>0)
+        scrollDir|=LEFT;
+    else if(x>=(WIDTH-20) && topleft.x<((map[0].size()*15)-WIDTH)/15)
+        scrollDir|=RIGHT;
+    if(y<=40 && topleft.y>0)
+        scrollDir|=DOWN;
+    else if(y>=(HEIGHT-140) && y<=HEIGHT-100 && topleft.y<((map.size()*15)-HEIGHT)/15)
+        scrollDir|=UP;
+	/*if(x<=20 && topleft.x>0)
 		topleft.x-=1;
 	else if(x>=(WIDTH-20) && topleft.x<((map[0].size()*15)-WIDTH)/15)
 		topleft.x+=1;
 	if(y<=40 && topleft.y>0)
 		topleft.y-=.5;
 	else if(y>=(HEIGHT-140) && y<=HEIGHT-100 && topleft.y<((map.size()*15)-HEIGHT)/15)
-		topleft.y+=.5;//end scroll
+		topleft.y+=.5;//end scroll*/
 	currmousex2=x;
 	currmousey2=y;
 	mousex=x;
 	mousey=y;
-	//currmousex2+=(topleft.x*15);
-	//currmousey2+=(topleft.y*15);
 }
 void processMouseMove(int x, int y)
 {
+    scrollDir=0;
+    if(x<=20 && topleft.x>0)
+        scrollDir|=LEFT;
+    else if(x>=(WIDTH-20) && topleft.x<((map[0].size()*15)-WIDTH)/15)
+        scrollDir|=RIGHT;
+    if(y<=40 && topleft.y>0)
+        scrollDir|=DOWN;
+    else if(y>=(HEIGHT-140) && y<=HEIGHT-100 && topleft.y<((map.size()*15)-HEIGHT)/15)
+        scrollDir|=UP;
 	if(mousex2!=x && mousey2!=y && lbuttondown)
 	{
 		uptomousex2=(float)x;
