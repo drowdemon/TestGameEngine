@@ -10,6 +10,7 @@
 #include "astarsearch.h"
 #include "buttonFunctions.h"
 #include "displayFunctions.h"
+#include "mouseOverFunctions.h"
 
 #include <vector>
 #include <cstdlib>
@@ -986,6 +987,8 @@ void processPassiveMouseMove(int x, int y)
 		topleft.y+=.5;//end scroll
 	currmousex2=x;
 	currmousey2=y;
+	mousex=x;
+	mousey=y;
 	//currmousex2+=(topleft.x*15);
 	//currmousey2+=(topleft.y*15);
 }
@@ -998,6 +1001,8 @@ void processMouseMove(int x, int y)
 		uptomousex2+=(topleft.x*15);
 		uptomousey2+=(topleft.y*15);
 	}
+	mousex=x;
+	mousey=y;
 }
 
 void dblClickTimer(int arg)
@@ -1316,14 +1321,18 @@ void initializeGameEngine()
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22, 70, 18, "Designate",designate,YOUR_UNIT));
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22*3, 70, 18, "Record", beginrecordreport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
 	allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
-	allbuttons.push_back(button(WIDTH*2/3+5+300, 615+22*3, 113, 18, "Transfer Resources", transferResourcesButton, YOUR_UNIT | YOUR_MULT_UNITS));	
-
+	indexTransferbutton=allbuttons.size();
+    allbuttons.push_back(button(WIDTH*2/3+5+300, 615+22*3, 113, 18, "Transfer Resources", transferResourcesButton, YOUR_UNIT | YOUR_MULT_UNITS));	
+    allMouseOver.push_back(mouseOver("Enter resources to transfer from one building to another in the format: [type of resource][amount] i.e. Food100gold20W40s10 or just g30. At any point it may be the whole word or just the first letter.",5,HEIGHT-105,indexTransferbutton,nullMouseFunc));
+    
+    indexBuildingsbutton=allbuttons.size();
 	for(unsigned int i=1; i<allbuildablebuildings.size(); i++) //starting with 1 skips the pile
 	{
 		if(i<=12)
 			allbuttons.push_back(button(5+103*((i-1)/3), 615+22*((i-1)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_1,i));
 		else
 			allbuttons.push_back(button(5+103*((i-13)/3), 615+22*((i-13)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_2,i));
+		allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildBuilding));
 	}
 	allbuttons.push_back(button(5+309, 615+66, 100, 18, "Switch Page", nextpage, YOUR_UNIT | YOUR_MULT_UNITS));
 	//allbuttons.push_back(button(5, 615, 60, 18, "House", build, YOUR_UNIT | YOUR_MULT_UNITS,0));
@@ -1746,6 +1755,25 @@ void mainTimerProc(int arg)
 				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
 				drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
 				delete[] toprint;
+				if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
+				{
+					for(unsigned int j=0; j<allMouseOver.size(); j++)
+					{
+						if(allMouseOver[j].dispwith==i)
+						{
+							string ret=allMouseOver[j].func(j);
+							toprint=new char[allMouseOver[j].text.length()+ret.length()+1];
+							for(unsigned int k=0; k<allMouseOver[j].text.length(); k++)
+								toprint[k]=allMouseOver[j].text[k];
+							for(unsigned int k=0; k<ret.length(); k++)
+								toprint[allMouseOver[j].text.length()+k]=ret[k];
+							toprint[allMouseOver[j].text.length()+ret.length()]=0;
+							renderBitmapString(allMouseOver[j].x,allMouseOver[j].y+12,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
+							delete[] toprint;
+							break;
+						}
+					}
+				}
 			}
 		}
 		for(unsigned int i=0; i<alldisp.size(); i++) //Print things in disp
@@ -2102,6 +2130,33 @@ void mainTimerProc(int arg)
 		glVertex3f( 2,  2,0);
 		glVertex3f( 0,  2,0);
 	glEnd();*/
+    for(unsigned int i=0; i<allbuttons.size(); i++) // Print mouse over text, if any
+    {
+        if(checkdisp(0,allbuttons[i].dispwhen))
+        {
+            if(((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend) && alldisp[indexGarrisondisp+i-indexGarrisonbutton].func(indexGarrisondisp+i-indexGarrisonbutton)=="")
+                continue;
+            if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
+            {
+                for(unsigned int j=0; j<allMouseOver.size(); j++)
+                {
+                    if(allMouseOver[j].dispwith==i)
+                    {
+                        string ret=allMouseOver[j].func(j);
+                        char *toprint=new char[allMouseOver[j].text.length()+ret.length()+1];
+                        for(unsigned int k=0; k<allMouseOver[j].text.length(); k++)
+                            toprint[k]=allMouseOver[j].text[k];
+                        for(unsigned int k=0; k<ret.length(); k++)
+                            toprint[allMouseOver[j].text.length()+k]=ret[k];
+                        toprint[allMouseOver[j].text.length()+ret.length()]=0;
+                        renderBitmapString(allMouseOver[j].x,allMouseOver[j].y,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
+                        delete[] toprint;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 	glScissor(0,0,WIDTH,HEIGHT);
 	glutSwapBuffers();
 }

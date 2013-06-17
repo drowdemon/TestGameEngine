@@ -176,5 +176,15 @@ public:
 	ErrorMSG(string m, int px, int py, int t);
 	ErrorMSG();
 };
+class mouseOver
+{
+public:
+	string text;
+	int x; //where it will show up.
+	int y; 
+	unsigned long long dispwith; //!< What button it is assosiated with
+	string (*func)(int); //!< To print variable text
+	mouseOver(string txt, int p_x, int p_y, unsigned long long dw, string (*f)(int));
+};
 
 #endif

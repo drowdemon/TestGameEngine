@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <cstdlib>
 
-
 using namespace std;
 
 //! \file unit.cpp This contains class unit

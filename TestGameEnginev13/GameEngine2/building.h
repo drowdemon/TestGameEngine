@@ -1,6 +1,6 @@
 #ifndef building_h
 #define building_h
-#include "baseUnitBuildings.h"
+#include "baseUnitBuildings2.h"
 #include "dataStructures.h"
 class building : public basebuilding //all buildings, including towers, walls, castles, houses etc.
 {

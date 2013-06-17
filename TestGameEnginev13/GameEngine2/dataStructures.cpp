@@ -143,3 +143,11 @@ ErrorMSG::ErrorMSG()
 	y=-1;
 	time=-1;
 }
+mouseOver::mouseOver(string txt, int p_x, int p_y, unsigned long long dw, string (*f)(int))
+{
+	text=txt;
+	x=p_x;
+	y=p_y;
+	dispwith=dw;
+	func=f;
+}

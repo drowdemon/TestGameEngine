@@ -87,6 +87,8 @@ extern vector <vector <vector <creationinfo> > > creationqueueunits;  //var[play
 extern vector <vector <vector <bool> > > minimapseen; //in form [player][y][x], if the specified player can see the tile, it is true, else false
 extern vector <vector <short> > newlybuiltbuildings; //var[player][index of built thing]
 extern bool lbuttondown;
+extern float mousex;//absolute position of mouse at any time
+extern float mousey;
 extern float mousex2; //where the mouse was when clicked
 extern float mousey2;
 extern float uptomousex2; //where the mouse was when last held down
@@ -126,6 +128,7 @@ extern string transferInput;
 extern int transferBuilding1;
 extern ErrorMSG currErr;
 extern vector<ErrorMSG> allErr;
+extern vector<mouseOver> allMouseOver;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;
@@ -136,5 +139,7 @@ extern int indexGarrisonbuttonend;
 extern int indexSailorsdisp;
 extern int indexSailorsbutton;
 extern int indexSailorsbuttonend;
+extern int indexBuildingsbutton;
+extern int indexTransferbutton;
 
 #endif

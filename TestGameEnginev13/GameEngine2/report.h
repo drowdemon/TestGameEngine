@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "dataStructures.h"
-#include "baseUnitBuildings.h"
+#include "baseUnitBuildings2.h"
 using namespace std;
 
 //!	\file report.h This contains class report

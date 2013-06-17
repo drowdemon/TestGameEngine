@@ -7,7 +7,7 @@
 
 short currplayer=0; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!! DELETE DELETE DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-//declarations of global variables
+//declmarations of global variables
 int countobstacle=0;//var to make sure that there are no infinite loops in threadgoaroundobstacle
 vector <vector <unit*> > allunits;   //all the units, each new vector of units is for each player
 vector <vector <building> > allbuildings;
@@ -36,11 +36,13 @@ vector <vector <vector <creationinfo> > > creationqueueunits;  //var[player][ind
 vector <vector <vector <bool> > > minimapseen; //in form [player][y][x], if the specified player can see the tile, it is true, else false
 vector <vector <short> > newlybuiltbuildings; //var[player][index of built thing]
 bool lbuttondown=false;
+float mousex=0; //Absolute position of mouse at any time, not in tiles, for mouse over text
+float mousey=0; 
 float mousex2=0; //where the mouse was when clicked
 float mousey2=0;
 float uptomousex2=0; //where the mouse was when last held down
 float uptomousey2=0;
-float currmousex2=0; //where the mouse is currently
+float currmousex2=0; //where the mouse is currently, for building hover
 float currmousey2=0;
 vector <short> designatedunit; //each player can designate one unit by ctrl-clicking. vector is of players. This is to select the lieutenant in a regiment
 short numplayers=2; //this will later be made changeable, NOT FULLY IMPLEMENTED, CANT JUST CHANGE HERE
@@ -70,6 +72,7 @@ string transferInput="";
 int transferBuilding1=-1;
 ErrorMSG currErr;
 vector<ErrorMSG> allErr;
+vector<mouseOver> allMouseOver;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
@@ -85,3 +88,5 @@ int indexGarrisonbuttonend;
 int indexSailorsdisp;
 int indexSailorsbutton;
 int indexSailorsbuttonend;
+int indexBuildingsbutton;
+int indexTransferbutton;
