@@ -1,7 +1,7 @@
 #include "globals.h"
 #include "dataStructures.h"
 #include "tile.h"
-#include "baseUnitBuildings.h"
+#include "baseUnitBuildings2.h"
 #include "building.h"
 #include "unit.h"
 #include "siege.h"
@@ -865,8 +865,8 @@ bool chkmvp1(tile &checkwhat, short player, short index, short utype)
 	}
 	if(checkwhat.tilestyle==TS_GATE && checkwhat.buildingplayer==players[player])
 		good=true;
-	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true) // It is 1 or 3 - there is a unit
-		return true;
+	//if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true) // It is 1 or 3 - there is a unit //AAHHHH WHAT THE HELL IS THIS???? WHAT'S IT DO??? ITS KILLI NEED IT SOMEWHERE ELSE!!!
+		//return true; //removing these lines fixed the ungarrissoning sailors problem, but I really really really hope it didn't break anything.
 	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
 		good=false;	
 	return good;

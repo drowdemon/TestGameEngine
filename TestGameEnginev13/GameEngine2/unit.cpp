@@ -1397,11 +1397,19 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 bool unit::checknomove(bool siegesent)
 {
 	if(unitstance==US_DONOTHING && userordered==false)
-		return false;
+	{
+        movetox=x;
+        movetoy=y;
+        return false;
+    }
 	if(whatisit==2 && allsiegeunits[player][siegeindex].manning.size()<(unsigned int)allsiegeunits[player][siegeindex].minmanning)
 		return false; //not enough units manning the siege unit to move
 	if(whatisit==3 && unitsinside.size()<mingarrison)
-		return false; //not enough units in the ship for it to move
+	{
+        movetox=x;
+        movetoy=y;
+        return false; //not enough units in the ship for it to move
+    }
 	if(health<=0) //skip the movement of all dead units
 		return false;
 	if(whatisit!=2 && siegeindex!=-1 && siegesent==false)//skip the movement of all actively manning units, until the siege unit moves
