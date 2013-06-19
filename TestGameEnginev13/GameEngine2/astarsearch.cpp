@@ -30,31 +30,48 @@ float problem::heuristic(point &state)
 }
 void problem::getsuccessors(point &state, vector<point> &add, vector<point> &moves, float speed, unit *u)
 {
-	//point checkthese[4]={point(-speed,0),point(0,-speed),point(0,speed),point(speed,0)};
-	point checkthese[4]={point(-0.9f,0),point(0,-0.9f),point(0,0.9f),point(0.9f,0)};
+	point checkthese[4]={point(-speed,0),point(0,-speed),point(0,speed),point(speed,0)};
+	//point checkthese[4]={point(-0.9f,0),point(0,-0.9f),point(0,0.9f),point(0.9f,0)};
 	for(int k=0; k<4; k++)
 	{
-		float i=checkthese[k].y;
-		float j=checkthese[k].x;
-		bool good[4]={false};
-		good[0]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j)]);
-		if(good[0]==true)
-			good[1]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j)]);
-		if(good[1]==true)
-			good[2]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j+u->width-0.001f)]);
-		if(good[2]==true)
-			good[3]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j+u->width-0.001f)]);
-		if(good[3]==true)
+        int maxsofar=0;
+        for(int h=1; h<=10; h++)
 		{
-			add.push_back(point(state.x+j,state.y+i));
-			moves.push_back(point(j,i));
-		}
+            float i=checkthese[k].y*h;
+            float j=checkthese[k].x*h;
+            bool good[4]={false};
+            good[0]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j)]);
+            if(good[0]==true)
+                good[1]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j)]);
+            if(good[1]==true)
+                good[2]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j+u->width-0.001f)]);
+            if(good[2]==true)
+                good[3]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j+u->width-0.001f)]);
+            if(good[3]==true)
+            {
+                maxsofar=h;
+                //add.push_back(point(state.x+j,state.y+i));
+                //moves.push_back(point(j,i));
+            }
+            else
+                break;
+        }
+        if(maxsofar!=0)
+        {
+            add.push_back(point(state.x+checkthese[k].x*maxsofar,state.y+checkthese[k].y*maxsofar));
+            moves.push_back(point(checkthese[k].x*maxsofar,checkthese[k].y*maxsofar));
+        }
+        if(maxsofar>2)
+        {
+            add.push_back(point(state.x+checkthese[k].x*maxsofar/2.0,state.y+checkthese[k].y*maxsofar/2.0));
+            moves.push_back(point(checkthese[k].x*maxsofar/2.0,checkthese[k].y*maxsofar/2.0));
+        }
 	}
 }
 
-searchfringe::searchfringe(point pState, float wtd, vector<point> *mtd)
+searchfringe::searchfringe(point pState, float wtd, vector<point> &mtd)
 {
 	state=pState;
 	weighttodate=wtd;
-	movestodate=*mtd;
+	movestodate=mtd;
 }

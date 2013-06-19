@@ -23,6 +23,6 @@ public:
 	point state; //!< The current state
 	float weighttodate; //!< How expensive the current sequence is
 	vector<point> movestodate; //!< What has been done in this search so far
-	searchfringe(point pState, float wtd, vector<point> *mtd); //!< A constructor, that takes all of the variables listed
+	searchfringe(point pState, float wtd, vector<point> &mtd); //!< A constructor, that takes all of the variables listed
 };
 #endif

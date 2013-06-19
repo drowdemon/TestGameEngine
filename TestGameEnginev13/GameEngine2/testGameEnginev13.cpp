@@ -45,7 +45,7 @@ vector<point> astarsearch(problem p, float speed, unit *u)
 {
 	vector<searchfringe> fringe; //poss make this a heap
 	vector<point> empty;
-	fringe.push_back(searchfringe(point(u->x,u->y),0,&empty));
+	fringe.push_back(searchfringe(point(u->x,u->y),0,empty));
 	vector<point> visited; //make this a hashtable
 	unsigned int maxsize=50;
 	if(u->firstobstacleattempt==true)
@@ -101,7 +101,7 @@ vector<point> astarsearch(problem p, float speed, unit *u)
 			weights[i]+=p.heuristic(add[i]);
 			vector <point> temp=fringe[minindex].movestodate;
 			temp.push_back(moves[i]);
-			fringe.push_back(searchfringe(add[i],fringe[minindex].weighttodate+weights[i],&temp));
+			fringe.push_back(searchfringe(add[i],fringe[minindex].weighttodate+weights[i],temp));
 		}
 		fringe.erase(fringe.begin()+minindex);
 	}
