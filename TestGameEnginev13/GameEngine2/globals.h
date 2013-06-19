@@ -68,6 +68,8 @@ void selectone(int player, point &clicked); //select one unit, no shift key pres
 void selectmany(int player, myrect &clicked); //select all the units in a box made by clicking and holding and dragging
 void move(int player, POINT &gowhere, bool waypoint=false);
 void capture(int player, point &clicked);
+void renderReportDialog();
+void dialogProc(int arg);
 
 //declarations of global variables
 extern int countobstacle;//var to make sure that there are no infinite loops in threadgoaroundobstacle
@@ -143,6 +145,7 @@ extern vector<mouseOver> allMouseOver;
 extern int WIDTH; 
 extern int HEIGHT;
 extern unsigned int scrollDir; //The scroll direction. Possibilities are LEFT RIGHT UP DOWN, which are |'d together
+extern bool makeReportDialog;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

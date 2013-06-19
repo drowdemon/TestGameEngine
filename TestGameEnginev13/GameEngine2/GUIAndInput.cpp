@@ -347,6 +347,16 @@ void makeEllipse(float x, float y, float radiusx, float radiusy, ARGB color)
 			glVertex3f((float)(cos(i)*radiusx+x)*2.0/WIDTH, 2.0-(float)(sin(i)*radiusy+y)*2.0/HEIGHT, 0.0);
 	glEnd();
 }
+void makeRect(float x, float y, float width, float height, RGB color, int winwidth, int winheight)
+{
+	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
+	glBegin(GL_QUADS);
+		glVertex3f((float)x*2.0/winwidth,2.0-(float)y*2.0/winheight,0);
+		glVertex3f((float)(x+width)*2.0/winwidth,2.0-(float)y*2.0/winheight,0);
+		glVertex3f((float)(x+width)*2.0/winwidth,2.0-(float)(y+height)*2.0/winheight,0);
+		glVertex3f((float)x*2.0/winwidth,2.0-(float)(y+height)*2.0/winheight,0);
+	glEnd();
+}
 void drawLine(float x, float y, float fx, float fy, RGB color)
 {
 	glColor3f((float)color.r/255.0, (float)color.g/255.0, (float)color.b/255.0);
@@ -365,6 +375,17 @@ void drawEmptyRect(float x, float y, float width, float height, RGB color)
 		glVertex3f((float)x*2.0/WIDTH,2.0-(float)(y+height)*2.0/HEIGHT,0);
 	glEnd();
 }
+void drawEmptyRect(float x, float y, float width, float height, RGB color, int winwidth, int winheight)
+{
+	glColor3f(color.r/255.0, color.g/255.0, color.b/255.0);
+	glBegin(GL_LINE_LOOP);
+		glVertex3f((float)x*2.0/winwidth,2.0-(float)y*2.0/winheight,0);
+		glVertex3f((float)(x+width)*2.0/winwidth,2.0-(float)y*2.0/winheight,0);
+		glVertex3f((float)(x+width)*2.0/winwidth,2.0-(float)(y+height)*2.0/winheight,0);
+		glVertex3f((float)x*2.0/winwidth,2.0-(float)(y+height)*2.0/winheight,0);
+	glEnd();
+}
+
 void renderBitmapString(float x,float y,float z,void *font,char *string)
 {
 	char *c;
@@ -385,6 +406,24 @@ void renderBitmapString(float x,float y,float z,void *font,char *string,RGB colo
 	glRasterPos3f((float)x*2.0/WIDTH,2.0-(float)y*2.0/HEIGHT,(float)z);
 	for (c=string; *c != '\0'; c++)
 	{
+		glutBitmapCharacter(font, *c);
+	}
+	glEnable(GL_TEXTURE_2D);
+}
+void renderBitmapString(float x,float y,float z,void *font,char *string, int winwidth, int winheight)
+{
+	char *c;
+	glDisable(GL_TEXTURE_2D);
+	glColor3f(0.0,0.0,0.0);
+	glRasterPos3f((float)x*2.0/winwidth,2.0-(float)y*2.0/winheight,(float)z);
+    int numnew=0;
+	for (c=string; *c != '\0'; c++)
+	{
+        if(*c=='\n')
+        {
+            numnew++;
+            glRasterPos3f((float)x*2.0/winwidth,2.0-(float)(y+numnew*20)*2/winheight,(float)z);
+        }
 		glutBitmapCharacter(font, *c);
 	}
 	glEnable(GL_TEXTURE_2D);
@@ -413,4 +452,85 @@ void processKeys(unsigned char key, int x, int y)
 			transferResourcesTyped+=key;
 		redraw=1;
 	}
+}
+void renderReportDialog()
+{ //TODO Make this change the text when you click a 'button'
+    glutSetWindow(reportDialogWindow);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glLoadIdentity();
+		// Set the camera
+	gluLookAt(1.0f, 1.0f, 1.0f,
+			  1.0f, 1.0f, 0.0f,
+			  0.0f, 1.0f, 0.0f);
+
+	RGB black(0,0,0);
+	RGB blue(0,0,255);
+    RGB grey(200,200,200);
+	RGB currColor=black;
+    RGB reddish(205,65,23);
+	if(currReportTab==0)
+		currColor=blue;
+	else
+		currColor=black;
+    int dwidth=glutGet(GLUT_WINDOW_WIDTH);
+	int dheight=glutGet(GLUT_WINDOW_HEIGHT);
+    makeRect(0,0,dwidth,dheight,grey,dwidth,dheight);
+	drawEmptyRect(15,20,70,18,currColor,dwidth,dheight); //buttons
+	renderBitmapString(17,32,0,GLUT_BITMAP_HELVETICA_12,(char *)"Units Lost\0", dwidth, dheight);
+	if(currReportTab==1)
+		currColor=blue;
+	else
+		currColor=black;
+	drawEmptyRect(88,20,87,18,currColor,dwidth,dheight);
+	renderBitmapString(90,32,0,GLUT_BITMAP_HELVETICA_12,(char *)"Enemies Killed\0",dwidth, dheight);
+	if(currReportTab==2)
+		currColor=blue;
+	else
+		currColor=black;
+	drawEmptyRect(178,20,142,18,currColor,dwidth,dheight);
+	renderBitmapString(180,32,0,GLUT_BITMAP_HELVETICA_12,(char *)"Surviving Enemies Seen\0", dwidth, dheight);
+
+	renderBitmapString(30,52,0,GLUT_BITMAP_HELVETICA_12,(currRep->*reportfuncs[currReportTab])(), dwidth, dheight);
+    
+    drawEmptyRect(280,350,40,18,black,dwidth,dheight);
+    renderBitmapString(290,362,0,GLUT_BITMAP_HELVETICA_12,(char *)"OK\0", dwidth, dheight);
+    
+    makeRect(3,3,13,13,reddish,dwidth,dheight); //The 'x' box
+    glColor3f(.8,.8,.8); //greyish
+    glBegin(GL_LINES);
+		glVertex3f((float)6*2.0/dwidth,2.0-(float)6*2.0/dheight,0);
+		glVertex3f((float)(13)*2.0/dwidth,2.0-(float)13*2.0/dheight,0);
+    glEnd();
+    glBegin(GL_LINES);
+		glVertex3f((float)6*2.0/dwidth,2.0-(float)13*2.0/dheight,0);
+		glVertex3f((float)(13)*2.0/dwidth,2.0-(float)6*2.0/dheight,0);
+    glEnd();
+	glutSwapBuffers();
+    glutSetWindow(mainWindow);
+}
+void reportDialogMouse(int button, int state, int x, int y)
+{
+    if(button==GLUT_LEFT_BUTTON)
+    {
+        if(state==GLUT_UP)
+        {
+            if(x>=15 && x<=85 && y>=20 && y<=38) //hit first tab-button
+                currReportTab=0;
+            else if(x>=88 && x<=173 && y>=20 && y<=38) //second
+                currReportTab=1;
+            else if(x>=178 && x<=320 && y>=20 && y<=38) //third
+                currReportTab=2;
+            else if(x>=280 && x<=320 && y>=350 && y<=368) //ok button
+            {
+                makeReportDialog=false;
+                redraw=2;
+            }
+            else if(x>=3 && x<=13 && y>=3 && y<=13) //'x' button
+            {
+                makeReportDialog=false;
+                redraw=2;
+            }
+        }
+    }
 }

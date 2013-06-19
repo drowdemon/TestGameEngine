@@ -1752,101 +1752,6 @@ void mainTimerProc(int arg)
 	glScissor(0,0,WIDTH,HEIGHT);
 	glutSwapBuffers();
 }
-void renderReportDialog()
-{ //TODO Make this change the text when you click a 'button'
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glLoadIdentity();
-		// Set the camera
-	gluLookAt(1.0f, 1.0f, 1.0f,
-				  1.0f, 1.0f, 0.0f,
-				  0.0f, 1.0f, 0.0f);
-
-	RGB black(0,0,0);
-	RGB blue(0,0,255);
-	RGB currColor=black;
-	if(currReportTab==0)
-		currColor=blue;
-	else
-		currColor=black;
-	drawEmptyRect(3,3,15,5,currColor); //buttons
-	renderBitmapString(5,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Units Lost\0");
-	if(currReportTab==1)
-		currColor=blue;
-	else
-		currColor=black;
-	drawEmptyRect(20,3,15,5,currColor);
-	renderBitmapString(22,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Enemies Killed\0");
-	if(currReportTab==2)
-		currColor=blue;
-	else
-		currColor=black;
-	drawEmptyRect(28,3,15,5,currColor);
-	renderBitmapString(30,5,0,GLUT_BITMAP_HELVETICA_12,(char *)"Surviving Enemies Seen\0");
-
-	renderBitmapString(25,25,0,GLUT_BITMAP_HELVETICA_12,(currRep->*reportfuncs[currReportTab])());
-	glutSwapBuffers();
-}
-
-/*BOOL CALLBACK reportdialogproc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-	switch(Message)
-    {
-		case WM_INITDIALOG:
-		{
-			INITCOMMONCONTROLSEX ix;
-			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
-		    ix.dwICC = ICC_TAB_CLASSES;
-		    InitCommonControlsEx(&ix); // have to run this to use tab control
-		    hTabControl = GetDlgItem(hWnd,IDC_TAB);
-			TCITEM ti;
-			ti.mask = TCIF_TEXT; // I'm only having text on the tab
-			ti.pszText = "Units lost";
-			TabCtrl_InsertItem(hTabControl,0,&ti);
-			ti.pszText = "Enemies killed";
-			TabCtrl_InsertItem(hTabControl,1,&ti);
-			ti.pszText = "Surviving enemies seen";
-			TabCtrl_InsertItem(hTabControl,2,&ti);
-			TabCtrl_SetCurSel(hTabControl,0);
-
-			hCurrentTab = CreateDialog(hInst,MAKEINTRESOURCE(IDC_TAB1),hTabControl,0); // Setting dialog to tab one by default
-			return TRUE;
-		}
-		case WM_NOTIFY:
-		{
-			switch(((LPNMHDR)lParam)->code)
-			{
-				case TCN_SELCHANGE: // message sent because someone changed the tab selection (clicked on another tab)
-				{
-					EndDialog(hCurrentTab,0); // we don't want the current tab, kill it
-					hCurrentTab=CreateDialog(hInst,MAKEINTRESOURCE(IDC_TAB1+TabCtrl_GetCurSel(hTabControl)),hTabControl,0);
-					updatetext(hWnd,MSG_ONE+TabCtrl_GetCurSel(hTabControl),(currRep->*reportfuncs[TabCtrl_GetCurSel(hTabControl)])());
-					return TRUE;
-				}
-			}
-			return TRUE;
-		}
-        case WM_COMMAND:
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-					EndDialog(hCurrentTab,0);
-					DestroyWindow(reportdialoghwnd);
-            }
-			break;
-		case WM_DESTROY:
-			EndDialog(hCurrentTab,0);
-			DestroyWindow(reportdialoghwnd);
-			break;
-		case WM_CLOSE:
-			EndDialog(hCurrentTab,0);
-			DestroyWindow(reportdialoghwnd);
-        default:
-            return FALSE;
-    }
-    return TRUE;
-}*/
-
 int processResources(string input, char search, int len)
 {
 	for(unsigned int i=0; i<input.length(); i++)
@@ -1960,4 +1865,15 @@ bool transferResources(int player, string input, int bindex1, int bindex2)
 		allunits[player][selectedunits[player][i]]->movetoy=allbuildings[player][bindex1].y;
 	}
 	return true;
+}
+void dialogProc(int arg)
+{
+    if(makeReportDialog==false)
+    {
+        glutDestroyWindow(reportDialogWindow);
+        glutSetWindow(mainWindow);
+        return;
+    }
+    glutTimerFunc(100,dialogProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE, which is why it is called here. In effect, time delayed recursion.
+    renderReportDialog();
 }

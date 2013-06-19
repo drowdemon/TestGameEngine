@@ -1,6 +1,7 @@
 #include "report.h"
 #include "unit.h"
 #include "globals.h"
+#include "GUIAndInput.h"
 
 #include <GL/glut.h>
 using namespace std;
@@ -45,9 +46,14 @@ void report::updatedkilledunits(short player, short index)
 void report::give()
 {
 	//reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
-	reportDialogWindow=glutCreateSubWindow(mainWindow, 30, 30, 300, 400);
+    makeReportDialog=true;
+	reportDialogWindow=glutCreateSubWindow(mainWindow, 30, 30, 330, 400);
+    glutMouseFunc(reportDialogMouse);
 	glutSetWindow(reportDialogWindow);
-
+    glutDisplayFunc(renderReportDialog);
+    glutPostRedisplay();
+    glutTimerFunc(100,dialogProc,0);
+    glutSetWindow(mainWindow);
 	currRep=this;
 	reportfuncs[0]=&report::gentxtMyKilled;
 	reportfuncs[1]=&report::gentxtEnemyKilled;
