@@ -39,15 +39,15 @@ void problem::getsuccessors(point &state, vector<point> &add, vector<point> &mov
 		{
             float i=checkthese[k].y*h;
             float j=checkthese[k].x*h;
-            bool good[4]={false};
+            int good[4]={-1,-1,-1,-1};
             good[0]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j)]);
-            if(good[0]==true)
+            if(good[0]==0)
                 good[1]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j)]);
-            if(good[1]==true)
+            if(good[1]==0)
                 good[2]=u->chkmvp1(map[(int)(state.y+i)][(int)(state.x+j+u->width-0.001f)]);
-            if(good[2]==true)
+            if(good[2]==0)
                 good[3]=u->chkmvp1(map[(int)(state.y+i+u->height-0.001f)][(int)(state.x+j+u->width-0.001f)]);
-            if(good[3]==true)
+            if(good[3]==0)
             {
                 maxsofar=h;
                 //add.push_back(point(state.x+j,state.y+i));

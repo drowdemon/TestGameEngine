@@ -39,7 +39,7 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define MAPSIZE 200 //will be 1000
 //! Distance that a unit can be from the lieutenant of a regiment before it no longer recieves/updates report
 #define DIST_TO_REG 20 
-//! The 4 directions, for scrolling
+//! The 4 directions, for scrolling and unit messages
 #define LEFT  1
 #define RIGHT 2
 #define UP    4

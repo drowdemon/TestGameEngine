@@ -93,6 +93,8 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    message=0;
+    adjusting=0;
 }
 unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, /*short ft, short wt, short gt, short st, short tt, */short sn, float px, float py, float ar, short pid, float c, short p, short i, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg)
 {
@@ -173,6 +175,8 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    message=0;
+    adjusting=0;
 }
 unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison)
 {
@@ -237,6 +241,8 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    message=0;
+    adjusting=0;
 }
 void unit::attackgoingtobstacle(char canmoveto[6])
 {
@@ -380,7 +386,7 @@ void unit::goingtobstacle() //horizontal line
 		bool good=false;
 		for(int i=0; i<2; i++)
 		{
-			if(chkmvp1(map[(unsigned int)movetoy+j][(unsigned int)movetox+i], false)==true && chkmvp1(map[(unsigned int)movetoy+j][(unsigned int)movetox+i+width],false)==true && chkmvp1(map[(unsigned int)movetoy+j+height][(unsigned int)movetox+i],false)==true && chkmvp1(map[(unsigned int)movetoy+j+height][(unsigned int)movetox+i+width],false)==true)
+			if(chkmvp1(map[(unsigned int)movetoy+j][(unsigned int)movetox+i], false)==0 && chkmvp1(map[(unsigned int)movetoy+j][(unsigned int)movetox+i+width],false)==0 && chkmvp1(map[(unsigned int)movetoy+j+height][(unsigned int)movetox+i],false)==0 && chkmvp1(map[(unsigned int)movetoy+j+height][(unsigned int)movetox+i+width],false)==0)
 			{
 				good=true;
 				if(goingobstaclecounter<10)
@@ -423,12 +429,12 @@ void unit::trainlieut()
 		exp+=(1.0f/FPS)*(trainercoefficient*(FPS*10)/(lieutenant+10));
 	}
 }
-bool unit::chkmvp1(tile &checkwhat, bool checkelev)
+int unit::chkmvp1(tile &checkwhat, bool checkelev) //returns: 0=all clear. 1=bad. 2=friendly unit in the way
 {
 	if(stayoutoftowerrange==true && userordered==false && checkwhat.whichplayer.get(true)!=players[player]) //if its walking onto the range of an enemy building and its not supposed to
-		return false;
+		return 1;
 	if(checkelev==true && (map[(unsigned int)y][(unsigned int)x].elevation>checkwhat.elevation+1 || checkwhat.elevation>map[(unsigned int)y][(unsigned int)x].elevation+1))
-		return false;
+		return 1;
 	short walkable[6]={0};
 	if(whatisit!=3)//if we walk on land
 	{
@@ -444,21 +450,26 @@ bool unit::chkmvp1(tile &checkwhat, bool checkelev)
 		walkable[0]=TS_WATER;
 		walkable[1]=TS_FISH;
 	}
-	bool good=false;
+	int good=1; //bad
 	for(int i=0; i<6; i++)//check all the legal squares
 	{
 		if(checkwhat.tilestyle==walkable[i])
 		{
-			good=true;//if the square is legal
+			good=0;//if the square is legal, good
 			break;//stop
 		}
 	}
 	if(checkwhat.tilestyle==TS_GATE && checkwhat.buildingplayer==players[player])
-		good=true;
-	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true)
-		return true;
-	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
-		good=false;	
+		good=0; //good
+	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true)  //WTF? WHAT IS THIS??
+		return 0;
+	if(good==0 && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
+    {
+		if(checkwhat.unitplayer!=player)
+            good=1;	//bad
+        else
+            good=2; //unit in the way
+    }
 	return good;
 }
 short unit::build(short buildwhat, int buildatx, int buildaty)
@@ -937,6 +948,71 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 		decreaseby=0;
 	actspeed*=float(1-(.01*decreaseby)); //decreased speed for low health
 	actspeed+=tilespeed[map[(unsigned int)y][(unsigned int)x].tilestyle-1]; //adjust speed for what tile the unit is standing on
+    if(adjusting==0 && message!=0)
+    {
+        unsigned short dir=0;
+        if(movetox>x+0.0001) //moving right
+            dir|=RIGHT;
+        else if(movetox<x-0.0001)
+            dir|=LEFT;
+        if(movetoy>y+0.0001)
+            dir|=DOWN;
+        else if(movetoy<y-0.0001)
+            dir|=UP;
+        if((dir|message)==message) //going in same directions already
+            message=0; //already following the request
+        else //modify course
+        {
+            unsigned int changex=0;
+            unsigned int changey=0;
+            if((message&LEFT)==LEFT && (message&DOWN)==DOWN) //go perp: 
+            {
+                changex=1;
+                changey=-1; //go right/up
+            }
+            else if((message&LEFT)==LEFT && (message&UP)==UP) //go perp:
+            {
+                changex=1;
+                changey=1;
+            }
+            else if((message&RIGHT)==RIGHT && (message&UP)==UP) //go perp:
+            {
+                changex=-1;
+                changey=1;
+            }
+            else if((message&RIGHT)==RIGHT && (message&DOWN)==DOWN) //go perp:
+            {
+                changex=-1;
+                changey=-1;
+            }//If still in else/if block, then its a single direction
+            else if((message&LEFT)==LEFT)
+            {
+                changex=0;
+                changey=1;
+            }
+            else if((message&RIGHT)==RIGHT)
+            {
+                changex=0;    
+                changey=1; //move perp
+            }   
+            else if((message&DOWN)==DOWN)
+            {
+                 changey=0; //go perp
+                 changex=1;
+            }   
+            else if((message&UP)==UP)
+            {
+                changey=0; //go perp
+                changex=1;
+            }
+            allobstacles[player][index].insert(allobstacles[player][index].begin(),point(movetox-changex,movetoy-changey));
+            movetox+=changex;
+            movetoy+=changey;
+            adjusting=(int)(1.0/speed);
+        }
+    }
+    if(adjusting>0)
+        adjusting--;
 	if(sqrt(pow((movetox-x), 2)+pow((movetoy-y), 2))>actspeed+0.05) //start moving
 	{
 		if(abs((double)(movetox-x))>=0.0001)//if the line isn't vert
@@ -1045,14 +1121,14 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					}
 					return;
 				}
-				else if(ret==2)
+				else if(ret==2) //moving to obstacle, try again
 				{
 					userordered=false;
 					movement(); //try moving with my new movetox/movetoy
 					return;
 				}
-				else if(ret==0)
-				{
+				else if(ret==0) //obstacle avoidance
+				{ 
 					if(allobstacles[player][index].size()<=0)
 					{
 						//movetox=x;
@@ -1068,6 +1144,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					movement();
 					return;
 				}
+                else if(ret==42) //unit in the way
+                    return; //told the unit to move
 			}
 			else
 			{
@@ -1153,6 +1231,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					movement();
 					return;
 				}
+                else if(ret==42) //unit in the way
+                    return; //told the unit to move
 			}
 		}
 		else
@@ -1240,6 +1320,8 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					movement();
 					return;
 				}
+                else if(ret==42) //unit in the way
+                    return; //told the unit to move
 			}
 			else
 			{
@@ -1324,12 +1406,14 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					movement();
 					return;
 				}
+                else if(ret==42)
+                    return;
 			}
 		}
 	}
 	else //going to square that is less than speed away from me
 	{
-		if(chkmvp1(map[(int)movetoy][(int)movetox])==true && chkmvp1(map[(int)movetoy][(int)(movetox+width-.001f)])==true && chkmvp1(map[(int)(movetoy+height-.001f)][(int)movetox])==true && chkmvp1(map[(int)(movetoy+height-.001f)][(int)(movetox+width-.001f)])==true)
+		if(chkmvp1(map[(int)movetoy][(int)movetox])==0 && chkmvp1(map[(int)movetoy][(int)(movetox+width-.001f)])==0 && chkmvp1(map[(int)(movetoy+height-.001f)][(int)movetox])==0 && chkmvp1(map[(int)(movetoy+height-.001f)][(int)(movetox+width-.001f)])==0)
 		{
 			//revealmapmvmt(movetox, movetoy, sqrt(pow((movetox-x), 2)+pow((movetoy-y), 2)));
 			for(float k=y; k<y+height; k+=.25)
@@ -1594,6 +1678,70 @@ bool unit::checknomove(bool siegesent)
 			}
 			userordered=false;
 			firstobstacleattempt=true; //at this point, actually meant to be doing nothing, for sure.
+            if(adjusting==0 && message!=0) //If someone asked me to get out of the way
+            {
+                unsigned short dir=0;
+                if(movetox>x+0.0001) //moving right
+                    dir|=RIGHT;
+                else if(movetox<x-0.0001)
+                    dir|=LEFT;
+                if(movetoy>y+0.0001)
+                    dir|=DOWN;
+                else if(movetoy<y-0.0001)
+                    dir|=UP;
+                if((dir|message)==message) //going in same directions already
+                    message=0; //already following the request
+                else //modify course
+                {
+                    unsigned int changex=0;
+                    unsigned int changey=0;
+                    if((message&LEFT)==LEFT && (message&DOWN)==DOWN) //go perp: 
+                    {
+                        changex=1;
+                        changey=-1; //go right/up
+                    }
+                    else if((message&LEFT)==LEFT && (message&UP)==UP) //go perp:
+                    {
+                        changex=1;
+                        changey=1;
+                    }
+                    else if((message&RIGHT)==RIGHT && (message&UP)==UP) //go perp:
+                    {
+                        changex=-1;
+                        changey=1;
+                    }
+                    else if((message&RIGHT)==RIGHT && (message&DOWN)==DOWN) //go perp:
+                    {
+                        changex=-1;
+                        changey=-1;
+                    }//If still in else/if block, then its a single direction
+                    else if((message&LEFT)==LEFT)
+                    {
+                        changex=0;
+                        changey=1;
+                    }
+                    else if((message&RIGHT)==RIGHT)
+                    {
+                        changex=0;    
+                        changey=1; //move perp
+                    }   
+                    else if((message&DOWN)==DOWN)
+                    {
+                         changey=0; //go perp
+                         changex=1;
+                    }   
+                    else if((message&UP)==UP)
+                    {
+                        changey=0; //go perp
+                        changex=1;
+                    }
+                    movetox+=changex;
+                    movetoy+=changey;
+                    adjusting=(int)(1.0/speed);
+                    movement(); //get out of the way and return false
+                    return false;
+                }
+            }
 			attackunitstance();//possibly only call this every 5th frame, if there are serious performance issues when its large scale. Which there probably will be.
 		}
 		return false;
@@ -1675,17 +1823,15 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 		movetoy+=.00001f;
 	if((int)(movetox+.00001f)!=(int)(movetox))
 		movetox+=.00001f;
-	bool good5=chkmvp1(map[(int)movetoy][(int)movetox], false); //changed the order on these, they were second before. Got promoted.
-	bool good6=true;
-	bool good7=true;
-	bool good8=true;
+	int good[4]={chkmvp1(map[(int)movetoy][(int)movetox], false),0,0,0}; //changed the order on these, they were second before. Got promoted.
+    //tile &check[4]={map[(int)movetoy][(int)movetox],map[(int)movetoy][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)],map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)movetox],map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)]};
 	if(map[(int)movetoy][(int)movetox].unitplayer!=-1 && map[(int)movetoy][(int)movetox].unitindex!=-1)
 	{
-		good6=chkmvp1(map[(int)movetoy][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
-		good7=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)movetox], false);
-		good8=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
+		good[1]=chkmvp1(map[(int)movetoy][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
+		good[2]=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)movetox], false);
+		good[3]=chkmvp1(map[(int)(movetoy+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->height-.001f)][(int)(movetox+allunits[map[(int)movetoy][(int)movetox].unitplayer][map[(int)movetoy][(int)movetox].unitindex]->width-.001f)], false);
 	}
-	if(good5==false || good6==false || good7==false || good8==false)
+	if(good[0]!=0 || good[1]!=0 || good[2]!=0 || good[3]!=0) //problem
 	{
 		if(map[(int)movetoy][(int)movetox].tilestyle==TS_BUILDING)
 		{
@@ -1698,46 +1844,67 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 			;//Just a placeholder, intended to be blank
 		else
 		{
-			goingtobstacle();
-			return 2;
+            //for(int i=0; i<4; i++)
+            //{
+            //   if(good[i]==1) //really bad
+            //    {
+                    goingtobstacle();
+                    return 2; //ends for loop, don't need break
+            //    }
+            //}
+            //at this point, it is known that at least one of the things in good is a 2, and there are no 1's
+            /*int msg=0;
+            if(movetox>x)
+            for(int i=0; i<4; i++)
+            {
+                if(good[i]==2) // my unit in the way
+                {
+                    
+                }
+            }
+			return 2;*/
 		}
 	}
-	bool good1=chkmvp1(map[(int)checkwhat.y][(int)checkwhat.x]);
-	bool good2=true;
-	bool good3=true;
-	bool good4=true;
+    int good2[4]={chkmvp1(map[(int)checkwhat.y][(int)checkwhat.x]),0,0,0};
+    tile check2[4]={map[(int)checkwhat.y][(int)checkwhat.x],map[(int)checkwhat.y][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)],map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x)],map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]};
 	if(map[(int)checkwhat.y][(int)checkwhat.x].unitplayer!=-1 && map[(int)checkwhat.y][(int)checkwhat.x].unitindex!=-1)
 	{
-		good2=chkmvp1(map[(int)checkwhat.y][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
-		good3=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x)]);
-		good4=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
+		good2[1]=chkmvp1(map[(int)checkwhat.y][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
+		good2[2]=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x)]);
+		good2[3]=chkmvp1(map[(int)(checkwhat.y+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->height-.001f)][(int)(checkwhat.x+allunits[map[(int)checkwhat.y][(int)checkwhat.x].unitplayer][map[(int)checkwhat.y][(int)checkwhat.x].unitindex]->width-.001f)]);
 	}
-	if(good1==false || good2==false || good3==false || good4==false)
+	if(good2[0]!=0 || good2[1]!=0 || good2[2]!=0 || good2[3]!=0) //not all good
 	{
-		//HANDLE bothhandles[2]; //the handles to the threads that will be created
-		//obstaclethreadparam topass((int)checkwhat.x-(int)x, (int)checkwhat.y-(int)y, x, y, 1, player, index, 0); //the first to pass, tells it where the unit is trying to go, where the unit is, and whether to test up/left
-		//bothhandles[0] = CreateThread(NULL, NULL, threadgoaroundobstacle, &topass, NULL, NULL); //starts the thread
-		//obstaclethreadparam topass2((int)checkwhat.x-(int)x, (int)checkwhat.y-(int)y, x, y, -1, player, index, 1); //same but tells it to test down/right 
-		//bothhandles[1] = CreateThread(NULL, NULL, threadgoaroundobstacle, &topass2, NULL, NULL); //same with new param
-		//WaitForMultipleObjects(2, bothhandles, TRUE, INFINITE); //wait for the threads to finish
-		//CloseHandle(bothhandles[0]);//make sure the threads are totally done
-		//CloseHandle(bothhandles[1]);
-		/*short walkable[6]={0};
-		if(whatisit!=3)//if we walk on land
-		{
-			walkable[0]=TS_GRASS;
-			walkable[1]=TS_GOLD;
-			walkable[2]=TS_STONE;
-			walkable[3]=TS_ROAD;
-			walkable[4]=TS_WATERBUILDING;
-			walkable[5]=TS_BUSHES;
-		}
-		else//ship, on water
-		{
-			walkable[0]=TS_WATER;
-			walkable[1]=TS_FISH;
-		}*/
-		if(whatisit==2)
+        bool any1=false;
+        for(int i=0; i<4; i++)
+        {
+            if(good2[i]==1)
+            {
+                any1=true;
+                break;
+            }
+        }
+        if(any1==false) //all 2 and 0
+        {
+            unsigned short msg=0;
+            if(movetox>x+0.0001) //moving right
+                msg|=RIGHT;
+            else if(movetox<x-0.0001)
+                msg|=LEFT;
+            if(movetoy>y+0.0001)
+                msg|=DOWN;
+            else if(movetoy<y-0.0001)
+                msg|=UP;
+            for(int i=0; i<4; i++)
+            {
+                if(good2[i]==2) //unit in the way
+                {
+                    allunits[check2[i].unitplayer][check2[i].unitindex]->message|=msg;
+                }
+            }
+            return 42; //unit in the way
+        }
+		if(whatisit==2) //Theres a 1, need to do obstacle avoidance
 		{
 			int highest=0;
 			for(unsigned int j=0; j<allsiegeunits[player][siegeindex].manning.size(); j++)
@@ -1748,7 +1915,7 @@ short unit::checkmove(point checkwhat, float actspeed) //0 is no good, called ob
 						highest=allunits[player][allsiegeunits[player][siegeindex].manning[j]]->height;
 				}
 			}
-			y+=highest; //'moves' the siege unit lower, really just makeing it the same height as it + the units manning it
+			y+=highest; //'moves' the siege unit lower, really just making it the same height as it + the units manning it
 			highest=0;
 			for(unsigned int j=0; j<allsiegeunits[player][siegeindex].manning.size(); j++)
 			{
