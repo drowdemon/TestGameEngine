@@ -729,8 +729,7 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 							sum+=allbuildings[player][nearesthold].holding[i];
 					}
 					if(nearesthold!=-1 && allbuildings[player][nearesthold].health>0 && sum<allbuildings[player][nearesthold].maxhold)
-					{
-						
+					{						
 						movetox=allbuildings[player][nearesthold].x-1;
 						movetoy=allbuildings[player][nearesthold].y;
 					}
@@ -1578,7 +1577,7 @@ bool unit::checknomove(bool siegesent)
 			}
 			if(sumbuilding+sumunit<=allbuildings[player][nearesthold].maxhold)
 			{
-				if(pow(x-allbuildings[player][nearesthold].x+(allbuildings[player][nearesthold].width/2),2)+pow(y-allbuildings[player][nearesthold].y+(allbuildings[player][nearesthold].height/2), 2)<=9) //If close enough to deposit into building, do it. Note its d^2 on the right.
+				if(distToBuilding(nearesthold,1.2)) //If close enough to deposit into building, do it.
 				{
 					for(int i=0; i<4; i++)
 					{
@@ -1609,7 +1608,7 @@ bool unit::checknomove(bool siegesent)
 	}
 	if(garrisoned>0) //garrisoning
 	{
-		if(allbuildings[player][garrisoned-1].beingbuilt>0 && (pow(x-allbuildings[player][garrisoned-1].x,2)+pow(y-allbuildings[player][garrisoned-1].y,2)<4.0)) //If you are building the building and you are close enough to do so
+		if(allbuildings[player][garrisoned-1].beingbuilt>0 && distToBuilding(garrisoned-1,2)) //If you are building the building and you are close enough to do so
 		{
 			allbuildings[player][garrisoned-1].beingbuilt--;		
 			if(allbuildings[player][garrisoned-1].beingbuilt==0)
@@ -1665,6 +1664,33 @@ bool unit::checknomove(bool siegesent)
 			movetoy=y;
 		}
 	}
+    if(gatheringx!=-1 && gatheringy!=-1 && nearesthold!=-1 && whatisit==1)
+    {
+        int sumbuilding=0;
+        int sumunit=0;
+        for(int i=0; i<4; i++)
+        {
+            sumbuilding+=allbuildings[player][nearesthold].holding[i];
+            sumunit+=holding[i];
+        }
+        if(sumunit>=maxhold && sumbuilding+sumunit<=allbuildings[player][nearesthold].maxhold)
+        {
+            if(distToBuilding(nearesthold,1.2)) //If close enough to deposit into building, do it.
+            {
+                for(int i=0; i<4; i++)
+                {
+                    resources[player][i]+=holding[i];
+                    allbuildings[player][nearesthold].holding[i]+=holding[i];
+                    holding[i]=0;
+                }
+                if(player==0 && (selected==true || allbuildings[player][nearesthold].selected==true))
+                    redraw=true;
+                movetox=gatheringx;
+                movetoy=gatheringy;
+                return false;
+            }
+        }
+    }
 	if(userordered==false && unitstance==US_DONTMOVE)
 		return false;
 	if(userordered==false && (unitstance==US_DEFENSIVE && sqrt(pow(x-dstancecoox, 2)+pow(y-dstancecooy, 2))>dstancerad))
@@ -2807,4 +2833,19 @@ void unit::searchresources()
 	}
 	gatheringx+=minx;
 	gatheringy+=miny;
+}
+bool unit::distToBuilding(int bindex, double dist)
+{
+//    if(pow(x-allbuildings[player][bindex].x,2)+pow(y-allbuildings[player][bindex].y,2)<dist*dist)
+//        return true;
+//    if(pow(x-allbuildings[player][bindex].x+allbuildings[player][bindex].width,2)+pow(y-allbuildings[player][bindex].y,2)<dist*dist)
+//        return true;
+//    if(pow(x-allbuildings[player][bindex].x+allbuildings[player][bindex].width,2)+pow(y-allbuildings[player][bindex].y+allbuildings[player][bindex].height,2)<dist*dist)
+//        return true;
+//    if(pow(x-allbuildings[player][bindex].x+allbuildings[player][bindex].height,2)+pow(y-allbuildings[player][bindex].y+allbuildings[player][bindex].height,2)<dist*dist)
+   double t1=(pow(x-(allbuildings[player][bindex].x+(allbuildings[player][bindex].width/2)),2))/(pow(allbuildings[player][bindex].width+dist,2));
+   double t2=(pow(y-(allbuildings[player][bindex].y+(allbuildings[player][bindex].height/2)),2))/(pow(allbuildings[player][bindex].height+dist,2));
+   if((t1+t2)<1)
+       return true;
+   return false;
 }

@@ -105,5 +105,6 @@ protected:
 	void gather(char gatheringwhat);
 	bool checknomove(bool siegesent);
 	void searchresources();
+	bool distToBuilding(int bindex, double dist);
 };
 #endif
