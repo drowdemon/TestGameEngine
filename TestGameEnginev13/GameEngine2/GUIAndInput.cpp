@@ -213,7 +213,7 @@ void processMouse(int button, int state, int x, int y)
 			//float mx=x;
 			//float my=y;
 			int reg=-1;
-			if(map[(int)(mousey2/15)][(int)(mousex2/15)].uniton==true)
+			if((map[(int)(mousey2/15)][(int)(mousex2/15)].unitonMineon&1)==1)
 				reg=allunits[0][map[(int)(mousey2/15)][(int)(mousex2/15)].unitindex]->regimentid;
 			if(reg!=-1)
 			{

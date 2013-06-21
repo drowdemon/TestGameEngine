@@ -86,7 +86,7 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 				}
 				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].unitplayer=player;
 				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].unitindex=overwriteunits[player].size()-1;
-				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].uniton=true;
+				map[(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->y][(int)allunits[player][overwriteunits[player][overwriteunits[player].size()-1]]->x].unitonMineon|=1;
 				overwriteunits[player].pop_back();
 			}
 			else
@@ -119,7 +119,7 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 					{
 						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].unitplayer=player;
 						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].unitindex=allunits[player].size()-1;
-						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].uniton=true;
+						map[(int)allunits[player][allunits[player].size()-1]->y+j][(int)allunits[player][allunits[player].size()-1]->x+i].unitonMineon|=1;
 					}
 				}
 			}

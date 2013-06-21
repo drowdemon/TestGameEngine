@@ -30,10 +30,10 @@ public://poss delete num 9 in following list for which tile (animal on grass)
 	short unitplayer;
 	short buildingindex;
 	short buildingplayer;
-	bool uniton; //is there a unit on the tile: false=no, 1=unit
+	unsigned char unitonMineon; //is there a unit on the tile: false=no, 1=unit. If there's a mine i.e. digging mine there: 2=yes. Bit shifting.             //IF I EVER USE THIS FOR EVERYTHING ELSE, BE SURE TO CHANGE LINE IN MAINTIMERPROC() THAT CHANGE THE TILESTYLE TO REFLECT THAT, WITH A SPARE & STATEMENT, SAME IN UNIT.CPP WHEN ITS BUILT.
 	short inbuildingrad; //if not in building radius, its -1. whether or not a tile is in the radius of a building which can supply resources, and if it is it will be that buildings index in allbuildings, else it will be -1
 	mychar whichplayer; //which player (in allunits) the tile can supply with resources(false), and which player (index in players[]) a building that can attack that square belongs to(true)
 	char elevation;
-	tile(short iunit=0, short punit=0, short ibuilding=0, short pbuilding=0, int ts=1, int lt=1, int f=0, int w=0, int g=0, int s=0, /*float c=0,*/ bool uo=false, short ibr=-1, unsigned char wpf=0, unsigned char wpt=0, char elev=0);
+	tile(short iunit=0, short punit=0, short ibuilding=0, short pbuilding=0, int ts=1, int lt=1, int f=0, int w=0, int g=0, int s=0, /*float c=0,*/ unsigned char uo=false, short ibr=-1, unsigned char wpf=0, unsigned char wpt=0, char elev=0);
 };
 #endif

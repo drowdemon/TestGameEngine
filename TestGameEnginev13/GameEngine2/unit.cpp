@@ -289,7 +289,7 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 	{
 		for(int k=0; k<6; k++)
 		{
-			if(map[(int)j][(int)i].uniton==true)
+			if((map[(int)j][(int)i].unitonMineon&1)==1)
 				continue;
 			if(map[(int)j][(int)i].tilestyle==canmoveto[k] || (map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle==TS_GATE && map[(unsigned int)movetoy][(unsigned int)movetox].buildingplayer==players[player]))
 			{
@@ -355,7 +355,7 @@ void unit::goingtobstacle0(char canmoveto[6])
 					{
 						if(movetox+(i*h)>=0 && movetox+(i*h)<map.size() && movetoy+newy>=0 && movetoy+newy<MAPSIZE)
 						{
-							if(map[(unsigned int)(newy+movetoy)][(unsigned int)(movetox+(i*h))].tilestyle==canmoveto[j] && map[(unsigned int)(newy+movetoy)][(unsigned int)(movetox+(i*h))].uniton==false)
+							if(map[(unsigned int)(newy+movetoy)][(unsigned int)(movetox+(i*h))].tilestyle==canmoveto[j] && (map[(unsigned int)(newy+movetoy)][(unsigned int)(movetox+(i*h))].unitonMineon&1)==0)
 							{
 								good=true;
 								break;
@@ -455,9 +455,9 @@ bool unit::chkmvp1(tile &checkwhat, bool checkelev)
 	}
 	if(checkwhat.tilestyle==TS_GATE && checkwhat.buildingplayer==players[player])
 		good=true;
-	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true)
+	if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && (checkwhat.unitonMineon&1)==1)
 		return true;
-	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
+	if(good==true && (checkwhat.unitonMineon&1)==1 && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
 		good=false;	
 	return good;
 }
@@ -498,7 +498,12 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 			{
 				for(float h=allbuildings[player][bindex].x; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width; h+=.25)
 				{
-					map[(int)k][(int)h].tilestyle=ts;
+                    if(allbuildings[player][bindex].id==23 && (map[(int)k][(int)h].unitonMineon>>3)==0) //mine (i.e. digging) //IF unitonMineon is EVER REUSED, UPDATE THIS
+                    {
+                        map[(int)k][(int)h].unitonMineon|=4; //Say a mine is being built
+                        map[(int)k][(int)h].unitonMineon|=(map[(int)k][(int)h].tilestyle<<3);
+                    }
+                    map[(int)k][(int)h].tilestyle=ts;
 					map[(int)k][(int)h].buildingplayer=player;
 					map[(int)k][(int)h].buildingindex=bindex;
 					map[(int)k][(int)h].whichplayer.set(false, (unsigned char)player);
@@ -539,7 +544,7 @@ pointex unit::getcandidate(int x, int y, double dist)
 	if(!(checkdimensions((float)x,(float)y)))
 		return pointex(-1,-1);
 	tile temp(map[y][x]);
-	if(temp.uniton==true)//if the space in question has a unit
+	if((temp.unitonMineon&1)==1)//if the space in question has a unit
 	{
 		if(players[temp.unitplayer]!=players[player]) //if this object is not allied to the player whose unit this is
 		{
@@ -972,7 +977,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=false;
+							map[(int)k][(int)h].unitonMineon&=254; //this sets the rightmost bit to 0 while leaving the rest the same
 							map[(int)k][(int)h].unitindex=0;
 							map[(int)k][(int)h].unitplayer=0;
 						}
@@ -984,7 +989,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=true;
+							map[(int)k][(int)h].unitonMineon|=1;
 							map[(int)k][(int)h].unitindex=index;
 							map[(int)k][(int)h].unitplayer=player;
 						}
@@ -1079,7 +1084,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=false;
+							map[(int)k][(int)h].unitonMineon&=254;
 							map[(int)k][(int)h].unitindex=0;
 							map[(int)k][(int)h].unitplayer=0;
 						}
@@ -1091,7 +1096,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=true;
+							map[(int)k][(int)h].unitonMineon|=1;
 							map[(int)k][(int)h].unitindex=index;
 							map[(int)k][(int)h].unitplayer=player;
 						}
@@ -1167,7 +1172,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=false;
+							map[(int)k][(int)h].unitonMineon&=254;
 							map[(int)k][(int)h].unitindex=0;
 							map[(int)k][(int)h].unitplayer=0;
 						}
@@ -1178,7 +1183,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=true;
+							map[(int)k][(int)h].unitonMineon|=1;
 							map[(int)k][(int)h].unitindex=index;
 							map[(int)k][(int)h].unitplayer=player;
 						}
@@ -1251,7 +1256,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=false;
+							map[(int)k][(int)h].unitonMineon&=254;
 							map[(int)k][(int)h].unitindex=0;
 							map[(int)k][(int)h].unitplayer=0;
 						}
@@ -1262,7 +1267,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 					{
 						for(float h=x; h<x+width; h+=.25)
 						{
-							map[(int)k][(int)h].uniton=true;
+							map[(int)k][(int)h].unitonMineon|=1;
 							map[(int)k][(int)h].unitindex=index;
 							map[(int)k][(int)h].unitplayer=player;
 						}
@@ -1336,7 +1341,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 			{
 				for(float h=x; h<x+width; h+=.25)
 				{
-					map[(int)k][(int)h].uniton=false;
+					map[(int)k][(int)h].unitonMineon&=254;
 					map[(int)k][(int)h].unitindex=0;
 					map[(int)k][(int)h].unitplayer=0;
 				}
@@ -1348,7 +1353,7 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 			{
 				for(float h=x; h<x+width; h+=.25)
 				{
-					map[(int)k][(int)h].uniton=true;
+					map[(int)k][(int)h].unitonMineon|=1;
 					map[(int)k][(int)h].unitindex=index;
 					map[(int)k][(int)h].unitplayer=player;
 				}
@@ -1534,7 +1539,7 @@ bool unit::checknomove(bool siegesent)
 			{
 				if(((x>=allbuildings[player][garrisoned-1].x-1 && x<allbuildings[player][garrisoned-1].x) || (x>allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width && x<=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+1)) && ((y>=allbuildings[player][garrisoned-1].y+1 && y<allbuildings[player][garrisoned-1].y) || (y>allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height && y<=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height-1)))
 				{
-					map[(int)y][(int)x].uniton=false; //garrisoning: remove unit
+					map[(int)y][(int)x].unitonMineon&=254; //garrisoning: remove unit, sets rightmost bit to 0, leaves the rest alone
 					map[(int)y][(int)x].unitplayer=0;
 					map[(int)y][(int)x].unitindex=0;
 					x=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width/2;//make the unit not appear in this case.
@@ -1554,6 +1559,10 @@ bool unit::checknomove(bool siegesent)
 				gather(0);
 			else if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_TREE)
 				gather(1);
+            else if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_GOLD)
+                gather(2);
+            else if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_STONE)
+                gather(3);
 			else if(gatheringwhat!=map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle)
 				searchresources();
 			didsomething=true;
@@ -1637,7 +1646,7 @@ bool unit::checknomove(bool siegesent)
 		{
 			if(x>=allbuildings[player][garrisoned-1].x-1 && x<allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+1 && y>=allbuildings[player][garrisoned-1].y-1 && y<=allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height+1)
 			{
-				map[(int)y][(int)x].uniton=false;//garrisoning: remove unit
+				map[(int)y][(int)x].unitonMineon&=254;//garrisoning: remove unit
 				map[(int)y][(int)x].unitplayer=0;
 				map[(int)y][(int)x].unitindex=0;
 				x=allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width/2;//make the unit not appear in this case.
@@ -2413,7 +2422,7 @@ void unit::fight()
 						{
 							for(float h=allunits[attackingunitplayer][attackingunitindex]->x; h<allunits[attackingunitplayer][attackingunitindex]->x+allunits[attackingunitplayer][attackingunitindex]->width; h+=.25)
 							{
-								map[(int)k][(int)h].uniton=false;
+								map[(int)k][(int)h].unitonMineon&=254; //sets rightmost bit to 0, leaves the rest alon
 								map[(int)k][(int)h].unitindex=0;
 								map[(int)k][(int)h].unitplayer=0;
 							}
@@ -2536,7 +2545,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 	{
 		if(x+i<map.size())
 		{
-			if(map[(unsigned int)y][(unsigned int)x+i].uniton==true)//if the space in question has a unit
+			if((map[(unsigned int)y][(unsigned int)x+i].unitonMineon&1)==1)//if the space in question has a unit
 			{
 				if(map[(unsigned int)y][(unsigned int)x+i].unitplayer==player) //if this object is the players
 				{
@@ -2547,7 +2556,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		}
 		if(y+i<map.size())
 		{
-			if(map[(unsigned int)y+i][(unsigned int)x].uniton==true)//if the space in question has a unit
+			if((map[(unsigned int)y+i][(unsigned int)x].unitonMineon&1)==1)//if the space in question has a unit
 			{
 				if(map[(unsigned int)y+i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
@@ -2558,7 +2567,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		}
 		if(x-i>=0)
 		{
-			if(map[(unsigned int)y][(unsigned int)x-i].uniton==true)//if the space in question has a unit
+			if((map[(unsigned int)y][(unsigned int)x-i].unitonMineon&1)==1)//if the space in question has a unit
 			{
 				if(map[(unsigned int)y][(unsigned int)x-i].unitplayer==player) //if this object is the players
 				{
@@ -2569,7 +2578,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 		}
 		if(y-i>=0)
 		{
-			if(map[(unsigned int)y-i][(unsigned int)x].uniton==true)//if the space in question has a unit
+			if((map[(unsigned int)y-i][(unsigned int)x].unitonMineon&1)==1)//if the space in question has a unit
 			{
 				if(map[(unsigned int)y-i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
@@ -2587,7 +2596,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 				{
 					if(x+i<map.size())
 					{
-						if(map[(unsigned int)y+j][(unsigned int)x+i].uniton==true)//if the space in question has a unit
+						if((map[(unsigned int)y+j][(unsigned int)x+i].unitonMineon&1)==1)//if the space in question has a unit
 						{
 							if(map[(unsigned int)y+j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
@@ -2598,7 +2607,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					}
 					if(x-i>=0)
 					{
-						if(map[(unsigned int)y+j][(unsigned int)x-i].uniton==true)//if the space in question has a unit
+						if((map[(unsigned int)y+j][(unsigned int)x-i].unitonMineon&1)==1)//if the space in question has a unit
 						{
 							if(map[(unsigned int)y+j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{
@@ -2612,7 +2621,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 				{
 					if(x+i<map.size())
 					{
-						if(map[(unsigned int)y-j][(unsigned int)x+i].uniton==true)//if the space in question has a unit
+						if((map[(unsigned int)y-j][(unsigned int)x+i].unitonMineon&1)==1)//if the space in question has a unit
 						{
 							if(map[(unsigned int)y-j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
@@ -2623,7 +2632,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 					}
 					if(x-i>=0 && y-j>=0)
 					{
-						if(map[(unsigned int)y-j][(unsigned int)x-i].uniton==true)//if the space in question has a unit
+						if((map[(unsigned int)y-j][(unsigned int)x-i].unitonMineon&1)==1)//if the space in question has a unit
 						{
 							if(map[(unsigned int)y-j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{

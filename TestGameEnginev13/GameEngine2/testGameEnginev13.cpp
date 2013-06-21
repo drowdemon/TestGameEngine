@@ -186,7 +186,7 @@ void hourpassed(int arg)
 							{
 								for(float h=allunits[i][j]->x; h<allunits[i][j]->x+allunits[i][j]->width; h+=.25)
 								{
-									map[(int)k][(int)h].uniton=false; //marks it dead
+									map[(int)k][(int)h].unitonMineon&=254; //marks it dead: unsigned char & 254 makes the rightmost bit a 0, but leavees the rest the same
 									map[(int)k][(int)h].unitindex=0;
 									map[(int)k][(int)h].unitplayer=0;
 								}
@@ -230,7 +230,7 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 		}
 		selectedunits[player].clear();
 	}
-	else if(map[(int)clicked.y][(int)clicked.x].uniton==true) //there is a unit on it
+	else if((map[(int)clicked.y][(int)clicked.x].unitonMineon&1)==1) //there is a unit on it
 	{
 		if(clicked.y<allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.bottom && clicked.y>allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.top && clicked.x>allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.left && clicked.x<allunits[map[(int)clicked.y][(int)clicked.x].unitplayer][map[(int)clicked.y][(int)clicked.x].unitindex]->boundingbox.right) //if the user clicked on the unit (within the 2d bouding box)
 		{
@@ -438,7 +438,7 @@ void move(int player, POINT &gowhere, bool waypoint)
 			allunits[player][selectedunits[player][i]]->gatheringy=-1;
 			allunits[player][selectedunits[player][i]]->gatheringwhat=-1; //TODO CHECK IF LEGIT
 			allunits[player][selectedunits[player][i]]->firstobstacleattempt=true; // at this point, definitely haven't tried to avoid an obstacle
-			if(map[(int)gowhere.y][(int)gowhere.x].uniton==true) //if there is a unit on the square where we are going
+			if((map[(int)gowhere.y][(int)gowhere.x].unitonMineon&1)==1) //if there is a unit on the square where we are going
 			{
 				if(gowhere.x>allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.left && gowhere.x<allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.right && gowhere.y>allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.top && gowhere.y<allunits[map[(int)gowhere.y][(int)gowhere.x].unitplayer][map[(int)gowhere.y][(int)gowhere.x].unitindex]->boundingbox.bottom) //if the current unit is going to be attacked
 				{
@@ -536,7 +536,7 @@ void move(int player, POINT &gowhere, bool waypoint)
 					}
 				}
 			}
-			else if(map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_TREE || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_BERRIES)
+			else if(map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_TREE || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_BERRIES || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_GOLD && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2) || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_STONE && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2))
 			{
 				allunits[player][selectedunits[player][i]]->gatheringx=(short)gowhere.x;
 				allunits[player][selectedunits[player][i]]->gatheringy=(short)gowhere.y;
@@ -867,7 +867,7 @@ bool chkmvp1(tile &checkwhat, short player, short index, short utype)
 		good=true;
 	//if(checkwhat.unitplayer==player && allunits[checkwhat.unitplayer][checkwhat.unitindex]->whatisit==3 && checkwhat.uniton==true) // It is 1 or 3 - there is a unit //AAHHHH WHAT THE HELL IS THIS???? WHAT'S IT DO??? ITS KILLI NEED IT SOMEWHERE ELSE!!!
 		//return true; //removing these lines fixed the ungarrissoning sailors problem, but I really really really hope it didn't break anything.
-	if(good==true && checkwhat.uniton==true && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
+	if(good==true && (checkwhat.unitonMineon&1)==1 && (checkwhat.unitindex!=index || checkwhat.unitplayer!=player))
 		good=false;	
 	return good;
 }
@@ -994,6 +994,11 @@ void initializeGameEngine()
 		}
 		getline(inf, name);
 		allbuildableunits.push_back(basicunit(args[0],(short)args[1],(short)args[2],(short)args[3],(short)args[4],args[5],args[6],(short)args[7],(short)args[8],(short)args[9],args[10],(short)args[11],args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(unsigned char)args[17],(unsigned char)args[18],(unsigned char)args[19],(char)args[20],(short)args[21],(short)args[22],(short)args[23],(short)args[24],(short)args[25],name));
+        if(allbuildableunits.size()>1 && allbuildableunits[allbuildableunits.size()-1].id==allbuildableunits[allbuildableunits.size()-2].id)
+        {
+            allbuildableunits.erase(allbuildableunits.end()-1);
+            break;
+        }
 	}
 	ifstream inf2("building.specs");
 	if(!inf2)
@@ -1010,6 +1015,11 @@ void initializeGameEngine()
 		}
 		getline(inf2, name);
 		allbuildablebuildings.push_back(basicbuilding((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],args[11],args[12],(short)args[13],(short)args[14],(bool)args[15],(short)args[16],(short)args[17],(short)args[18],(short)args[19],(short)args[20],name));
+        if(allbuildablebuildings.size()>1 && allbuildablebuildings[allbuildablebuildings.size()-1].id==allbuildablebuildings[allbuildablebuildings.size()-2].id)
+        {
+            allbuildablebuildings.erase(allbuildablebuildings.end()-1);
+            break;
+        }
 	}
 	ifstream inf3("map2.specs");
 	if(!inf3)
@@ -1233,7 +1243,7 @@ void initializeGameEngine()
 			{
 				for(float h=actallunits[i][j].x; h<actallunits[i][j].x+actallunits[i][j].width; h+=.25)
 				{
-					map[(int)k][(int)h].uniton=true;
+					map[(int)k][(int)h].unitonMineon|=1;
 					map[(int)k][(int)h].unitindex=actallunits[i][j].index;
 					map[(int)k][(int)h].unitplayer=actallunits[i][j].player;
 				}
@@ -1296,6 +1306,8 @@ void mainTimerProc(int arg)
 	RGB terminalColor(48,10,36);
 	RGB white(255,255,255);
 	RGB darkRed(150,0,0);
+    RGB mine(143,62,0);
+    RGB stone(50,50,50);
 	//Setting up openGL
 	// Clear Color and Depth Buffers
 	glEnable(GL_SCISSOR_TEST);
@@ -1499,6 +1511,21 @@ void mainTimerProc(int arg)
 						}
 					}
 				}
+                else if(allbuildings[i][newlybuiltbuildings[i][j]].id==23) //mine
+                {
+                    for(float k=allbuildings[i][newlybuiltbuildings[i][j]].y; k<allbuildings[i][newlybuiltbuildings[i][j]].y+allbuildings[i][newlybuiltbuildings[i][j]].height; k+=.25)
+					{
+						for(float h=allbuildings[i][newlybuiltbuildings[i][j]].x; h<allbuildings[i][newlybuiltbuildings[i][j]].x+allbuildings[i][newlybuiltbuildings[i][j]].width; h+=.25)
+						{
+                            if((map[(int)k][(int)h].unitonMineon>>3)>0)
+							{
+                                map[(int)k][(int)h].unitonMineon|=2;
+                                map[(int)k][(int)h].tilestyle=(map[(int)k][(int)h].unitonMineon>>3);
+                                map[(int)k][(int)h].unitonMineon&=3; //sets everything except for the rightmost 2 bits to 0. IF I EVER USE THIS VARIABLE FOR ANYTHING ELSE, MODIFY THIS TO REFLECT THAT!!
+                            }
+						}
+					}
+                }
 				newlybuiltbuildings[i].erase(newlybuiltbuildings[i].begin()+j);
 			}
 		}
@@ -1568,7 +1595,13 @@ void mainTimerProc(int arg)
 				break;
 			if(i>=MAPSIZE)
 				break;
-			if(map[i][j].tilestyle==TS_BERRIES) //print berries
+            if(map[i][j].tilestyle==TS_GOLD && (map[i][j].unitonMineon&2)==2) //There's gold and a mine
+                makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,yellow);
+            else if(map[i][j].tilestyle==TS_STONE && (map[i][j].unitonMineon&2)==2) //There's stone and a mine
+                makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,stone);
+            else if((map[i][j].unitonMineon&2)==2) //theres a mine
+                makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,mine);
+			else if(map[i][j].tilestyle==TS_BERRIES) //print berries
 				makeRect((j-topleft.x)*15,(i-topleft.y)*15,15.0,15.0,red);
 				//g.FillRectangle(&red,Gdiplus::REAL(j-topleft.x)*15, Gdiplus::REAL(i-topleft.y)*15, 15.0f, 15.0f);
 			else if(map[i][j].tilestyle==TS_WATER || map[i][j].tilestyle==TS_FISH || map[i][j].tilestyle==TS_WATERBUILDING) //print water and fish as the same thing
@@ -1648,7 +1681,7 @@ void mainTimerProc(int arg)
 					}
 				}
 			}//end print buildings
-			if(map[i][j].tilestyle!=TS_BUILDING && map[i][j].uniton==true && allunits[0][generals[0]]->los>dist)//print units
+			if(map[i][j].tilestyle!=TS_BUILDING && (map[i][j].unitonMineon&1)==1 && allunits[0][generals[0]]->los>dist)//print units
 			{
 				int index=map[i][j].unitindex;
 				int player=map[i][j].unitplayer;
