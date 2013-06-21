@@ -1609,7 +1609,7 @@ bool unit::checknomove(bool siegesent)
 	}
 	if(garrisoned>0) //garrisoning
 	{
-		if(allbuildings[player][garrisoned-1].beingbuilt>0)
+		if(allbuildings[player][garrisoned-1].beingbuilt>0 && (pow(x-allbuildings[player][garrisoned-1].x,2)+pow(y-allbuildings[player][garrisoned-1].y,2)<4.0)) //If you are building the building and you are close enough to do so
 		{
 			allbuildings[player][garrisoned-1].beingbuilt--;		
 			if(allbuildings[player][garrisoned-1].beingbuilt==0)
@@ -1638,6 +1638,7 @@ bool unit::checknomove(bool siegesent)
 				garrisoned=0;
 			}
 		}
+        else if(allbuildings[player][garrisoned-1].beingbuilt>0) ; //a place holder, so that in this scenario the unit still moves
 		else if(allbuildings[player][garrisoned-1].beingbuilt==0 || allbuildings[player][garrisoned-1].beingbuilt==-1)
 		{
 			garrisoned=0;
