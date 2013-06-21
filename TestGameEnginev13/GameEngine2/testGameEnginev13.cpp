@@ -1423,14 +1423,14 @@ void mainTimerProc(int arg)
 		if(currErr.time<=0)
 			redraw=1;
 	}
-    if((scrollDir&LEFT)==LEFT) //scroll
+    if((scrollDir&LEFT)==LEFT && topleft.x>0) //scroll
         topleft.x-=1;
-    else if((scrollDir&RIGHT)==RIGHT)
+    else if((scrollDir&RIGHT)==RIGHT && topleft.x<((map[0].size()*15)-WIDTH)/15)
         topleft.x+=1;
-    if((scrollDir&DOWN)==DOWN)
+    if((scrollDir&DOWN)==DOWN && topleft.y>0)
         topleft.y-=.5;
-    else if((scrollDir&UP)==UP)
-        topleft.y+= .5; //end scroll
+    else if((scrollDir&UP)==UP && topleft.y<((map.size()*15)-HEIGHT)/15)
+        topleft.y+=.5; //end scroll
 	glScissor(0,100,WIDTH,HEIGHT-100);
 	for(unsigned int g=0; g<creationqueueunits.size(); g++)//add units
 	{
