@@ -146,6 +146,7 @@ extern int WIDTH;
 extern int HEIGHT;
 extern unsigned int scrollDir; //The scroll direction. Possibilities are LEFT RIGHT UP DOWN, which are |'d together
 extern bool makeReportDialog;
+extern vector<progressBar> allProgressBar;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

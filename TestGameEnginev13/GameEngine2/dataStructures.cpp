@@ -151,3 +151,12 @@ mouseOver::mouseOver(string txt, int p_x, int p_y, unsigned long long dw, string
 	dispwith=dw;
 	func=f;
 }
+progressBar::progressBar(int px, int py, int w, string txt, int disp, double(*f)(int))
+{
+    x=px;
+    y=py;
+    width=w;
+    text=txt;
+    dispwhen=disp;
+    func=f;
+}

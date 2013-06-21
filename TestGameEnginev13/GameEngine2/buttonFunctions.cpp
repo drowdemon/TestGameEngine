@@ -32,12 +32,14 @@ void build(buttonparam b)
 void createnewunit(buttonparam b)
 {
 	allbuildings[b.player][selectedunits[b.player][0]].createunit(b.unitorbuilding, -1, -1);
+    redraw=1;
 }
 void createunit(buttonparam b)
 {
 	for(unsigned int i=0; i<allgarrisonedselectedunits[0].size(); i++)
 	{
 		allbuildings[b.player][-allunits[b.player][allgarrisonedselectedunits[b.player][i]]->garrisoned-1].createunit(b.unitorbuilding,allgarrisonedselectedunits[b.player][i]);
+        redraw=1;
 	}
 }
 void selectgarrison(buttonparam b)

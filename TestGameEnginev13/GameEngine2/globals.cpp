@@ -77,6 +77,7 @@ int WIDTH=700;
 int HEIGHT=700;
 unsigned int scrollDir=0;
 bool makeReportDialog=false;
+vector<progressBar> allProgressBar;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;

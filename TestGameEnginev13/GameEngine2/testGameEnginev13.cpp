@@ -12,6 +12,7 @@
 #include "displayFunctions.h"
 #include "mouseOverFunctions.h"
 #include "GUIAndInput.h"
+#include "progressBarFunctions.h"
 
 #include <vector>
 #include <cstdlib>
@@ -1128,6 +1129,9 @@ void initializeGameEngine()
 	allErr.push_back(ErrorMSG("Too Many Resources to Transfer",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
 	allErr.push_back(ErrorMSG("Nowhere to Retrieve Resources From",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
 	
+    allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Building", YOUR_UNIT | YOUR_MULT_UNITS, progressBuilding));
+    allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Unit",YOUR_BUILDING,progressUnit));
+    
 	for(int i=0; i<numplayers; i++)
 		generals[i]=0;
 	int ts=0;
@@ -1398,6 +1402,19 @@ void mainTimerProc(int arg)
 				delete[] toprint;
 			}
 		}
+        for(unsigned int i=0; i<allProgressBar.size(); i++)
+        {
+            if(checkdisp(0,allProgressBar[i].dispwhen)) //must include a select a unit or building or something clause in disp_when, else this will fail
+            {
+                double progress=allProgressBar[i].func(selectedunits[0][0]);
+                if(!(abs(progress+1)<0.0001)) //!(progress==-1)
+                {
+                    drawEmptyRect(allProgressBar[i].x,allProgressBar[i].y,allProgressBar[i].width,18,black);
+                    makeRect(allProgressBar[i].x, allProgressBar[i].y,allProgressBar[i].width*progress,17,green);
+                    renderBitmapString(allProgressBar[i].x, allProgressBar[i].y+12, 0, GLUT_BITMAP_HELVETICA_12, (char*)allProgressBar[i].text.c_str());
+                }
+            }
+        }
 		if(transferResourcesPressed>0)
 		{
 			makeRect(0,HEIGHT-16,WIDTH,16,terminalColor);

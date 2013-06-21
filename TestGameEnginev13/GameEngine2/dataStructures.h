@@ -191,5 +191,15 @@ struct POINT
 	int x;
 	int y;
 };
-
+class progressBar
+{
+public:
+	int x;
+	int y;
+	int width;
+	string text;
+	int dispwhen;
+	double (*func)(int);
+	progressBar(int px, int py, int w, string txt, int disp, double (*f)(int));
+};
 #endif
