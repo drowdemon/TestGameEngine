@@ -45,17 +45,25 @@ building::building(basebuilding b, float px, float py, short p, short i, float b
 }
 void building::createunit(short createwhat, short pindex, short creating) //createwhat is the index of the unit to be created in unitsmade, creating is the index in creationqueueunits if it is time to actually create the unit
 {
-	if(creating==-1)//NOTE: what is assumed is that only the available createwhat's are displayed to the user, so its impossible for createwhat to be an invalid value. That means that the second unit in branch 2 will not have the option to become unit 1 in branch 2 already. It also means that if its too expensive to update a unit, that option will be greyed out. This also means that if this particular building cannot upgrade this unit, no options to upgrade will be shown
+	if(creating==-1)
 	{
-		resources[player][0]-=allbuildableunits[createwhat].foodontraining;
-		resources[player][1]-=allbuildableunits[createwhat].woodontraining;
-		resources[player][2]-=allbuildableunits[createwhat].goldontraining;
-		resources[player][3]-=allbuildableunits[createwhat].stoneontraining;
-		holding[0]-=allbuildableunits[createwhat].foodontraining;
-		holding[1]-=allbuildableunits[createwhat].woodontraining;
-		holding[2]-=allbuildableunits[createwhat].goldontraining;
-		holding[3]-=allbuildableunits[createwhat].stoneontraining;
-		creationqueueunits[player][index].push_back(creationinfo(pindex, allbuildableunits[createwhat].timeontraining, createwhat));
+        if(holding[0]>=allbuildableunits[createwhat].foodontraining && holding[1]>=allbuildableunits[createwhat].woodontraining && holding[2]>=allbuildableunits[createwhat].goldontraining && holding[3]>=allbuildableunits[createwhat].stoneontraining) //enough resources
+		{
+            resources[player][0]-=allbuildableunits[createwhat].foodontraining;
+            resources[player][1]-=allbuildableunits[createwhat].woodontraining;
+            resources[player][2]-=allbuildableunits[createwhat].goldontraining;
+            resources[player][3]-=allbuildableunits[createwhat].stoneontraining;
+            holding[0]-=allbuildableunits[createwhat].foodontraining;
+            holding[1]-=allbuildableunits[createwhat].woodontraining;
+            holding[2]-=allbuildableunits[createwhat].goldontraining;
+            holding[3]-=allbuildableunits[createwhat].stoneontraining;
+            creationqueueunits[player][index].push_back(creationinfo(pindex, allbuildableunits[createwhat].timeontraining, createwhat));
+        }
+        else if(player==0)
+        {
+            currErr=allErr[FEWRESOURCES];
+            redraw=1;
+        }
 	}
 	else
 	{

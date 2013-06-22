@@ -1029,10 +1029,10 @@ void initializeGameEngine()
 		exit(-235);
 	}
 
+    allbuildablebuildings[1].unitsmade.push_back(1); //house can train villager
+    allbuildablebuildings[2].unitsmade.push_back(4); //barracks: militia
+    allbuildablebuildings[3].unitsmade.push_back(3); //port: ship
 	//buttons
-	/*int width  = GetSystemMetrics(SM_CXFULLSCREEN);//screen dimensions
-	int height = GetSystemMetrics(SM_CYFULLSCREEN);*/
-
 	allbuttons.push_back(button(WIDTH*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));
 	indexStancebutton=allbuttons.size();
 	allbuttons.push_back(button(WIDTH*2/3+5,615,70,18,"Aggressive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
@@ -1070,6 +1070,7 @@ void initializeGameEngine()
 		for(int j=0; j<3; j++)
 		{
 			allbuttons.push_back(button(WIDTH/3+5+j*80, 615+22*i, 75, 18, "", selectgarrison, YOUR_BUILDING));
+            allMouseOver.push_back(mouseOver("Left-click to select this unit for a to-be-chosen training. Right-click to ungarrison.", 5, HEIGHT-105,allbuttons.size()-1,nullMouseFunc));
 		}
 	}
 	indexGarrisonbuttonend=allbuttons.size();
@@ -1172,24 +1173,6 @@ void initializeGameEngine()
 		}
 	}
 	//End absolutely necessary stuff. Next is unit creation, building creation, etc.
-	//elevation change
-	/*for(int i=20; i<30; i++)
-	{
-		for(int j=20; j<30; j++)
-		{
-			if(i<26 || i>28)
-				map[i][j].elevation=1;
-			else
-				map[i][j].elevation=2;
-		}
-	}*/
-	/*for(int i=50; i<60; i++)//create water
-	{
-		for(int j=15; j<35; j++)
-		{
-			map[j][i].tilestyle=TS_WATER;
-		}
-	}//end create water*/
 	for(int i=0; i<6; i++)//unit creation
 	{
 		/*if(i==5)
@@ -1267,28 +1250,6 @@ void mainTimerProc(int arg)
 {
 	glutTimerFunc(50,mainTimerProc,0); //NOTE THAT THIS WILL DO IT ONLY ONCE, which is why it is called here. In effect, time delayed recursion.
 	frames++;
-	//RECT client;
-	//GetClientRect(hWnd, &client);
-	//client.bottom-=100; //IMPORTANT
-	/*Pen p[6]={Color(0,0,0), Color(255,0,0), Color(0,255,0), Color(0,0,255), Color(255,0,255), Color(255,255,0)};
-	SolidBrush sb(Color(0,255,0));
-	SolidBrush green(Color(50, 0, 255, 0));
-	SolidBrush black(Color(0, 0, 0)); 
-	SolidBrush red(Color(255,0,0));
-	SolidBrush sea(Color(55,160,225));
-	SolidBrush grass(Color(35,228,50));
-	SolidBrush tree(Color(106,52,43));
-	SolidBrush bushes(Color(0,81,0));
-	SolidBrush animal(Color(128,128,0));
-	SolidBrush road(Color(0,255,255));
-	SolidBrush elevation(Color(100,100,100,100));
-	SolidBrush hover(Color(100,200,200,200));
-	SolidBrush yellow(Color(100,255,255,0));
-	SolidBrush lightgrey(Color(50,230,230,230));
-	FontFamily  fontFamily(L"Times New Roman"); //To print unit lvl
-	Font        font(&fontFamily, 12, FontStyleRegular, UnitPixel);
-	Font        bigfont(&fontFamily, 14, FontStyleRegular, UnitPixel);*/
-	//SolidBrush white(Color(255,255,255));
 	RGB green(0,255,0);
 	RGB blue(0,0,255);
 	RGB magenta(255,0,255);
