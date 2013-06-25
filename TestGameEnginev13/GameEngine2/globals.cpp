@@ -4,6 +4,7 @@
 #include "button.h"
 #include "regiment.h"
 #include "siege.h"
+#include "advancement.h"
 
 short currplayer=0; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!! DELETE DELETE DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -77,9 +78,11 @@ int WIDTH=700;
 int HEIGHT=700;
 unsigned int scrollDir=0;
 bool makeReportDialog=false;
-vector<progressBar> allProgressBar;
-vector<vector<bool> > buildingAllowed;
-vector<vector<bool> > unitAllowed;
+vector<progressBar> allProgressBar; //!< all of the progress bars
+vector<vector<bool> > buildingAllowed;//!< for each player, for each building, whether the building is allowed to be built
+vector<vector<bool> > unitAllowed; //!< for each player, for each unit, whether the unit is allowed to be trained
+vector<vector<bool> > advComplete; //!< for each player, for each advancement, whether the advancement was completed
+vector<advancement> allAdvancements; //!< all of the possible advancements
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
@@ -100,3 +103,4 @@ int indexBuildingsbuttonend;
 int indexTransferbutton;
 int indexUnitButtons;
 int indexUnitButtonsend;
+int indexAdvErrors;

@@ -129,14 +129,21 @@ ARGB::ARGB(int pa, int pr, int pg, int pb)
 	g=pg;
 	b=pb;
 }
-ErrorMSG::ErrorMSG(string m, int px, int py, int t)
+ErrorMSG::ErrorMSG(string m, int px, int py, int t) : color(150,0,0)
 {
 	msg=m;
 	x=px;
 	y=py;
 	time=t;
 }
-ErrorMSG::ErrorMSG()
+ErrorMSG::ErrorMSG(string m, int px, int py, int t, RGB c) : color(c)
+{
+	msg=m;
+	x=px;
+	y=py;
+	time=t;
+}
+ErrorMSG::ErrorMSG() : color(150,0,0)
 {
 	msg="";
 	x=-1;
@@ -159,4 +166,9 @@ progressBar::progressBar(int px, int py, int w, string txt, int disp, double(*f)
     text=txt;
     dispwhen=disp;
     func=f;
+}
+advReq::advReq(short wr, short ar)
+{
+    whatsreq=wr;
+    amntreq=ar;
 }

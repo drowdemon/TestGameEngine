@@ -987,6 +987,7 @@ void initializeGameEngine()
 	players.push_back(0);
 	players.push_back(1);
 	creationqueueunits.resize(numplayers);
+    advComplete.resize(numplayers);
 
 	ifstream inf("unit.specs"); //Get allbuildableunits
 	if(!inf)
@@ -1307,6 +1308,19 @@ void initializeGameEngine()
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Building", YOUR_UNIT | YOUR_MULT_UNITS, progressBuilding));
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Unit",YOUR_BUILDING,progressUnit));
     
+    vector<advReq> uinfo;
+    vector<advReq> binfo;
+    uinfo.push_back(advReq(1,6));
+    allAdvancements.push_back(advancement(uinfo,binfo,9,UNITUNLOCK));
+    
+    for(unsigned int i=0; i<advComplete.size(); i++)
+        advComplete[i].resize(allAdvancements.size());
+    //abuse of error messaging as just regular messaging, with a different message color
+    string msg("Congratulations, you have unlocked the ");
+    indexAdvErrors=allErr.size();
+    for(unsigned int i=0; i<allAdvancements.size(); i++)
+        allErr.push_back(ErrorMSG(msg+allAdvancements[i].unlockMessage()+"!!!", WIDTH/3+5,HEIGHT-16,2.5*FPS,RGB(0,170,0)));
+    
 	for(int i=0; i<numplayers; i++)
 		generals[i]=0;
 	int ts=0;
@@ -1565,7 +1579,7 @@ void mainTimerProc(int arg)
 			for(unsigned int i=0; i<currErr.msg.length(); i++)
 				toprint[i]=currErr.msg[i];
 			toprint[currErr.msg.length()]=0;
-			renderBitmapString(currErr.x, currErr.y+13, 0, GLUT_BITMAP_HELVETICA_12, toprint, darkRed);
+			renderBitmapString(currErr.x, currErr.y+13, 0, GLUT_BITMAP_HELVETICA_12, toprint, currErr.color);
 		}
 	}
 	if(currErr.msg!="" && currErr.time>0) //update time left for error message
@@ -1736,6 +1750,20 @@ void mainTimerProc(int arg)
 			}
 		}
 	}
+    if(frames%(FPS/2)==0) //every half second - not super critical and could get rather slow
+    {
+        for(unsigned int i=0; i<allAdvancements.size(); i++)
+        {
+            for(unsigned int j=0; j<advComplete.size(); j++)
+            {
+                if(!advComplete[j][i] && (advComplete[j][i]=allAdvancements[i].checkAdv(j)) && j==0) //if this advancement has not been accomplished by this player, and then this advancement has now been accomplished (record that) and then this is player 1, the human, display that. An "error" (abuse of error messaging system).
+                {
+                    redraw=1;
+                    currErr=allErr[indexAdvErrors+i];
+                }
+            }
+        }
+    }
 	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, print tiles
 	{
 		for(unsigned int j=(int)topleft.x; j<topleft.x+WIDTH/15; j++)

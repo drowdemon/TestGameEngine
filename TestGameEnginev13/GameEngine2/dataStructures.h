@@ -176,7 +176,9 @@ public:
 	int x;
 	int y;
 	int time; //In frames. When creating do sec*FPS
+	RGB color;
 	ErrorMSG(string m, int px, int py, int t);
+	ErrorMSG(string m, int px, int py, int t, RGB c);
 	ErrorMSG();
 };
 class mouseOver
@@ -204,5 +206,12 @@ public:
 	int dispwhen;
 	double (*func)(int);
 	progressBar(int px, int py, int w, string txt, int disp, double (*f)(int));
+};
+class advReq 
+{
+public:
+	short whatsreq; //!< The stuff one must have for advancement
+	short amntreq;  //!< How much of it one must have
+	advReq(short wr, short ar); //!< simple constructor
 };
 #endif

@@ -8,6 +8,7 @@
 #include "button.h"
 #include "astarsearch.h"
 #include "dataStructures.h"
+#include "advancement.h"
 
 //NOTE TO SELF: THIS FILE MAY ONLY HAVE extern VARIABLES, AND EXTERN VARIABLE MAY NOT BE DEFINED HERE i.e NO EQUALS SIGNS. THOSE GO IN globals.cpp!
 
@@ -149,6 +150,8 @@ extern bool makeReportDialog;
 extern vector<progressBar> allProgressBar;
 extern vector<vector<bool> > buildingAllowed;
 extern vector<vector<bool> > unitAllowed;
+extern vector<vector<bool> > advComplete;
+extern vector<advancement> allAdvancements;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;
@@ -164,5 +167,5 @@ extern int indexBuildingsbuttonend;
 extern int indexTransferbutton;
 extern int indexUnitButtons;
 extern int indexUnitButtonsend;
-
+extern int indexAdvErrors;
 #endif
