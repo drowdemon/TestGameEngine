@@ -958,12 +958,13 @@ void initializeGameEngine()
 	overwritebuildings.resize(numplayers);
 	selectedunits.resize(numplayers);
 	whatsselected.resize(numplayers);
-	minimapseen[0].resize(MAPSIZE);
-	minimapseen[1].resize(MAPSIZE);
+    resources.resize(numplayers);
+    for(int i=0; i<numplayers; i++)
+    {
+        minimapseen[i].resize(MAPSIZE);
+        resources[i].resize(4);
+    }
 	allsiegeunits.resize(numplayers);
-	resources.resize(numplayers);
-	resources[0].resize(4);
-	resources[1].resize(4);
 	players.push_back(0);
 	players.push_back(1);
 	newlybuiltbuildings.resize(numplayers);
@@ -984,8 +985,8 @@ void initializeGameEngine()
 	actallunits[1].reserve(100);
 	allbuildings.resize(numplayers);
 	allobstacles.resize(numplayers);
-	players.push_back(0);
-	players.push_back(1);
+	//players.push_back(0); //repeat for some reason. 
+	//players.push_back(1);
 	creationqueueunits.resize(numplayers);
     advComplete.resize(numplayers);
 
@@ -1085,7 +1086,8 @@ void initializeGameEngine()
     allbuildablebuildings[13].unitsmade.push_back(33); //castle: elite spy
     allbuildablebuildings[13].unitsmade.push_back(34); //castle: assassin
 	
-    for(unsigned int i=0; i<unitAllowed.size(); i++) //allowing things
+    //allowing things
+    for(unsigned int i=0; i<unitAllowed.size(); i++)
     {
         unitAllowed[i][1]=true; //villager allowed
         unitAllowed[i][4]=true; //militia allowed
@@ -1103,6 +1105,14 @@ void initializeGameEngine()
         buildingAllowed[i][16]=true; //farm
         buildingAllowed[i][18]=true; //road
     }
+    
+    //bonuses
+    vector<short> unitsaffected;
+    for(int i=21; i<=31; i++)
+        unitsaffected.push_back(i); //add all units from 21 to 31: all cavalry. Mounted archers, knights, and transport.
+    allbuildableunits[6].allBonuses.push_back(powerBonus(unitsaffected,0,2,5,0)); //give spearmen a bonus vs. cavalry
+    allbuildableunits[13].allBonuses.push_back(powerBonus(unitsaffected,3,2.5,7,0)); //give pikemen a bonus vs. cavalry
+    allbuildableunits[14].allBonuses.push_back(powerBonus(unitsaffected,10,2.5,10,0)); //give elite pikemen a bonus vs. cavalry
     
     //buttons
 	allbuttons.push_back(button(WIDTH*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));

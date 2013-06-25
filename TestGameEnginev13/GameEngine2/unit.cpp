@@ -2414,15 +2414,41 @@ void unit::fight()
 					if(garrisoned<=-1)
 						attack+=allbuildings[player][(-garrisoned)-1].garrisonedrangedattack;
 				}
-				attack+=(veterancylvl*0.5f); //add for vet lvl
+				attack+=(veterancylvl/**0.5f*/); //add for vet lvl
 				if(!(garrisoned<=-1) && regimentid>=0) //if not garrisoned, add for regiment lvl
-					attack+=allregiments[player][regimentid].reglvl/4;
+					attack+=allregiments[player][regimentid].reglvl/2;//4;
+                for(unsigned int i=0; i<allBonuses.size(); i++) //apply attack bonuses
+                {
+                    for(unsigned int j=0; j<allBonuses[i].againstWhat.size(); j++)
+                    {
+                        if(allBonuses[i].againstWhat[j]==allunits[attackingunitplayer][attackingunitindex]->id) //bonus applicable
+                        {
+                            attack+=allBonuses[i].attackBonus;
+                            attack*=allBonuses[i].attackPercentBonus;
+                            break;
+                        }
+                    }
+                }
+                
 				float armor=allunits[attackingunitplayer][attackingunitindex]->armor; //next 4 lines set armor of unit being attacked;
 				if(allunits[attackingunitplayer][attackingunitindex]->garrisoned<=-1)
 					armor+=allbuildings[attackingunitplayer][(-allunits[attackingunitplayer][attackingunitindex]->garrisoned)-1].garrisonedarmorup; //add for garrisoned
 				else if(allunits[attackingunitplayer][attackingunitindex]->regimentid>=0)
-					armor+=allregiments[attackingunitplayer][allunits[attackingunitplayer][attackingunitindex]->regimentid].reglvl/5; //add for reg lvl, if not garrisoned
-				armor+=allunits[attackingunitplayer][attackingunitindex]->veterancylvl/3.0f; //add for vet lvl
+					armor+=allregiments[attackingunitplayer][allunits[attackingunitplayer][attackingunitindex]->regimentid].reglvl/3;//5; //add for reg lvl, if not garrisoned
+				armor+=allunits[attackingunitplayer][attackingunitindex]->veterancylvl/2;//3.0f; //add for vet lvl
+                for(unsigned int i=0; i<allunits[attackingunitplayer][attackingunitindex]->allBonuses.size(); i++) //apply defense bonuses
+                {
+                    for(unsigned int j=0; j<allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].againstWhat.size(); j++)
+                    {
+                        if(allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].againstWhat[j]==id) //bonus applicable
+                        {
+                            armor+=allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].defenseBonus;
+                            armor*=allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].defensePercentBonus;
+                            break;
+                        }
+                    }
+                }
+                
 				float hpercent=(health/allbuildableunits[id].health)*100;
 				float dmg=0;
 				if(hpercent==100)
@@ -2434,7 +2460,7 @@ void unit::fight()
 					return;
 
 				int chance=100; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
-				if(allunits[attackingunitplayer][attackingunitindex]->garrisoned<=-1)
+				if(allunits[attackingunitplayer][attackingunitindex]->garrisoned<=-1) 
 					chance=allbuildings[attackingunitplayer][(-allunits[attackingunitplayer][attackingunitindex]->garrisoned)-1].chanceofbeinghit;
 				int rndnum = rand()%100;
 				if(rndnum<chance)

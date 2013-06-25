@@ -172,3 +172,11 @@ advReq::advReq(short wr, short ar)
     whatsreq=wr;
     amntreq=ar;
 }
+powerBonus::powerBonus(vector<short> aw, double ab, double ap, double db, double dp)
+{
+    againstWhat=aw;
+    attackBonus=ab;
+    attackPercentBonus=ap;
+    defenseBonus=db;
+    defensePercentBonus=dp;
+}

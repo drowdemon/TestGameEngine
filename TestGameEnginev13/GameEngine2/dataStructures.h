@@ -214,4 +214,14 @@ public:
 	short amntreq;  //!< How much of it one must have
 	advReq(short wr, short ar); //!< simple constructor
 };
+class powerBonus
+{
+public:
+	vector<short> againstWhat;
+	double attackBonus;
+	double attackPercentBonus;
+	double defenseBonus;
+	double defensePercentBonus;
+	powerBonus(vector<short> aw, double ab, double ap, double db, double dp);
+};
 #endif

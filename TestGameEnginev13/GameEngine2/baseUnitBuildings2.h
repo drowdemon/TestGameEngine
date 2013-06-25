@@ -2,6 +2,7 @@
 #define base_unit_buildings_h
 #include <vector>
 #include <string>
+#include "dataStructures.h"
 using namespace std;
 //! Data that every unit must have, and is not unique for each unit. 
 class baseunit
@@ -28,6 +29,7 @@ public:
 	unsigned char whatisit; //!< 0 is regular unit (cav/archer/infantry) (now 1=regular, including villager) (removed: 1 is villager), 2 is siege, 3 is ship
 	unsigned char maxgarrison; //!< this variable is for ships only, the maximum amount of units that can garrison in it, else (not ship) it will be -1
 	unsigned char mingarrison; //!< this variable is for ships only, the minimum number of units that must be garrisoned for the ship to be usable
+	vector<powerBonus> allBonuses; //!< The bonuses a unit has against some other units. Initialized manually in init function, not from file.
 	baseunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1); //!< Constructor/default constructor. Accepts all of the above variables
 };
 //! the stats in allbuildableunits
