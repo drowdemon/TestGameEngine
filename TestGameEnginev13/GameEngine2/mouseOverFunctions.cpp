@@ -43,3 +43,17 @@ string nullMouseFunc(int index)
 {
     return "";
 }
+
+string buildUnit(int index)
+{
+    index=allbuttons[allMouseOver[index].dispwith].unitorbuilding;
+    string s("Food: ");
+    s+=inttostring(allbuildableunits[index].foodontraining);
+    s+=string(" Wood: ");
+    s+=inttostring(allbuildableunits[index].woodontraining);
+    s+=string(" Gold: ");
+    s+=inttostring(allbuildableunits[index].goldontraining);
+    s+=string(" Stone: ");
+    s+=inttostring(allbuildableunits[index].stoneontraining);
+    return s;
+}

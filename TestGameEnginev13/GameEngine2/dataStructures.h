@@ -165,6 +165,8 @@ public:
 #define SELFTRANSFER	 5
 #define TOOBIGTRANSFER   6
 #define NORESOURCELOC    7
+#define EARLYBUILD		 8
+#define EARLYTRAIN		 9
 
 class ErrorMSG
 {

@@ -19,6 +19,9 @@
 #define PAGE_1			  512 
 //!Your on page 2 (building list)
 #define PAGE_2			  1024 
+#define ARCHERY_BUILDING  2048 //id=4
+#define STABLE_BUILDING   4096 //id=5
+#define CASTLE_BUILDING   8192 //id=13
 
 using namespace std;
 class button

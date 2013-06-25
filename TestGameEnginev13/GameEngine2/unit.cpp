@@ -469,49 +469,62 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 		takeresourcesfrom=-1;
 	if(takeresourcesfrom!=-1)
 	{
-		if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+        if(buildingAllowed[player][buildwhat]) //allowed to build this
 		{
-			allbuildings[player][takeresourcesfrom].holding[0]-=allbuildablebuildings[buildwhat].foodtobuild;
-			allbuildings[player][takeresourcesfrom].holding[1]-=allbuildablebuildings[buildwhat].woodtobuild;
-			allbuildings[player][takeresourcesfrom].holding[2]-=allbuildablebuildings[buildwhat].goldtobuild;
-			allbuildings[player][takeresourcesfrom].holding[3]-=allbuildablebuildings[buildwhat].stonetobuild;
-			resources[player][0]-=allbuildablebuildings[buildwhat].foodtobuild;
-			resources[player][1]-=allbuildablebuildings[buildwhat].woodtobuild;
-			resources[player][2]-=allbuildablebuildings[buildwhat].goldtobuild;
-			resources[player][3]-=allbuildablebuildings[buildwhat].stonetobuild;
-			if(overwritebuildings[player].size()>0)
-			{
-				bindex=overwritebuildings[player][overwritebuildings[player].size()-1];
-				overwritebuildings[player].pop_back();
-				allbuildings[player][overwritebuildings[player][overwritebuildings[player].size()-1]]=building(allbuildablebuildings[buildwhat], (float)buildatx, (float)buildaty, player, overwritebuildings[player][overwritebuildings[player].size()-1], (float)buildaty+allbuildablebuildings[buildwhat].height, (float)buildaty, (float)buildatx, (float)buildatx+allbuildablebuildings[buildwhat].width,0,0,0,0,allbuildablebuildings[buildwhat].timetobuild); //CHANGE y+1 and the like to something from GUI, so that you can specify where you want it
-			}
-			else
-			{
-				bindex=allbuildings[player].size();
-				allbuildings[player].push_back(building(allbuildablebuildings[buildwhat], (float)buildatx, (float)buildaty, player, allbuildings[player].size(), (float)buildaty+allbuildablebuildings[buildwhat].height, (float)buildaty, (float)buildatx, (float)buildatx+allbuildablebuildings[buildwhat].width,0,0,0,0, allbuildablebuildings[buildwhat].timetobuild)); 	
-				creationqueueunits[0].resize(creationqueueunits[0].size()+1);
-			}
-			int ts=TS_BUILDING;
-			if(allbuildings[player][bindex].landorwater==false) //water
-				ts=TS_WATERBUILDING;
-			for(float k=allbuildings[player][bindex].y; k<allbuildings[player][bindex].y+allbuildings[player][bindex].height; k+=.25)
-			{
-				for(float h=allbuildings[player][bindex].x; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width; h+=.25)
-				{
-                    if(allbuildings[player][bindex].id==23 && (map[(int)k][(int)h].unitonMineon>>3)==0) //mine (i.e. digging) //IF unitonMineon is EVER REUSED, UPDATE THIS
+            if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+            {
+                allbuildings[player][takeresourcesfrom].holding[0]-=allbuildablebuildings[buildwhat].foodtobuild;
+                allbuildings[player][takeresourcesfrom].holding[1]-=allbuildablebuildings[buildwhat].woodtobuild;
+                allbuildings[player][takeresourcesfrom].holding[2]-=allbuildablebuildings[buildwhat].goldtobuild;
+                allbuildings[player][takeresourcesfrom].holding[3]-=allbuildablebuildings[buildwhat].stonetobuild;
+                resources[player][0]-=allbuildablebuildings[buildwhat].foodtobuild;
+                resources[player][1]-=allbuildablebuildings[buildwhat].woodtobuild;
+                resources[player][2]-=allbuildablebuildings[buildwhat].goldtobuild;
+                resources[player][3]-=allbuildablebuildings[buildwhat].stonetobuild;
+                if(overwritebuildings[player].size()>0)
+                {
+                    bindex=overwritebuildings[player][overwritebuildings[player].size()-1];
+                    overwritebuildings[player].pop_back();
+                    allbuildings[player][overwritebuildings[player][overwritebuildings[player].size()-1]]=building(allbuildablebuildings[buildwhat], (float)buildatx, (float)buildaty, player, overwritebuildings[player][overwritebuildings[player].size()-1], (float)buildaty+allbuildablebuildings[buildwhat].height, (float)buildaty, (float)buildatx, (float)buildatx+allbuildablebuildings[buildwhat].width,0,0,0,0,allbuildablebuildings[buildwhat].timetobuild); //CHANGE y+1 and the like to something from GUI, so that you can specify where you want it
+                }
+                else
+                {
+                    bindex=allbuildings[player].size();
+                    allbuildings[player].push_back(building(allbuildablebuildings[buildwhat], (float)buildatx, (float)buildaty, player, allbuildings[player].size(), (float)buildaty+allbuildablebuildings[buildwhat].height, (float)buildaty, (float)buildatx, (float)buildatx+allbuildablebuildings[buildwhat].width,0,0,0,0, allbuildablebuildings[buildwhat].timetobuild)); 	
+                    creationqueueunits[0].resize(creationqueueunits[0].size()+1);
+                }
+                int ts=TS_BUILDING;
+                if(allbuildings[player][bindex].landorwater==false) //water
+                    ts=TS_WATERBUILDING;
+                for(float k=allbuildings[player][bindex].y; k<allbuildings[player][bindex].y+allbuildings[player][bindex].height; k+=.25)
+                {
+                    for(float h=allbuildings[player][bindex].x; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width; h+=.25)
                     {
-                        map[(int)k][(int)h].unitonMineon|=4; //Say a mine is being built
-                        map[(int)k][(int)h].unitonMineon|=(map[(int)k][(int)h].tilestyle<<3);
+                        if(allbuildings[player][bindex].id==23 && (map[(int)k][(int)h].unitonMineon>>3)==0) //mine (i.e. digging) //IF unitonMineon is EVER REUSED, UPDATE THIS
+                        {
+                            map[(int)k][(int)h].unitonMineon|=4; //Say a mine is being built
+                            map[(int)k][(int)h].unitonMineon|=(map[(int)k][(int)h].tilestyle<<3);
+                        }
+                        map[(int)k][(int)h].tilestyle=ts;
+                        map[(int)k][(int)h].buildingplayer=player;
+                        map[(int)k][(int)h].buildingindex=bindex;
+                        map[(int)k][(int)h].whichplayer.set(false, (unsigned char)player);
+                        map[(int)k][(int)h].whichplayer.set(true, players[player]);
                     }
-                    map[(int)k][(int)h].tilestyle=ts;
-					map[(int)k][(int)h].buildingplayer=player;
-					map[(int)k][(int)h].buildingindex=bindex;
-					map[(int)k][(int)h].whichplayer.set(false, (unsigned char)player);
-					map[(int)k][(int)h].whichplayer.set(true, players[player]);
-				}
-			}
-			return bindex;
-		}
+                }
+                return bindex;
+            }
+            else if(player==0)
+            {
+                currErr=allErr[FEWRESOURCES];
+                redraw=1;
+            }
+        }
+        else if(player==0)
+        {
+            currErr=allErr[EARLYBUILD];
+            redraw=1;
+        }
 	}
 	else
 	{

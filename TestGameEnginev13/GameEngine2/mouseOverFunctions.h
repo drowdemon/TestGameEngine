@@ -3,6 +3,7 @@
 
 string buildBuilding(int index);
 string nullMouseFunc(int index);
+string buildUnit(int index);
 
 #endif	/* MOUSEOVERFUNCTIONS_H */
 

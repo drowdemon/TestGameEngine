@@ -776,7 +776,13 @@ bool checkdisp(int player, unsigned long long dispwhen)
 			return true;
 		else if((dispwhen&DOCK_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==3)
 			return true;
-		else if((dispwhen&HOUSE_BUILDING)>=1 || (dispwhen&BARRACKS_BUILDING)>=1 || (dispwhen&DOCK_BUILDING)>=1) //It has a flag but the other condition was false
+        else if((dispwhen&ARCHERY_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==4)
+            return true;
+        else if((dispwhen&STABLE_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==5)
+            return true;
+        else if((dispwhen&CASTLE_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==13)
+            return true;
+		else if((dispwhen&HOUSE_BUILDING)>=1 || (dispwhen&BARRACKS_BUILDING)>=1 || (dispwhen&DOCK_BUILDING)>=1 || (dispwhen&ARCHERY_BUILDING)>=1 || (dispwhen&STABLE_BUILDING)>=1 || (dispwhen&CASTLE_BUILDING)>=1) //It has a flag but the other condition was false
 			return false;
 		else //It doesn't have any flags other than YOUR_BUILDING 
 			return true;
@@ -962,6 +968,8 @@ void initializeGameEngine()
 	designatedunit.resize(numplayers);
 	allregiments.resize(numplayers);
 	allgarrisonedselectedunits.resize(numplayers);
+    unitAllowed.resize(numplayers);
+    buildingAllowed.resize(numplayers);
 	for(int i=0; i<MAPSIZE; i++)
 	{
 		map[i].resize(MAPSIZE);
@@ -1029,10 +1037,71 @@ void initializeGameEngine()
 		exit(-235);
 	}
 
+    for(int i=0; i<numplayers; i++)
+    {
+        unitAllowed.resize(allbuildableunits.size());
+        buildingAllowed.resize(allbuildablebuildings.size());
+        for(unsigned int j=0; j<unitAllowed.size(); j++)
+            unitAllowed[i][j]=false;
+        for(unsigned int j=0; j<buildingAllowed.size(); j++)
+            buildingAllowed[i][j]=false;
+    }
+    
+    //what can train what
     allbuildablebuildings[1].unitsmade.push_back(1); //house can train villager
     allbuildablebuildings[2].unitsmade.push_back(4); //barracks: militia
+    allbuildablebuildings[2].unitsmade.push_back(5); //barracks: swordman
+    allbuildablebuildings[2].unitsmade.push_back(6); //barracks: spearman
     allbuildablebuildings[3].unitsmade.push_back(3); //port: ship
-	//buttons
+    allbuildablebuildings[4].unitsmade.push_back(7); //Archery Range: archer
+    allbuildablebuildings[4].unitsmade.push_back(8); //Archery Range: javelinist
+    allbuildablebuildings[2].unitsmade.push_back(9); //barracks: shielded swordsman
+    allbuildablebuildings[2].unitsmade.push_back(10); //barracks: two-handed swordsman
+    allbuildablebuildings[2].unitsmade.push_back(11); //barracks: dual-swordsman
+    allbuildablebuildings[2].unitsmade.push_back(12); //barracks: swordsmaster
+    allbuildablebuildings[2].unitsmade.push_back(13); //barracks: pikeman
+    allbuildablebuildings[2].unitsmade.push_back(14); //barracks: elite pikeman
+    allbuildablebuildings[2].unitsmade.push_back(15); //barracks: axe man
+    allbuildablebuildings[2].unitsmade.push_back(16); //barracks: axe master
+    allbuildablebuildings[4].unitsmade.push_back(17); //archery range: longbow man
+    allbuildablebuildings[4].unitsmade.push_back(18); //archery range: crossbow man
+    allbuildablebuildings[4].unitsmade.push_back(19); //archery range: elite javelinist
+    allbuildablebuildings[2].unitsmade.push_back(20); //barracks: scout
+    allbuildablebuildings[5].unitsmade.push_back(21); //stable: mounted scout
+    allbuildablebuildings[5].unitsmade.push_back(22); //stable: mounted javelinist
+    allbuildablebuildings[5].unitsmade.push_back(23); //stable: mounted archer
+    allbuildablebuildings[5].unitsmade.push_back(24); //stable: mounted fast archer
+    allbuildablebuildings[5].unitsmade.push_back(25); //stable: Apprentice Knight
+    allbuildablebuildings[5].unitsmade.push_back(26); //stable: Knight
+    allbuildablebuildings[5].unitsmade.push_back(27); //stable: Elite Knight
+    allbuildablebuildings[5].unitsmade.push_back(28); //stable: oxen
+    allbuildablebuildings[5].unitsmade.push_back(29); //stable: cart
+    allbuildablebuildings[5].unitsmade.push_back(30); //stable: pull team
+    allbuildablebuildings[5].unitsmade.push_back(31); //stable: heavy pull team
+    allbuildablebuildings[13].unitsmade.push_back(32); //castle: spy
+    allbuildablebuildings[13].unitsmade.push_back(33); //castle: elite spy
+    allbuildablebuildings[13].unitsmade.push_back(34); //castle: assassin
+	
+    for(unsigned int i=0; i<unitAllowed.size(); i++) //allowing things
+    {
+        unitAllowed[i][1]=true; //villager allowed
+        unitAllowed[i][4]=true; //militia allowed
+        unitAllowed[i][3]=true; //ship allowed
+        unitAllowed[i][20]=true; //scout allowed
+    }
+    for(unsigned int i=0; i<buildingAllowed.size(); i++)
+    {
+        buildingAllowed[i][1]=true; //house allowed
+        buildingAllowed[i][2]=true; //barracks allowed
+        buildingAllowed[i][3]=true; //port allowed
+        buildingAllowed[i][8]=true; //wall
+        buildingAllowed[i][10]=true; //storehouse
+        buildingAllowed[i][15]=true; //market
+        buildingAllowed[i][16]=true; //farm
+        buildingAllowed[i][18]=true; //road
+    }
+    
+    //buttons
 	allbuttons.push_back(button(WIDTH*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));
 	indexStancebutton=allbuttons.size();
 	allbuttons.push_back(button(WIDTH*2/3+5,615,70,18,"Aggressive",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
@@ -1055,15 +1124,115 @@ void initializeGameEngine()
 			allbuttons.push_back(button(5+103*((i-13)/3), 615+22*((i-13)%3), 100, 18, allbuildablebuildings[i].name, build, YOUR_UNIT | YOUR_MULT_UNITS | PAGE_2,i));
 		allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildBuilding));
 	}
+    indexBuildingsbuttonend=allbuttons.size();
 	allbuttons.push_back(button(5+309, 615+66, 100, 18, "Switch Page", nextpage, YOUR_UNIT | YOUR_MULT_UNITS));
 	//allbuttons.push_back(button(5, 615, 60, 18, "House", build, YOUR_UNIT | YOUR_MULT_UNITS,0));
 	//allbuttons.push_back(button(5, 615+22, 60, 18, "Barracks", build, YOUR_UNIT | YOUR_MULT_UNITS,2));
 	//allbuttons.push_back(button(5, 615+44, 60, 18, "Dock", build, YOUR_UNIT | YOUR_MULT_UNITS,3));
 
-	allbuttons.push_back(button(5, 615, 60, 18, "Villager", createnewunit, YOUR_BUILDING | HOUSE_BUILDING, 1));
-	allbuttons.push_back(button(5, 615, 60, 18, "Militia", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 4));
-	allbuttons.push_back(button(5, 615, 60, 18, "Ship", createnewunit, YOUR_BUILDING | DOCK_BUILDING, 3));
-
+    indexUnitButtons=allbuttons.size(); //unit buttons. Not in loop :(
+	
+    allbuttons.push_back(button(5, 611, 60, 18, "Villager", createnewunit, YOUR_BUILDING | HOUSE_BUILDING, 1));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+	
+    allbuttons.push_back(button(5, 611, 60, 18, "Militia", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 4));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+	
+    allbuttons.push_back(button(5, 611, 60, 18, "Ship", createnewunit, YOUR_BUILDING | DOCK_BUILDING, 3));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+45, 611, 60, 18, "Swordman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 5));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+158, 611, 78, 18, "Spearman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 6));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611, 85, 18, "Archer", createunit, YOUR_BUILDING | ARCHERY_BUILDING, 7));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+90, 611, 85, 18, "Javelinist", createunit, YOUR_BUILDING | ARCHERY_BUILDING, 8));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85, 611+20, 150, 18, "Shielded Swordsman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 9));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85, 611+40, 150, 18, "Two-Handed Swordsman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 10));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85, 611+60, 150, 17, "Dual-Swordsman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 11));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85, 611+79, 150, 17, "Swordsmaster", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 12));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+158, 611+20, 78, 18, "Pikeman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 13));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+158, 611+40, 78, 18, "Elite Pikeman", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 14));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+158+85, 611+40, 75, 18, "Axe Man", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 15));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+85+158+85, 611+79, 75, 17, "Axe Master", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 16));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+20, 85, 17, "Longbow Man", createunit, YOUR_BUILDING | ARCHERY_BUILDING, 17));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+40, 85, 17, "Crossbowman", createunit, YOUR_BUILDING | ARCHERY_BUILDING, 18));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+90, 611+40, 85, 17, "Elite Javelinist", createunit, YOUR_BUILDING | ARCHERY_BUILDING, 19));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+20, 60, 18, "Scout", createunit, YOUR_BUILDING | BARRACKS_BUILDING, 20));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611, 125, 18, "Mounted Scout", createunit, YOUR_BUILDING | STABLE_BUILDING, 21));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+20, 125, 18, "Mounted Javelinist", createunit, YOUR_BUILDING | STABLE_BUILDING, 22));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+40, 125, 18, "Fast Mounted Archer", createunit, YOUR_BUILDING | STABLE_BUILDING, 24));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+60, 125, 18, "Mounted Archer", createunit, YOUR_BUILDING | STABLE_BUILDING, 23));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130, 611, 115, 18, "Apprentice Knight", createunit, YOUR_BUILDING | STABLE_BUILDING, 25));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130, 611+20, 115, 18, "Knight", createunit, YOUR_BUILDING | STABLE_BUILDING, 26));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130, 611+40, 115, 18, "Elite Knight", createunit, YOUR_BUILDING | STABLE_BUILDING, 27));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130+120, 611, 105, 18, "Oxen", createunit, YOUR_BUILDING | STABLE_BUILDING, 28));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130+120, 611+20, 105, 18, "Cart", createunit, YOUR_BUILDING | STABLE_BUILDING, 29));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130+120, 611+40, 105, 18, "Pull Team", createunit, YOUR_BUILDING | STABLE_BUILDING, 30));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5+130+120, 611+60, 105, 18, "Heavy Pull Team", createunit, YOUR_BUILDING | STABLE_BUILDING, 31));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611, 70, 18, "Spy", createunit, YOUR_BUILDING | CASTLE_BUILDING, 32));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+20, 70, 18, "Elite Spy", createunit, YOUR_BUILDING | CASTLE_BUILDING, 33));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    allbuttons.push_back(button(5, 611+40, 70, 18, "Assassin", createunit, YOUR_BUILDING | CASTLE_BUILDING, 34));
+    allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,buildUnit));
+    
+    indexUnitButtonsend=allbuttons.size();
+    
 	indexGarrisonbutton=allbuttons.size();
 	for(int i=0; i<4; i++)
 	{
@@ -1129,7 +1298,9 @@ void initializeGameEngine()
 	allErr.push_back(ErrorMSG("Cannot Transfer to Self",WIDTH/3+5+80,HEIGHT-16,2.5*FPS));
 	allErr.push_back(ErrorMSG("Too Many Resources to Transfer",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
 	allErr.push_back(ErrorMSG("Nowhere to Retrieve Resources From",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
-	
+	allErr.push_back(ErrorMSG("Cannot Build This Building Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
+    allErr.push_back(ErrorMSG("Cannot Train This Unit Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
+    
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Building", YOUR_UNIT | YOUR_MULT_UNITS, progressBuilding));
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Unit",YOUR_BUILDING,progressUnit));
     
@@ -1302,6 +1473,10 @@ void mainTimerProc(int arg)
 			{
 				if(((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend) && alldisp[indexGarrisondisp+i-indexGarrisonbutton].func(indexGarrisondisp+i-indexGarrisonbutton)=="")
 					continue;
+                if(((int)i>=indexBuildingsbutton && (int)i<indexBuildingsbuttonend) && !buildingAllowed[0][i-indexBuildingsbutton+1]) //not an allowed building
+                    continue;
+                if((int)i>=indexUnitButtons && (int)i<indexUnitButtonsend && !unitAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
+                    continue;
 				char *toprint=new char[allbuttons[i].text.size()+1];
 				for(unsigned int j=0; j<allbuttons[i].text.size(); j++)
 				{
@@ -1316,25 +1491,6 @@ void mainTimerProc(int arg)
 				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
 				drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
 				delete[] toprint;
-				if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
-				{
-					for(unsigned int j=0; j<allMouseOver.size(); j++)
-					{
-						if(allMouseOver[j].dispwith==i)
-						{
-							string ret=allMouseOver[j].func(j);
-							toprint=new char[allMouseOver[j].text.length()+ret.length()+1];
-							for(unsigned int k=0; k<allMouseOver[j].text.length(); k++)
-								toprint[k]=allMouseOver[j].text[k];
-							for(unsigned int k=0; k<ret.length(); k++)
-								toprint[allMouseOver[j].text.length()+k]=ret[k];
-							toprint[allMouseOver[j].text.length()+ret.length()]=0;
-							renderBitmapString(allMouseOver[j].x,allMouseOver[j].y+12,0,GLUT_BITMAP_HELVETICA_12,toprint,white);
-							delete[] toprint;
-							break;
-						}
-					}
-				}
 			}
 		}
 		for(unsigned int i=0; i<alldisp.size(); i++) //Print things in disp
@@ -1738,6 +1894,10 @@ void mainTimerProc(int arg)
         if(checkdisp(0,allbuttons[i].dispwhen))
         {
             if(((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend) && alldisp[indexGarrisondisp+i-indexGarrisonbutton].func(indexGarrisondisp+i-indexGarrisonbutton)=="")
+                continue;
+            if(((int)i>indexBuildingsbutton && (int)i<indexBuildingsbuttonend) && !buildingAllowed[0][i-indexBuildingsbutton+1]) //not an allowed building
+                continue;
+            if((int)i>=indexUnitButtons && (int)i<indexUnitButtonsend && !unitAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
                 continue;
             if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
             {

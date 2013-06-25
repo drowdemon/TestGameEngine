@@ -100,7 +100,7 @@ int main()
 				//system("pause");
 				exit(-235);
 			}
-			outf << "\n";
+			//outf << "\n";
 			float args[21]={0};
 			cout << "health  ";
 			cin >> args[0];

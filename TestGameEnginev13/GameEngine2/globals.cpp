@@ -78,6 +78,8 @@ int HEIGHT=700;
 unsigned int scrollDir=0;
 bool makeReportDialog=false;
 vector<progressBar> allProgressBar;
+vector<vector<bool> > buildingAllowed;
+vector<vector<bool> > unitAllowed;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
@@ -94,4 +96,7 @@ int indexSailorsdisp;
 int indexSailorsbutton;
 int indexSailorsbuttonend;
 int indexBuildingsbutton;
+int indexBuildingsbuttonend;
 int indexTransferbutton;
+int indexUnitButtons;
+int indexUnitButtonsend;

@@ -47,21 +47,29 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 {
 	if(creating==-1)
 	{
-        if(holding[0]>=allbuildableunits[createwhat].foodontraining && holding[1]>=allbuildableunits[createwhat].woodontraining && holding[2]>=allbuildableunits[createwhat].goldontraining && holding[3]>=allbuildableunits[createwhat].stoneontraining) //enough resources
-		{
-            resources[player][0]-=allbuildableunits[createwhat].foodontraining;
-            resources[player][1]-=allbuildableunits[createwhat].woodontraining;
-            resources[player][2]-=allbuildableunits[createwhat].goldontraining;
-            resources[player][3]-=allbuildableunits[createwhat].stoneontraining;
-            holding[0]-=allbuildableunits[createwhat].foodontraining;
-            holding[1]-=allbuildableunits[createwhat].woodontraining;
-            holding[2]-=allbuildableunits[createwhat].goldontraining;
-            holding[3]-=allbuildableunits[createwhat].stoneontraining;
-            creationqueueunits[player][index].push_back(creationinfo(pindex, allbuildableunits[createwhat].timeontraining, createwhat));
+        if(unitAllowed[player][createwhat]) //researched/unlocked
+        {    
+            if(holding[0]>=allbuildableunits[createwhat].foodontraining && holding[1]>=allbuildableunits[createwhat].woodontraining && holding[2]>=allbuildableunits[createwhat].goldontraining && holding[3]>=allbuildableunits[createwhat].stoneontraining) //enough resources
+            {
+                resources[player][0]-=allbuildableunits[createwhat].foodontraining;
+                resources[player][1]-=allbuildableunits[createwhat].woodontraining;
+                resources[player][2]-=allbuildableunits[createwhat].goldontraining;
+                resources[player][3]-=allbuildableunits[createwhat].stoneontraining;
+                holding[0]-=allbuildableunits[createwhat].foodontraining;
+                holding[1]-=allbuildableunits[createwhat].woodontraining;
+                holding[2]-=allbuildableunits[createwhat].goldontraining;
+                holding[3]-=allbuildableunits[createwhat].stoneontraining;
+                creationqueueunits[player][index].push_back(creationinfo(pindex, allbuildableunits[createwhat].timeontraining, createwhat));
+            }
+            else if(player==0) //not enough resources
+            {
+                currErr=allErr[FEWRESOURCES];
+                redraw=1;
+            }
         }
         else if(player==0)
         {
-            currErr=allErr[FEWRESOURCES];
+            currErr=allErr[EARLYTRAIN];
             redraw=1;
         }
 	}
