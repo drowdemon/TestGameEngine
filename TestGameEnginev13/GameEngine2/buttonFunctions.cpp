@@ -36,14 +36,18 @@ void createnewunit(buttonparam b)
 }
 void createunit(buttonparam b)
 {
-	for(unsigned int i=0; i<allgarrisonedselectedunits[0].size(); i++)
+	for(unsigned int i=0; i<allgarrisonedselectedunits[b.player].size(); i++)
 	{
 		allbuildings[b.player][-allunits[b.player][allgarrisonedselectedunits[b.player][i]]->garrisoned-1].createunit(b.unitorbuilding,allgarrisonedselectedunits[b.player][i]);
-        redraw=1;
 	}
+    if(b.player==0)
+        redraw=1;
+    if(b.player==0 && allgarrisonedselectedunits[b.player].size()==0)
+        currErr=allErr[NOUNITSSELECTED];
 }
 void selectgarrison(buttonparam b)
 {
+    redraw=1;
 	for(unsigned int i=0; i<allgarrisonedselectedunits[b.player].size(); i++)
 	{
 		if(allbuildings[b.player][selectedunits[b.player][0]].garrisoned[b.index-indexGarrisonbutton]==allgarrisonedselectedunits[b.player][i])

@@ -167,6 +167,7 @@ public:
 #define NORESOURCELOC    7
 #define EARLYBUILD		 8
 #define EARLYTRAIN		 9
+#define NOUNITSSELECTED  10
 
 class ErrorMSG
 {

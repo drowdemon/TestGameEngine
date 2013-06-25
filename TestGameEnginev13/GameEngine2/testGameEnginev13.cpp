@@ -217,6 +217,7 @@ void selectone(int player, point &clicked) //select one unit, no shift key press
 {
 	if(player==0)
 		redraw=1;//mod buttons likely
+    allgarrisonedselectedunits[player].clear(); //no people inside buildings selected anymore
 	if(sqrt(pow(clicked.x-allunits[player][generals[player]]->x,2)+pow(clicked.y-allunits[player][generals[player]]->y,2))>allunits[player][generals[player]]->los) //out of range
 	{
 		if(whatsselected[player]==true)
@@ -349,6 +350,7 @@ void selectmany(int player, myrect &clicked)//select all the units in a box made
 {
 	if(player==0)
 		redraw=1; //mod buttons likely
+    allgarrisonedselectedunits[player].clear(); //no people inside buildings selected anymore
 	if(whatsselected[player]==true)
 	{
 		for(unsigned int i=0; i<selectedunits[player].size(); i++)
@@ -1300,6 +1302,7 @@ void initializeGameEngine()
 	allErr.push_back(ErrorMSG("Nowhere to Retrieve Resources From",WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
 	allErr.push_back(ErrorMSG("Cannot Build This Building Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
     allErr.push_back(ErrorMSG("Cannot Train This Unit Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
+    allErr.push_back(ErrorMSG("First Select a Garrisoned Unit to Train", WIDTH/3+5+80,HEIGHT-16,4.0*FPS));
     
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Building", YOUR_UNIT | YOUR_MULT_UNITS, progressBuilding));
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Unit",YOUR_BUILDING,progressUnit));
@@ -1489,7 +1492,21 @@ void mainTimerProc(int arg)
 				renderBitmapString(allbuttons[i].x,allbuttons[i].y+12,0,GLUT_BITMAP_HELVETICA_12,toprint);
 				//temp.DrawString(toprint,allbuttons[i].text.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL(allbuttons[i].x), Gdiplus::REAL(allbuttons[i].y)),&black);
 				//temp.DrawRectangle(&(p[0]),allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height);
-				drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
+                drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,black);
+                if((int)i>=indexGarrisonbutton && (int)i<indexGarrisonbuttonend)
+                {
+                    bool good=false;
+                    for(unsigned int j=0; j<allgarrisonedselectedunits[0].size(); j++)
+                    {
+                        if(allgarrisonedselectedunits[0][j]==allbuildings[0][selectedunits[0][0]].garrisoned[i-indexGarrisonbutton])
+                        {
+                            good=true;
+                            break;
+                        }
+                    }
+                    if(good)
+                        drawEmptyRect(allbuttons[i].x,allbuttons[i].y,allbuttons[i].width,allbuttons[i].height,blue);
+                }
 				delete[] toprint;
 			}
 		}
