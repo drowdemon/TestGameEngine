@@ -4,6 +4,7 @@
 #include "dataStructures.h"
 #include "tile.h"
 #include "report.h"
+#include "building.h"
 
 //US==Unit Stance //similar to age of emps
 #define US_AGGRESIVE 1 //chases while in LOS
@@ -106,5 +107,8 @@ protected:
 	bool checknomove(bool siegesent);
 	void searchresources();
 	bool distToBuilding(int bindex, double dist);
+private:
+	int innerFight(unit *what);
+	int innerFight(building &what);
 };
 #endif

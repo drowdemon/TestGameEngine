@@ -174,7 +174,7 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	transferfrom=-1;
 	transferto=-1;
 }
-unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison)
+unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea)
 {
 	x=px;
 	y=py;
@@ -242,24 +242,24 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 {
 	float attackx=0;
 	float attacky=0;
-	//float attackh=0;
+	float attackh=0;
 	float attackw=0;
 	if(attackingwhat==true)
 	{
 		attackx=allunits[attackingunitplayer][attackingunitindex]->x;
 		attacky=allunits[attackingunitplayer][attackingunitindex]->y;
-		//attackh=allunits[attackingunitplayer][attackingunitindex]->height;
+		attackh=allunits[attackingunitplayer][attackingunitindex]->height;
 		attackw=allunits[attackingunitplayer][attackingunitindex]->width;
 	}
 	else
 	{
 		attackx=allbuildings[attackingunitplayer][attackingunitindex].x;
 		attacky=allbuildings[attackingunitplayer][attackingunitindex].y;
-		//attackh=allbuildings[attackingunitplayer][attackingunitindex].height;
+		attackh=allbuildings[attackingunitplayer][attackingunitindex].height;
 		attackw=allbuildings[attackingunitplayer][attackingunitindex].width;
 	}
 	float attackcenterx=attackx+(attackw/2.0f);
-	float attackcentery=attacky+(attacky/2.0f);
+	float attackcentery=attacky+(attackh/2.0f);
 	float startx=0;
 	float starty=0;
 	bool dir=true; //true==counterclockwise, false==clockwise
@@ -2353,254 +2353,299 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 }
 void unit::fight()
 {
-	if(attackingwhat==true)
-	{
-		if(allunits[attackingunitplayer][attackingunitindex]->health<=0)
-		{
-			attackingunitindex=-1;
-			attackingunitplayer=-1;
-			return;
-		}
-	}
-	else
-	{
-		if(allbuildings[attackingunitplayer][attackingunitindex].health<=0)
-		{
-			attackingunitplayer=-1;
-			attackingunitindex=-1;
-			return;
-		}
-	}
+    int change=0;
+    if(attackingwhat==true) //attacking unit
+        change=innerFight(allunits[attackingunitplayer][attackingunitindex]);
+    else if(attackingwhat==false) //attacking building
+        change=innerFight(allbuildings[attackingunitplayer][attackingunitindex]);
+    if(attackarea!=0)
+    {
+        int ax;
+        int ay;
+        ax=(attackingwhat) ? (int)(allunits[attackingunitplayer][attackingunitindex]->x) : (int)(allbuildings[attackingunitplayer][attackingunitindex].x);
+        ay=(attackingwhat) ? (int)(allunits[attackingunitplayer][attackingunitindex]->y) : (int)(allbuildings[attackingunitplayer][attackingunitindex].y);
+        for(int i=ax+1; i<ax+attackarea; i++)
+        {
+            for(int j=ay+1; j<ay+attackarea; j++)
+            {
+                if(map[j][i].tilestyle==TS_BUILDING)
+                {
+                    innerFight(allbuildings[map[j][i].buildingplayer][map[j][i].buildingindex]);
+                }
+                if((map[j][i].unitonMineon&1)==1) //unit on
+                {
+                    innerFight(allunits[map[j][i].unitplayer][map[j][i].unitindex]);
+                }
+            }
+        }
+    }
+    if(change==1)
+    {
+        attackingunitplayer=-1;
+        attackingunitindex=-1;
+    }
+    else if(change==2)
+    {
+        attackingunitplayer=-1;
+        attackingunitindex=-1;
+        attackunitstance();
+    }
+}
+int unit::innerFight(unit *what)
+{		
+    if(what->health<=0)
+    {
+        //attackingunitindex=-1;
+        //attackingunitplayer=-1;
+        return 1;
+    }
 	if(whatisit==2 && allsiegeunits[player][siegeindex].manning.size()<(unsigned int)allsiegeunits[player][siegeindex].minmanning)
-		return; //not enough units manning the siege unit to do anything
+		return 0; //not enough units manning the siege unit to do anything
 	if(unitstance==US_DONOTHING && userordered==false)
-		return;
+		return 0;
 	if(frames%attackspeed==0)
 	{
-		if(attackingwhat==true)//attacking a unit
-		{
-			float dist=sqrt(pow(x-allunits[attackingunitplayer][attackingunitindex]->x, 2)+pow(y-allunits[attackingunitplayer][attackingunitindex]->y, 2));
-			float actualrange=attackrange+0.05f;
-			if(garrisoned<=-1)
-			{
-				if(attackrange!=MELEE)
-					actualrange=allbuildings[player][(-garrisoned)-1].range+0.05f;
-			}
-			if(dist<=actualrange) //in range
-			{
-				float attack=0;
-				if(dist<=MELEE) //must melee (siege machines can't do anything)
-				{
-					attack=meleeattack;
-					if(garrisoned<=-1)
-						attack+=allbuildings[player][(-garrisoned)-1].garrisonedmeleeattack;
-					if(whatisit==2) //siegeunit
-					{
-						for(unsigned int i=0; i<allsiegeunits[player][siegeindex].manning.size(); i++)
-						{
-							allunits[player][allsiegeunits[player][siegeindex].manning[i]]->siegeindex=-1;
-							if(allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackingunitindex==-1 || allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackingunitplayer==-1)
-								allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackunitstance();
-							else
-								allunits[player][allsiegeunits[player][siegeindex].manning[i]]->fight();
-							allobstacles[player][allsiegeunits[player][siegeindex].manning[i]].push_back(point(allunits[player][allsiegeunits[player][siegeindex].manning[i]]->x, allunits[player][allsiegeunits[player][siegeindex].manning[i]]->y)); //tell it to come back when its done, by making its current location a waypoint in the obstacle avoidance vector
-						}
-						allsiegeunits[player][siegeindex].manning.clear();
-					}
-				}
-				else //must range
-				{
-					attack=rangedattack;
-					if(garrisoned<=-1)
-						attack+=allbuildings[player][(-garrisoned)-1].garrisonedrangedattack;
-				}
-				attack+=(veterancylvl/**0.5f*/); //add for vet lvl
-				if(!(garrisoned<=-1) && regimentid>=0) //if not garrisoned, add for regiment lvl
-					attack+=allregiments[player][regimentid].reglvl/2;//4;
-                for(unsigned int i=0; i<allBonuses.size(); i++) //apply attack bonuses
+        float dist=sqrt(pow(x-what->x, 2)+pow(y-what->y, 2));
+        float actualrange=attackrange+0.05f;
+        if(garrisoned<=-1)
+        {
+            if(attackrange!=MELEE)
+                actualrange=allbuildings[player][(-garrisoned)-1].range+0.05f;
+        }
+        if(dist<=actualrange) //in range
+        {
+            float attack=0;
+            if(dist<=MELEE) //must melee (siege machines can't do anything)
+            {
+                attack=meleeattack;
+                if(garrisoned<=-1)
+                    attack+=allbuildings[player][(-garrisoned)-1].garrisonedmeleeattack;
+                if(whatisit==2) //siegeunit
                 {
-                    for(unsigned int j=0; j<allBonuses[i].againstWhat.size(); j++)
+                    for(unsigned int i=0; i<allsiegeunits[player][siegeindex].manning.size(); i++)
                     {
-                        if(allBonuses[i].againstWhat[j]==allunits[attackingunitplayer][attackingunitindex]->id) //bonus applicable
-                        {
-                            attack+=allBonuses[i].attackBonus;
-                            attack*=allBonuses[i].attackPercentBonus;
-                            break;
-                        }
+                        allunits[player][allsiegeunits[player][siegeindex].manning[i]]->siegeindex=-1;
+                        if(allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackingunitindex==-1 || allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackingunitplayer==-1)
+                            allunits[player][allsiegeunits[player][siegeindex].manning[i]]->attackunitstance();
+                        else
+                            allunits[player][allsiegeunits[player][siegeindex].manning[i]]->fight();
+                        allobstacles[player][allsiegeunits[player][siegeindex].manning[i]].push_back(point(allunits[player][allsiegeunits[player][siegeindex].manning[i]]->x, allunits[player][allsiegeunits[player][siegeindex].manning[i]]->y)); //tell it to come back when its done, by making its current location a waypoint in the obstacle avoidance vector
+                    }
+                    allsiegeunits[player][siegeindex].manning.clear();
+                }
+            }
+            else //must range
+            {
+                attack=rangedattack;
+                if(garrisoned<=-1)
+                    attack+=allbuildings[player][(-garrisoned)-1].garrisonedrangedattack;
+            }
+            attack+=(veterancylvl/**0.5f*/); //add for vet lvl
+            if(!(garrisoned<=-1) && regimentid>=0) //if not garrisoned, add for regiment lvl
+                attack+=allregiments[player][regimentid].reglvl/2;//4;
+            for(unsigned int i=0; i<allBonuses.size(); i++) //apply attack bonuses
+            {
+                for(unsigned int j=0; j<allBonuses[i].againstWhat.size(); j++)
+                {
+                    if(allBonuses[i].againstWhat[j]==what->id) //bonus applicable
+                    {
+                        attack+=allBonuses[i].attackBonus;
+                        attack*=allBonuses[i].attackPercentBonus;
+                        break;
                     }
                 }
-                
-				float armor=allunits[attackingunitplayer][attackingunitindex]->armor; //next 4 lines set armor of unit being attacked;
-				if(allunits[attackingunitplayer][attackingunitindex]->garrisoned<=-1)
-					armor+=allbuildings[attackingunitplayer][(-allunits[attackingunitplayer][attackingunitindex]->garrisoned)-1].garrisonedarmorup; //add for garrisoned
-				else if(allunits[attackingunitplayer][attackingunitindex]->regimentid>=0)
-					armor+=allregiments[attackingunitplayer][allunits[attackingunitplayer][attackingunitindex]->regimentid].reglvl/3;//5; //add for reg lvl, if not garrisoned
-				armor+=allunits[attackingunitplayer][attackingunitindex]->veterancylvl/2;//3.0f; //add for vet lvl
-                for(unsigned int i=0; i<allunits[attackingunitplayer][attackingunitindex]->allBonuses.size(); i++) //apply defense bonuses
-                {
-                    for(unsigned int j=0; j<allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].againstWhat.size(); j++)
-                    {
-                        if(allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].againstWhat[j]==id) //bonus applicable
-                        {
-                            armor+=allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].defenseBonus;
-                            armor*=allunits[attackingunitplayer][attackingunitindex]->allBonuses[i].defensePercentBonus;
-                            break;
-                        }
-                    }
-                }
-                
-				float hpercent=(health/allbuildableunits[id].health)*100;
-				float dmg=0;
-				if(hpercent==100)
-					dmg=(float)attack-(float)armor;
-				//for this formula and what it does, see the excel document called age of emps health percents, sheet one
-				else if(hpercent<100 && hpercent>25)
-					dmg=attack-((attack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f)))-armor;
-				if(dmg<=0) //if its <=25, will go here, dmg is 0
-					return;
+            }
 
-				int chance=100; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
-				if(allunits[attackingunitplayer][attackingunitindex]->garrisoned<=-1) 
-					chance=allbuildings[attackingunitplayer][(-allunits[attackingunitplayer][attackingunitindex]->garrisoned)-1].chanceofbeinghit;
-				int rndnum = rand()%100;
-				if(rndnum<chance)
-				{
-					allunits[attackingunitplayer][attackingunitindex]->health-=dmg;
-					if(attackingunitplayer==0 && allunits[0][attackingunitindex]->selected==true) //its selected - update its health in disp
-						redraw=true;
-					if(allunits[attackingunitplayer][attackingunitindex]->health<=0) //killed it
-					{
-						if(regimentid!=-1 && allregiments[player][regimentid].recording==true)
-							allregiments[player][regimentid].rep.updatedkilledunits(attackingunitplayer, attackingunitindex);
-						if(allunits[attackingunitplayer][attackingunitindex]->regimentid!=-1)
-						{
-							allregiments[attackingunitplayer][allunits[attackingunitplayer][attackingunitindex]->regimentid].removeunit(attackingunitindex);
-							allunits[attackingunitplayer][attackingunitindex]->regimentid=-1;
-						}
-						overwriteunits[attackingunitplayer].push_back(attackingunitindex);//it died, say its rewritable
-						for(int g=0; g<4; g++)
-						{
-							map[(unsigned int)allunits[attackingunitplayer][attackingunitindex]->y][(unsigned int)allunits[attackingunitplayer][attackingunitindex]->x].resources[g]=allunits[attackingunitplayer][attackingunitindex]->holding[g];
-							allunits[attackingunitplayer][attackingunitindex]->holding[g]=0;
-							//CREATE BUILDING: PILE (JUST BUNCH OF RESOURCES) belongs to no one  (Not walkable)
-						}
-						for(float k=allunits[attackingunitplayer][attackingunitindex]->y; k<allunits[attackingunitplayer][attackingunitindex]->y+allunits[attackingunitplayer][attackingunitindex]->height; k+=.25)
-						{
-							for(float h=allunits[attackingunitplayer][attackingunitindex]->x; h<allunits[attackingunitplayer][attackingunitindex]->x+allunits[attackingunitplayer][attackingunitindex]->width; h+=.25)
-							{
-								map[(int)k][(int)h].unitonMineon&=254; //sets rightmost bit to 0, leaves the rest alon
-								map[(int)k][(int)h].unitindex=0;
-								map[(int)k][(int)h].unitplayer=0;
-							}
-						}
-						if(allunits[attackingunitplayer][attackingunitindex]->selected==true) //deselect is required
-						{
-							for(unsigned int i=0; i<selectedunits[attackingunitplayer].size(); i++)
-							{
-								if(selectedunits[attackingunitplayer][i]==attackingunitindex)
-								{
-									selectedunits[attackingunitplayer].erase(selectedunits[attackingunitplayer].begin()+i);
-									break;
-								}
-							}
-							allunits[attackingunitplayer][attackingunitindex]->selected=false;
-						}
-						attackingunitplayer=-1;
-						attackingunitindex=-1;
-						return;
-					}
-				}
-			}
-			else //not in range
-			{
-				if(garrisoned<=-1)//garrisoned
-				{
-					attackingunitindex=-1;
-					attackingunitplayer=-1;
-					attackunitstance();
-				}
-				if(unitstance==US_DONTMOVE && userordered==false)
-				{
-					attackingunitplayer=-1;
-					attackingunitindex=-1;
-					attackunitstance();
-				}
-				else if(unitstance==US_DEFENSIVE || unitstance==US_AGGRESIVE || userordered==true)
-				{
-					attackingwhat=true;
-					attackmovement();
-				}
-			}
-		}
-		else //attacking a building
-		{
-			float enemyx=allbuildings[attackingunitplayer][attackingunitindex].x;
-			float enemyy=allbuildings[attackingunitplayer][attackingunitindex].y;
-			float enemyx2=allbuildings[attackingunitplayer][attackingunitindex].x+allbuildings[attackingunitplayer][attackingunitindex].width;
-			float enemyy2=allbuildings[attackingunitplayer][attackingunitindex].y+allbuildings[attackingunitplayer][attackingunitindex].height;
-			float dist=sqrt(pow((enemyx-x), 2)+pow((enemyy-y), 2));
-			if(sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))<dist)
-				dist=sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2));
-			if(sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))<dist)
-				dist=sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2));
-			if(sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))<dist)
-				dist=sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2));
-			float actualrange=attackrange+0.05f;
-			if(garrisoned<=-1)
-			{
-				if(attackrange!=MELEE)
-					actualrange=allbuildings[player][(-garrisoned)-1].range+0.05f;
-			}
-			if(dist<=actualrange) //in range
-			{
-				float hpercent=(health/allbuildableunits[id].health)*100;
-				float dmg=0;
-				if(hpercent==100)
-					dmg=(float)buildingattack-((allbuildings[attackingunitplayer][attackingunitindex].beingbuilt>0) ? 0 : (float)allbuildings[attackingunitplayer][attackingunitindex].armor);
-				//for this formula and what it does, see the excel document called age of emps health percents 
-				else if(hpercent<100 && hpercent>25)
-					dmg=(buildingattack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f))-((allbuildings[attackingunitplayer][attackingunitindex].beingbuilt>0) ? 0 : (float)allbuildings[attackingunitplayer][attackingunitindex].armor);
-				if(dmg<=0) //if its <=25, will go here, dmg is 0
-					return;
-				allbuildings[attackingunitplayer][attackingunitindex].health-=(short)dmg;
-				if(allbuildings[attackingunitplayer][attackingunitindex].selected==true)
-					redraw=true;
-				if(allbuildings[attackingunitplayer][attackingunitindex].health<=0)
-				{
-					overwritebuildings[attackingunitplayer].push_back(attackingunitindex);//it died, say its rewritable
-					for(int g=0; g<4; g++)
-					{
-						resources[attackingunitplayer][g]-=allbuildings[attackingunitplayer][attackingunitindex].holding[g];
-						map[(unsigned int)allbuildings[attackingunitplayer][attackingunitindex].y][(unsigned int)allbuildings[attackingunitplayer][attackingunitindex].x].resources[g]=allbuildings[attackingunitplayer][attackingunitindex].holding[g];
-						allbuildings[attackingunitplayer][attackingunitindex].holding[g]=0;
-						//CREATE BUILDING: PILE (JUST BUNCH OF RESOURCES) belongs to no one  (Not walkable)
-					}
-					for(float k=allbuildings[attackingunitplayer][attackingunitindex].y; k<allbuildings[attackingunitplayer][attackingunitindex].y+allbuildings[attackingunitplayer][attackingunitindex].height; k+=.25)
-					{
-						for(float h=allbuildings[attackingunitplayer][attackingunitindex].x; h<allbuildings[attackingunitplayer][attackingunitindex].x+allbuildings[attackingunitplayer][attackingunitindex].width; h+=.25)
-						{
-							map[(int)k][(int)h].tilestyle=TS_GRASS;
-						}
-					}
-				}
-			}
-			else
-			{
-				if(unitstance==US_DONTMOVE && userordered==false)
-				{
-					attackingunitplayer=-1;
-					attackingunitindex=-1;
-					attackunitstance();
-				}
-				else if(unitstance==US_DEFENSIVE || unitstance==US_AGGRESIVE || userordered==true)
-				{
-					attackingwhat=true;
-					attackmovement();
-				}
-			}
+            float armor=what->armor; //next 4 lines set armor of unit being attacked;
+            if(what->garrisoned<=-1)
+                armor+=allbuildings[what->player][(-what->garrisoned)-1].garrisonedarmorup; //add for garrisoned
+            else if(what->regimentid>=0)
+                armor+=allregiments[what->player][what->regimentid].reglvl/3;//5; //add for reg lvl, if not garrisoned
+            armor+=what->veterancylvl/2;//3.0f; //add for vet lvl
+            for(unsigned int i=0; i<what->allBonuses.size(); i++) //apply defense bonuses
+            {
+                for(unsigned int j=0; j<what->allBonuses[i].againstWhat.size(); j++)
+                {
+                    if(what->allBonuses[i].againstWhat[j]==id) //bonus applicable
+                    {
+                        armor+=what->allBonuses[i].defenseBonus;
+                        armor*=what->allBonuses[i].defensePercentBonus;
+                        break;
+                    }
+                }
+            }
+
+            float hpercent=(health/allbuildableunits[id].health)*100;
+            float dmg=0;
+            if(hpercent==100)
+                dmg=(float)attack-(float)armor;
+            //for this formula and what it does, see the excel document called age of emps health percents, sheet one
+            else if(hpercent<100 && hpercent>25)
+                dmg=attack-((attack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f)))-armor;
+            if(dmg<=0) //if its <=25, will go here, dmg is 0
+                return 0;
+
+            int chance=100; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
+            if(what->garrisoned<=-1) 
+                chance=allbuildings[what->player][(-what->garrisoned)-1].chanceofbeinghit;
+            int rndnum = rand()%100;
+            if(rndnum<chance)
+            {
+                what->health-=dmg;
+                if(what->player==0 && allunits[0][what->index]->selected==true) //its the humans and its selected - update its health in disp
+                    redraw=true;
+                if(what->health<=0) //killed it
+                {
+                    if(regimentid!=-1 && allregiments[player][regimentid].recording==true)
+                        allregiments[player][regimentid].rep.updatedkilledunits(what->player, what->index);
+                    if(what->regimentid!=-1)
+                    {
+                        allregiments[what->player][what->regimentid].removeunit(what->index);
+                        what->regimentid=-1;
+                    }
+                    overwriteunits[what->player].push_back(what->index);//it died, say its rewritable
+                    for(int g=0; g<4; g++)
+                    {
+                        map[(unsigned int)what->y][(unsigned int)what->x].resources[g]=what->holding[g];
+                        what->holding[g]=0;
+                        //CREATE BUILDING: PILE (JUST BUNCH OF RESOURCES) belongs to no one  (Not walkable)
+                    }
+                    for(float k=what->y; k<what->y+what->height; k+=.25)
+                    {
+                        for(float h=what->x; h<what->x+what->width; h+=.25)
+                        {
+                            map[(int)k][(int)h].unitonMineon&=254; //sets rightmost bit to 0, leaves the rest alon
+                            map[(int)k][(int)h].unitindex=0;
+                            map[(int)k][(int)h].unitplayer=0;
+                        }
+                    }
+                    if(what->selected==true) //deselect is required
+                    {
+                        for(unsigned int i=0; i<selectedunits[what->player].size(); i++)
+                        {
+                            if(selectedunits[what->player][i]==what->index)
+                            {
+                                selectedunits[what->player].erase(selectedunits[what->player].begin()+i);
+                                break;
+                            }
+                        }
+                        what->selected=false;
+                    }
+                    //attackingunitplayer=-1;
+                    //attackingunitindex=-1;
+                    return 1;
+                }
+            }
+        }
+        else //not in range
+        {
+            if(garrisoned<=-1)//garrisoned
+            {
+                //attackingunitindex=-1;
+                //attackingunitplayer=-1;
+                attackunitstance();
+                return 2;
+            }
+            if(unitstance==US_DONTMOVE && userordered==false)
+            {
+                //attackingunitplayer=-1;
+                //attackingunitindex=-1;
+                return 2;
+                //attackunitstance();
+            }
+            else if(unitstance==US_DEFENSIVE || unitstance==US_AGGRESIVE || userordered==true)
+            {
+                attackingwhat=true;
+                attackmovement();
+            }
+        }
+    }
+    return 0;
+}
+int unit::innerFight(building &what)
+{
+    if(what.health<=0)
+    {
+        //attackingunitplayer=-1;
+        //attackingunitindex=-1;
+        return 1;
+    }
+	if(whatisit==2 && allsiegeunits[player][siegeindex].manning.size()<(unsigned int)allsiegeunits[player][siegeindex].minmanning)
+		return 0; //not enough units manning the siege unit to do anything
+	if(unitstance==US_DONOTHING && userordered==false)
+		return 0;
+	if(frames%attackspeed==0)
+	{
+        float enemyx=what.x;
+        float enemyy=what.y;
+        float enemyx2=what.x+what.width;
+        float enemyy2=what.y+what.height;
+        float dist=sqrt(pow((enemyx-x), 2)+pow((enemyy-y), 2));
+        if(sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))<dist)
+            dist=sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2));
+        if(sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))<dist)
+            dist=sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2));
+        if(sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))<dist)
+            dist=sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2));
+        float actualrange=attackrange+0.05f;
+        if(garrisoned<=-1)
+        {
+            if(attackrange!=MELEE)
+                actualrange=allbuildings[player][(-garrisoned)-1].range+0.05f;
+        }
+        if(dist<=actualrange) //in range
+        {
+            float hpercent=(health/allbuildableunits[id].health)*100;
+            float dmg=0;
+            if(hpercent==100)
+                dmg=(float)buildingattack-((what.beingbuilt>0) ? 0 : (float)what.armor);
+            //for this formula and what it does, see the excel document called age of emps health percents 
+            else if(hpercent<100 && hpercent>25)
+                dmg=(buildingattack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f))-((what.beingbuilt>0) ? 0 : (float)what.armor);
+            if(dmg<=0) //if its <=25, will go here, dmg is 0
+                return 0;
+            what.health-=(short)dmg;
+            if(what.player==0 && what.selected==true)
+                redraw=true;
+            if(what.health<=0)
+            {
+                overwritebuildings[what.player].push_back(what.index);//it died, say its rewritable
+                for(int g=0; g<4; g++)
+                {
+                    resources[what.player][g]-=what.holding[g];
+                    map[(unsigned int)what.y][(unsigned int)what.x].resources[g]=what.holding[g];
+                    what.holding[g]=0;
+                    //CREATE BUILDING: PILE (JUST BUNCH OF RESOURCES) belongs to no one  (Not walkable)
+                }
+                for(float k=what.y; k<what.y+what.height; k+=.25)
+                {
+                    for(float h=what.x; h<what.x+what.width; h+=.25)
+                    {
+                        map[(int)k][(int)h].tilestyle=TS_GRASS;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(unitstance==US_DONTMOVE && userordered==false)
+            {
+                //attackingunitplayer=-1;
+                //attackingunitindex=-1;
+                attackunitstance();
+                return 2;
+            }
+            else if(unitstance==US_DEFENSIVE || unitstance==US_AGGRESIVE || userordered==true)
+            {
+                attackingwhat=true;
+                attackmovement();
+                return 0;
+            }
 		}
 	}
+    return 0;
 }
+
 vector <pointex2> unit::findallies(int foodneeded) //returns the index of the nearest unit of same player carrying food
 {
 	short cyclethrough=SEE_ALLIES;
