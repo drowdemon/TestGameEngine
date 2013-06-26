@@ -2260,11 +2260,15 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 	if(abs(enemyx-x)>=0.0001) //if the line is not vertical
 	{
 		float slope=(enemyy-y)/(enemyx-x); //slope
-		float b=y-(slope*x); //y-intercept
-		float newx1=(sqrt(-(b*b)+(2*b*y)-(2*b*slope*x)-(y*y)+(2*y*slope*x)+((dist*dist)*(slope*slope))+(dist*dist)-((slope*slope)*(x*x)))-(b*slope)+(y*slope)+x)/((slope*slope)+1);
-		float newx2=(-sqrt(-(b*b)+(2*b*y)-(2*b*slope*x)-(y*y)+(2*y*slope*x)+((dist*dist)*(slope*slope))+(dist*dist)-((slope*slope)*(x*x)))-(b*slope)+(y*slope)+x)/((slope*slope)+1);
-		float newy1=(slope*newx1)+b; //we got the x-coordinate above, heres the y coordinate
-		float newy2=(slope*newx2)+b; //2 x's, 2 y's
+		//float b=y-(slope*x); //y-intercept
+		//float newx1=(sqrt(-(b*b)+(2*b*y)-(2*b*slope*x)-(y*y)+(2*y*slope*x)+((dist*dist)*(slope*slope))+(dist*dist)-((slope*slope)*(x*x)))-(b*slope)+(y*slope)+x)/((slope*slope)+1);
+		//float newx2=(-sqrt(-(b*b)+(2*b*y)-(2*b*slope*x)-(y*y)+(2*y*slope*x)+((dist*dist)*(slope*slope))+(dist*dist)-((slope*slope)*(x*x)))-(b*slope)+(y*slope)+x)/((slope*slope)+1);
+		//float newy1=(slope*newx1)+b; //we got the x-coordinate above, heres the y coordinate
+		//float newy2=(slope*newx2)+b; //2 x's, 2 y's
+        float newx1=(sqrt(speed*speed*(slope*slope+1))+slope*slope*x+x)/(slope*slope+1);
+        float newx2=(-sqrt(speed*speed*(slope*slope+1))+slope*slope*x+x)/(slope*slope+1);
+        float newy1=slope*(newx1-x)+y;
+        float newy2=slope*(newx2-x)+y;
 		int conditionsmet=0; //was the point both between the start and finish in x and in y?
 		bool firstoneisgood=false; //is the first one correct
 		conditionsmet+=pointonlinesegment(x, enemyx, newx1); //check x
@@ -2292,27 +2296,28 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 	else //line is vert
 	{
 		movetox=x;
-		if(pointonlinesegment(y, enemyy, y+dist)==true)
+		/*if(pointonlinesegment(y, enemyy, y+dist)==true)
 			movetoy=y+dist;
 		else
-			movetoy=y-dist;
+			movetoy=y-dist;*/
+        if(pointonlinesegment(y, enemyy, y+speed)==true)
+			movetoy=y+speed;
+		else
+			movetoy=y-speed;
 	}
-	if(whatisit!=3)//check if that is valid (a land unit)
+    if(!chkmvp1(map[(int)movetoy][(int)movetox]) || !chkmvp1(map[(int)movetoy][(int)(movetox+width-.001f)]) || !chkmvp1(map[(int)(movetoy+height-.001f)][(int)movetox]) || !chkmvp1(map[(int)(movetoy+height-.001f)][(int)(movetox+width-.001f)]))
 	{
-		if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GRASS && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_ROAD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_GOLD && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_STONE && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATERBUILDING && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BERRIES && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_BUSHES)
-		{
-			char canmoveto[6]={TS_GRASS, TS_ROAD, TS_GOLD, TS_STONE, TS_WATERBUILDING, TS_BUSHES};
+        if(whatisit!=3)
+        {
+            char canmoveto[6]={TS_GRASS, TS_ROAD, TS_GOLD, TS_STONE, TS_WATERBUILDING, TS_BUSHES};
 			attackgoingtobstacle(canmoveto);
-		}
-	}
-	else
-	{
-		if(map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_WATER && map[(unsigned int)movetoy][(unsigned int)movetox].tilestyle!=TS_FISH)
-		{
-			char canmoveto[6]={TS_WATER, TS_FISH, 0, 0, 0, 0};
+        }
+        else
+        {
+            char canmoveto[6]={TS_WATER, TS_FISH, 0, 0, 0, 0};
 			attackgoingtobstacle(canmoveto);
-		}
-	}
+        }
+    }
 	if(whatisit==2) //siegeunit
 	{
 		for(unsigned int j=0; j<allsiegeunits[player][siegeindex].manning.size(); j++)
