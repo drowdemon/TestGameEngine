@@ -174,7 +174,7 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	transferfrom=-1;
 	transferto=-1;
 }
-unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea)
+unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea, u.chanceHit)
 {
 	x=px;
 	y=py;
@@ -2485,9 +2485,9 @@ int unit::innerFight(unit *what)
             if(dmg<=0) //if its <=25, will go here, dmg is 0
                 return 0;
 
-            int chance=100; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
+            int chance=chanceHit; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
             if(what->garrisoned<=-1) 
-                chance=allbuildings[what->player][(-what->garrisoned)-1].chanceofbeinghit;
+                chance-=allbuildings[what->player][(-what->garrisoned)-1].chanceofbeinghit;
             int rndnum = rand()%100;
             if(rndnum<chance)
             {
@@ -2604,6 +2604,8 @@ int unit::innerFight(building &what)
                 dmg=(buildingattack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f))-((what.beingbuilt>0) ? 0 : (float)what.armor);
             if(dmg<=0) //if its <=25, will go here, dmg is 0
                 return 0;
+            if((rand()%100)>chanceHit)
+                return 0; //missed
             what.health-=(short)dmg;
             if(what.player==0 && what.selected==true)
                 redraw=true;

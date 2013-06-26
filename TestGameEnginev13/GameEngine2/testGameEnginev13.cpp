@@ -996,17 +996,17 @@ void initializeGameEngine()
 		printf("Unable to open unit.specs");
 		exit(-235);
 	}
-	float args[27]={0};
+	float args[28]={0};
 	string name;
 	while(!inf.eof())
 	{
-		for(int i=0; i<27; i++) //27=number of args to basic unit. Make sure that this is so.
+		for(int i=0; i<28; i++) //28=number of args to basic unit. Make sure that this is so.
 		{
 			inf >> args[i];
 			inf.get();
 		}
 		getline(inf, name);
-		allbuildableunits.push_back(basicunit(args[0],(short)args[1],(short)args[2],(short)args[3],(short)args[4],args[5],args[6],(short)args[7],(short)args[8],(short)args[9],args[10],(short)args[11],args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(unsigned char)args[17],(unsigned char)args[18],(unsigned char)args[19],(short)args[20],(char)args[21],(short)args[22],(short)args[23],(short)args[24],(short)args[25],(short)args[26],name));
+		allbuildableunits.push_back(basicunit(args[0],(short)args[1],(short)args[2],(short)args[3],(short)args[4],args[5],args[6],(short)args[7],(short)args[8],(short)args[9],args[10],(short)args[11],args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(unsigned char)args[17],(unsigned char)args[18],(unsigned char)args[19],(short)args[20],(short)args[21], (char)args[22],(short)args[23],(short)args[24],(short)args[25],(short)args[26],(short)args[27],name));
         if(allbuildableunits.size()>1 && allbuildableunits[allbuildableunits.size()-1].id==allbuildableunits[allbuildableunits.size()-2].id)
         {
             allbuildableunits.erase(allbuildableunits.end()-1);

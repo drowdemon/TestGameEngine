@@ -1,6 +1,6 @@
 #include "baseUnitBuildings2.h"
 #include <stdio.h>
-baseunit::baseunit(float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, short sn, float ar, short pid, float c, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, short aa)
+baseunit::baseunit(float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, short sn, float ar, short pid, float c, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, short aa, short ch)
 {
 	health=h;
 	meleeattack=ma;
@@ -23,8 +23,9 @@ baseunit::baseunit(float h, short ma, short ra, short a, short ba, float LOS, fl
 	mingarrison=ming;
 	maxgarrison=maxg;
     attackarea=aa;
+    chanceHit=ch;
 }
-basicunit::basicunit(float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, short sn, float ar, short pid, float c, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, short aa, char tf, short ft, short wt, short gt, short st, short tt, string n) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg, aa)
+basicunit::basicunit(float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, short sn, float ar, short pid, float c, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, short aa, short ch, char tf, short ft, short wt, short gt, short st, short tt, string n) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg, aa, ch)
 { 
 	/*health=h;
 	meleeattack=ma;

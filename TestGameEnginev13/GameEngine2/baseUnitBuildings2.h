@@ -30,8 +30,9 @@ public:
 	unsigned char maxgarrison; //!< this variable is for ships only, the maximum amount of units that can garrison in it, else (not ship) it will be -1
 	unsigned char mingarrison; //!< this variable is for ships only, the minimum number of units that must be garrisoned for the ship to be usable
 	short attackarea; //!< how wide an area the unit can attack in. 0=normal, attacks one unit. For instance, 2 makes a 2 by 2 square in which damage is caused. For catapults and the like.
+	short chanceHit; //!< percent chance of hitting.
 	vector<powerBonus> allBonuses; //!< The bonuses a unit has against some other units. Initialized manually in init function, not from file.
-	baseunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, short aa=0); //!< Constructor/default constructor. Accepts all of the above variables
+	baseunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, short aa=0, short ch=100); //!< Constructor/default constructor. Accepts all of the above variables
 };
 //! the stats in allbuildableunits
 class basicunit : public baseunit 
@@ -57,7 +58,7 @@ public:
 	short stoneontraining;
 	short timeontraining;
 	string name;		//!< What is this unit called
-	basicunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, short aa=0, char tf=0, short ft=0, short wt=0, short gt=0, short st=0, short tt=0, string n=""); //!< [default] constructor
+	basicunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, short aa=0, short ch=100, char tf=0, short ft=0, short wt=0, short gt=0, short st=0, short tt=0, string n=""); //!< [default] constructor
 };
 //! A building, stores all info that does not change from building to building and is required for each building
 class basebuilding
