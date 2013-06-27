@@ -93,6 +93,9 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    unitbuildingwhat=-1;
+    buildingx=-1;
+    buildingy=-1;
 }
 unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, /*short ft, short wt, short gt, short st, short tt, */short sn, float px, float py, float ar, short pid, float c, short p, short i, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg)
 {
@@ -173,6 +176,9 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    unitbuildingwhat=-1;
+    buildingx=-1;
+    buildingy=-1;
 }
 unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea, u.chanceHit)
 {
@@ -237,6 +243,9 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
 	transferring=0;
 	transferfrom=-1;
 	transferto=-1;
+    unitbuildingwhat=-1;
+    buildingx=-1;
+    buildingy=-1;
 }
 void unit::attackgoingtobstacle(char canmoveto[6])
 {
@@ -467,10 +476,10 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 	short takeresourcesfrom=map[(int)y][(int)x].inbuildingrad;
 	if(map[(int)y][(int)x].whichplayer.get(false)!=player)
 		takeresourcesfrom=-1;
-	if(takeresourcesfrom!=-1)
+    if(buildingAllowed[player][buildwhat]) //allowed to build this
 	{
-        if(buildingAllowed[player][buildwhat]) //allowed to build this
-		{
+        if(takeresourcesfrom!=-1)
+        {
             if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
             {
                 allbuildings[player][takeresourcesfrom].holding[0]-=allbuildablebuildings[buildwhat].foodtobuild;
@@ -514,26 +523,67 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
                 }
                 return bindex;
             }
-            else if(player==0)
+            /*else if(player==0)
             {
                 currErr=allErr[FEWRESOURCES];
                 redraw=1;
+            }*/
+            else //not enough resources at current building
+            {
+                point p=searchbuildingresources(buildwhat);
+                if(p.x==-1.0f && p.y==-1.0f)
+                {
+                    if(player==0)
+                    {
+                        currErr=allErr[NORESOURCELOC];
+                        redraw=1;
+                    }
+                    return -1;
+                }
+                else //good loc
+                {
+                    movetox=p.x;
+                    movetoy=p.y;
+                    unitbuildingwhat=buildwhat;
+                    buildingx=buildatx;
+                    buildingy=buildaty;
+                    return -1;
+                }
+            }    
+        }
+        /*else if(player==0)
+        {
+            currErr=allErr[NORESOURCELOC];
+            redraw=1;
+        }*/
+        else
+        {
+            point p=searchbuildingresources(buildwhat);
+            if(p.x==-1.0f && p.y==-1.0f)
+            {
+                if(player==0)
+                {
+                    currErr=allErr[NORESOURCELOC];
+                    redraw=1;
+                }
+                return -1;
+            }
+            else //good loc
+            {
+                movetox=p.x;
+                movetoy=p.y;
+                unitbuildingwhat=buildwhat;
+                buildingx=buildatx;
+                buildingy=buildaty;
+                return -1;
             }
         }
-        else if(player==0)
-        {
-            currErr=allErr[EARLYBUILD];
-            redraw=1;
-        }
 	}
-	else
-	{
-		if(player==0)
-		{
-			currErr=allErr[NORESOURCELOC];
-			redraw=1;
-		}
-	}
+    else if(player==0)
+    {
+        currErr=allErr[EARLYBUILD];
+        redraw=1;
+    }
 	return -1;
 }
 void unit::revealmapcreation()
@@ -1523,7 +1573,8 @@ bool unit::checknomove(bool siegesent)
 					{
 						for(float h=allbuildings[player][garrisoned-1].x-allbuildings[player][garrisoned-1].radiustodistribute; h<allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+allbuildings[player][garrisoned-1].radiustodistribute; h+=.25)
 						{
-							map[(int)k][(int)h].inbuildingrad=garrisoned-1;
+                            if(pow(k-allbuildings[player][garrisoned-1].y,2)+pow(h-allbuildings[player][garrisoned-1].x,2)<pow(allbuildings[player][garrisoned-1].radiustodistribute,2))
+                                map[(int)k][(int)h].inbuildingrad=garrisoned-1;
 						}
 					}
 					if(allbuildings[player][garrisoned-1].maxhold>0)
@@ -1606,6 +1657,25 @@ bool unit::checknomove(bool siegesent)
 			}
 			didsomething=true;
 		}
+        if(unitbuildingwhat!=-1 && garrisoned==0)
+        {
+            int bindex=build(unitbuildingwhat, buildingx, buildingy);
+            if(bindex!=-1) //success
+            {
+                unitbuildingwhat=-1;
+                buildingx=-1;
+                buildingy=-1;
+                garrisoned=bindex+1;
+                movetox=allbuildings[player][bindex].x;
+                movetoy=allbuildings[player][bindex].y;
+                didsomething=true;
+            }            
+            else
+            {
+                printf("What? Oops. Issue...");
+                didsomething=false;
+            }
+        }
 		if(didsomething==false)
 		{
 			if(dstancecoox==-1 || dstancecooy==-1)
@@ -1630,7 +1700,8 @@ bool unit::checknomove(bool siegesent)
 				{
 					for(float h=allbuildings[player][garrisoned-1].x-allbuildings[player][garrisoned-1].radiustodistribute; h<allbuildings[player][garrisoned-1].x+allbuildings[player][garrisoned-1].width+allbuildings[player][garrisoned-1].radiustodistribute; h+=.25)
 					{
-						map[(int)k][(int)h].inbuildingrad=0;
+                        if(pow(k-allbuildings[player][garrisoned-1].y,2)+pow(h-allbuildings[player][garrisoned-1].x,2)<pow(allbuildings[player][garrisoned-1].radiustodistribute,2))
+                            map[(int)k][(int)h].inbuildingrad=garrisoned-1;
 					}
 				}
 				if(allbuildings[player][garrisoned-1].maxhold>0)
@@ -2939,4 +3010,59 @@ bool unit::distToBuilding(int bindex, double dist)
    if((t1+t2)<1)
        return true;
    return false;
+}
+point unit::searchbuildingresources(short buildwhat)
+{
+    int takeresourcesfrom=-1;
+    for(int side=1; side<30; side++) //side length
+    {
+        for(int i=(int)x-side; i<=(int)x+side; i++) //loop through width of square
+        {
+            if((takeresourcesfrom=map[(int)y-side][i].inbuildingrad)!=-1) //in a buildings take resources zone
+            {
+                if(map[(int)y-side][i].whichplayer.get(false)==player) //my players building
+                {
+                    if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild) //if that building has enough resources
+                    {
+                        return point(i,(int)y-side);
+                    }
+                }
+            }
+            if((takeresourcesfrom=map[(int)y+side][i].inbuildingrad)!=-1) //in a buildings take resources zone
+            {
+                if(map[(int)y+side][i].whichplayer.get(false)==player) //my players building
+                {
+                    if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild) //if that building has enough resources
+                    {
+                        return point(i,(int)y+side);
+                    }
+                }
+            }
+        }
+        
+        for(int i=(int)y-side+1; i<=(int)y+side-1; i++)
+        {
+            if((takeresourcesfrom=map[i][(int)x-side].inbuildingrad)!=-1) //in a buildings take resources zone
+            {
+                if(map[i][(int)x-side].whichplayer.get(false)==player) //my players building
+                {
+                    if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild) //if that building has enough resources
+                    {
+                        return point((int)x-side,i);
+                    }
+                }
+            }
+            if((takeresourcesfrom=map[i][(int)x+side].inbuildingrad)!=-1) //in a buildings take resources zone
+            {
+                if(map[i][(int)x+side].whichplayer.get(false)==player) //my players building
+                {
+                    if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild) //if that building has enough resources
+                    {
+                        return point((int)x+side,i);
+                    }
+                }
+            }
+        }
+    }
+    return point(-1,-1);
 }

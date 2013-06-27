@@ -58,7 +58,7 @@ vector <vector<short> > allgarrisonedselectedunits;
 bool buildinghover=false;
 int buildingheight=0;
 int buildingwidth=0;
-int buildingwhat=-1;
+vector<int> buildingwhat;
 int redraw=5;
 /*HWND reportdialoghwnd;
 HWND hTabControl; // tab control handle

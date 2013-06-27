@@ -27,7 +27,7 @@ void build(buttonparam b)
 	buildinghover=true;
 	buildingwidth=(int)allbuildablebuildings[b.unitorbuilding].width;
 	buildingheight=(int)allbuildablebuildings[b.unitorbuilding].height;
-	buildingwhat=b.unitorbuilding;
+	buildingwhat[b.player]=b.unitorbuilding;
 }
 void createnewunit(buttonparam b)
 {

@@ -81,9 +81,9 @@ void processMouse(int button, int state, int x, int y)
 			mousey2+=(topleft.y*15);
 			if(buildinghover==true)
 			{
-				build(0,buildingwhat,(int)mousex2/15,(int)mousey2/15);
+				build(0,buildingwhat[0],(int)mousex2/15,(int)mousey2/15);
 				buildinghover=false;
-				buildingwhat=-1;
+				buildingwhat[0]=-1;
 				buildingwidth=0;
 				buildingheight=0;
 				//return; //Fixed bug where units would be selected if building placed in invalid square

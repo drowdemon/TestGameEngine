@@ -128,7 +128,7 @@ extern vector <vector<short> > allgarrisonedselectedunits;
 extern bool buildinghover;
 extern int buildingwidth;
 extern int buildingheight;
-extern int buildingwhat;
+extern vector<int> buildingwhat;
 extern int redraw;
 extern char* (report::*reportfuncs[3])();
 extern report* currRep;

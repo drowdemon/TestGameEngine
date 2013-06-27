@@ -656,7 +656,8 @@ void capture(int player, point &clicked)
 				{
 					for(float h=allbuildings[player][bindex].x-allbuildings[player][bindex].radiustodistribute; h<allbuildings[player][bindex].x+allbuildings[player][bindex].width+allbuildings[player][bindex].radiustodistribute; h+=.25)
 					{
-						map[(int)k][(int)h].inbuildingrad=bindex;
+                        if(pow(k-allbuildings[player][bindex].y,2)+pow(h-allbuildings[player][bindex].x,2)<pow(allbuildings[player][bindex].radiustodistribute,2))
+                            map[(int)k][(int)h].inbuildingrad=bindex;
 					}
 				}
 				if(allbuildings[player][bindex].maxhold>0)
@@ -959,10 +960,12 @@ void initializeGameEngine()
 	selectedunits.resize(numplayers);
 	whatsselected.resize(numplayers);
     resources.resize(numplayers);
+    buildingwhat.resize(numplayers);
     for(int i=0; i<numplayers; i++)
     {
         minimapseen[i].resize(MAPSIZE);
         resources[i].resize(4);
+        buildingwhat[i]=-1;
     }
 	allsiegeunits.resize(numplayers);
 	players.push_back(0);
@@ -1409,7 +1412,8 @@ void initializeGameEngine()
 	{
 		for(float h=allbuildings[0][0].x-allbuildings[0][0].radiustodistribute; h<allbuildings[0][0].x+allbuildings[0][0].width+allbuildings[0][0].radiustodistribute; h+=.25)
 		{
-			map[(int)k][(int)h].inbuildingrad=0;
+            if(pow(k-allbuildings[0][0].y,2)+pow(h-allbuildings[0][0].x,2)<pow(allbuildings[0][0].radiustodistribute,2))
+                map[(int)k][(int)h].inbuildingrad=0;
 		}
 	}
 	for(int i=0; i<5; i++)
@@ -1853,7 +1857,6 @@ void mainTimerProc(int arg)
 						//g.DrawString(text,allbuildablebuildings[allbuildings[player][index].id].name.size(),&bigfont,Gdiplus::PointF(Gdiplus::REAL((j-topleft.x)*15+2), Gdiplus::REAL((i-topleft.y)*15+2)),&black);
 						if(allbuildings[player][index].beingbuilt<0)
 						{
-							//TODO Figure out the below ellipse
 							makeEllipse((float)(j+allbuildings[player][index].width/2-topleft.x)*15, (float)(i+allbuildings[player][index].height/2-topleft.y)*15, ((allbuildings[player][index].width)/2+allbuildings[player][index].radiustodistribute)*15, ((allbuildings[player][index].height)/2+allbuildings[player][index].radiustodistribute)*15, softyellow);
 							//g.FillEllipse(&softyellow, Gdiplus::REAL(j-allbuildings[player][index].radiustodistribute-topleft.x)*15, Gdiplus::REAL(i-allbuildings[player][index].radiustodistribute-topleft.y)*15, (allbuildings[player][index].width+(2*allbuildings[player][index].radiustodistribute))*15, (allbuildings[player][index].height+(2*allbuildings[player][index].radiustodistribute))*15);
 							if(allbuildings[player][index].selected==false && player==0)

@@ -66,9 +66,12 @@ public:
 	bool lieuttrain;
 	bool recording; //!< This is true if the regiment the unit is part of is recording. 
 	report rep; //!< This stores the report of the regiment the unit is in
-	short transferring; //!< This stores transfer state. 0=not transffering resources, 1=going to building to get resources to transfer, 2=going to building to deposit resources to transfer
-	short transferfrom; //!< which building its transffering from
-	short transferto; //!<which building its transffering to
+	short transferring; //!< This stores transfer state. 0=not transfering resources, 1=going to building to get resources to transfer, 2=going to building to deposit resources to transfer
+	short transferfrom; //!< which building its transfering from
+	short transferto; //!< which building its transfering to
+	short unitbuildingwhat; //!< what the unit is building, -1 if nothing
+	short buildingx; //!< where the unit is building, -1 if not building
+	short buildingy; //!< where the unit is building, -1 if not building
 	
 	//!<  It is empty if the unit is near the regiment. Else, it stores the report as it was when it left the vicinity of the regiment. At that point, no more updating takes place.
 	unit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, /*short ft=0, short wt=0, short gt=0, short st=0, short tt=0, */short sn=0, float px=0, float py=0, float ar=0, short pid=0, float c=0, short p=-1, short i=-1, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, float m=100, float ts=0, short vetlvl=0, float xp=0, float mx=-1, float my=-1, short si=-1, char us=US_AGGRESIVE, bool sotr=false, float dx=0, float dy=0, short drad=10, short spec=0,/* short tr=-1,*/ short regid=-1, bool lieut=false);
@@ -110,5 +113,6 @@ protected:
 private:
 	int innerFight(unit *what);
 	int innerFight(building &what);
+	point searchbuildingresources(short buildwhat);
 };
 #endif
