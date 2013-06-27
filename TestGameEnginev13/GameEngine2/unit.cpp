@@ -96,6 +96,7 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
     unitbuildingwhat=-1;
     buildingx=-1;
     buildingy=-1;
+    buildingResourcesFrom=-1;
 }
 unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, /*short ft, short wt, short gt, short st, short tt, */short sn, float px, float py, float ar, short pid, float c, short p, short i, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg)
 {
@@ -179,6 +180,7 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
     unitbuildingwhat=-1;
     buildingx=-1;
     buildingy=-1;
+    buildingResourcesFrom=-1;
 }
 unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea, u.chanceHit)
 {
@@ -246,6 +248,7 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
     unitbuildingwhat=-1;
     buildingx=-1;
     buildingy=-1;
+    buildingResourcesFrom=-1;
 }
 void unit::attackgoingtobstacle(char canmoveto[6])
 {
@@ -473,19 +476,34 @@ bool unit::chkmvp1(tile &checkwhat, bool checkelev)
 short unit::build(short buildwhat, int buildatx, int buildaty)
 {
 	short bindex=-1;
-	short takeresourcesfrom=map[(int)y][(int)x].inbuildingrad;
+	short takeresourcesfrom=-1;
+    if(buildingResourcesFrom==-1) //its a building
+        takeresourcesfrom=map[(int)y][(int)x].inbuildingrad;
 	if(map[(int)y][(int)x].whichplayer.get(false)!=player)
 		takeresourcesfrom=-1;
     if(buildingAllowed[player][buildwhat]) //allowed to build this
 	{
-        if(takeresourcesfrom!=-1)
+        if(takeresourcesfrom!=-1 || buildingResourcesFrom>=0) //good building or good unit
         {
-            if(allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+            bool good=false;
+            if(takeresourcesfrom!=-1 && allbuildings[player][takeresourcesfrom].holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allbuildings[player][takeresourcesfrom].holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allbuildings[player][takeresourcesfrom].holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allbuildings[player][takeresourcesfrom].holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
             {
+                good=true;
                 allbuildings[player][takeresourcesfrom].holding[0]-=allbuildablebuildings[buildwhat].foodtobuild;
                 allbuildings[player][takeresourcesfrom].holding[1]-=allbuildablebuildings[buildwhat].woodtobuild;
                 allbuildings[player][takeresourcesfrom].holding[2]-=allbuildablebuildings[buildwhat].goldtobuild;
                 allbuildings[player][takeresourcesfrom].holding[3]-=allbuildablebuildings[buildwhat].stonetobuild;
+            }
+            else if(buildingResourcesFrom>=0 && allunits[player][buildingResourcesFrom]->holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allunits[player][buildingResourcesFrom]->holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allunits[player][buildingResourcesFrom]->holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allunits[player][buildingResourcesFrom]->holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+            {
+                good=true;
+                allunits[player][buildingResourcesFrom]->holding[0]-=allbuildablebuildings[buildwhat].foodtobuild;
+                allunits[player][buildingResourcesFrom]->holding[1]-=allbuildablebuildings[buildwhat].woodtobuild;
+                allunits[player][buildingResourcesFrom]->holding[2]-=allbuildablebuildings[buildwhat].goldtobuild;
+                allunits[player][buildingResourcesFrom]->holding[3]-=allbuildablebuildings[buildwhat].stonetobuild;
+            }
+            if(good==true)
+            {
                 resources[player][0]-=allbuildablebuildings[buildwhat].foodtobuild;
                 resources[player][1]-=allbuildablebuildings[buildwhat].woodtobuild;
                 resources[player][2]-=allbuildablebuildings[buildwhat].goldtobuild;
@@ -1662,6 +1680,7 @@ bool unit::checknomove(bool siegesent)
             int bindex=build(unitbuildingwhat, buildingx, buildingy);
             if(bindex!=-1) //success
             {
+                buildingResourcesFrom=-1;
                 unitbuildingwhat=-1;
                 buildingx=-1;
                 buildingy=-1;
@@ -1689,7 +1708,7 @@ bool unit::checknomove(bool siegesent)
 		}
 		return false;
 	}
-	if(garrisoned>0) //garrisoning
+	if(garrisoned>0) //garrisoning or building
 	{
 		if(allbuildings[player][garrisoned-1].beingbuilt>0 && distToBuilding(garrisoned-1,2)) //If you are building the building and you are close enough to do so
 		{
@@ -1774,6 +1793,28 @@ bool unit::checknomove(bool siegesent)
                 return false;
             }
         }
+    }
+    if(unitbuildingwhat!=-1 && garrisoned==0 && buildingResourcesFrom>=0) //going to build building and getting resources from a unit
+    {
+        if(pow(allunits[player][buildingResourcesFrom]->x-x,2)+pow(allunits[player][buildingResourcesFrom]->y-y,2)<DISTUNITRESOURCE)
+        {
+            int bindex=build(unitbuildingwhat, buildingx, buildingy);
+            if(bindex!=-1) //success
+            {
+                buildingResourcesFrom=-1;
+                unitbuildingwhat=-1;
+                buildingx=-1;
+                buildingy=-1;
+                garrisoned=bindex+1;
+                movetox=allbuildings[player][bindex].x;
+                movetoy=allbuildings[player][bindex].y;
+            }            
+            else
+            {
+                printf("What? Oops. Issue...");
+            }
+        }
+        return true;
     }
 	if(userordered==false && unitstance==US_DONTMOVE)
 		return false;
@@ -3028,6 +3069,14 @@ point unit::searchbuildingresources(short buildwhat)
                     }
                 }
             }
+            if((map[(int)y-side][i].unitonMineon&1)==1 && map[(int)y-side][i].unitplayer==player && (takeresourcesfrom=map[(int)y-side][i].unitindex)!=-1) //near unit that can supply the resources
+            {
+                if(allunits[player][takeresourcesfrom]->holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allunits[player][takeresourcesfrom]->holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allunits[player][takeresourcesfrom]->holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allunits[player][takeresourcesfrom]->holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+                {
+                    buildingResourcesFrom=takeresourcesfrom;
+                    return point(i+1, (int)y-side);
+                }
+            }
             if((takeresourcesfrom=map[(int)y+side][i].inbuildingrad)!=-1) //in a buildings take resources zone
             {
                 if(map[(int)y+side][i].whichplayer.get(false)==player) //my players building
@@ -3036,6 +3085,14 @@ point unit::searchbuildingresources(short buildwhat)
                     {
                         return point(i,(int)y+side);
                     }
+                }
+            }
+            if((map[(int)y+side][i].unitonMineon&1)==1 && map[(int)y+side][i].unitplayer==player && (takeresourcesfrom=map[(int)y+side][i].unitindex)!=-1) //near unit that can supply the resources
+            {
+                if(allunits[player][takeresourcesfrom]->holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allunits[player][takeresourcesfrom]->holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allunits[player][takeresourcesfrom]->holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allunits[player][takeresourcesfrom]->holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+                {
+                    buildingResourcesFrom=takeresourcesfrom;
+                    return point(i+1, (int)y+side);
                 }
             }
         }
@@ -3052,6 +3109,14 @@ point unit::searchbuildingresources(short buildwhat)
                     }
                 }
             }
+            if((map[i][(int)x-side].unitonMineon&1)==1 && map[i][(int)x-side].unitplayer==player && (takeresourcesfrom=map[i][(int)x-side].unitindex)!=-1) //near unit that can supply the resources
+            {
+                if(allunits[player][takeresourcesfrom]->holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allunits[player][takeresourcesfrom]->holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allunits[player][takeresourcesfrom]->holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allunits[player][takeresourcesfrom]->holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+                {
+                    buildingResourcesFrom=takeresourcesfrom;
+                    return point((int)x-side, i-1);
+                }
+            }
             if((takeresourcesfrom=map[i][(int)x+side].inbuildingrad)!=-1) //in a buildings take resources zone
             {
                 if(map[i][(int)x+side].whichplayer.get(false)==player) //my players building
@@ -3060,6 +3125,14 @@ point unit::searchbuildingresources(short buildwhat)
                     {
                         return point((int)x+side,i);
                     }
+                }
+            }
+            if((map[i][(int)x+side].unitonMineon&1)==1 && map[i][(int)x+side].unitplayer==player && (takeresourcesfrom=map[i][(int)x+side].unitindex)!=-1) //near unit that can supply the resources
+            {
+                if(allunits[player][takeresourcesfrom]->holding[0]>=allbuildablebuildings[buildwhat].foodtobuild && allunits[player][takeresourcesfrom]->holding[1]>=allbuildablebuildings[buildwhat].woodtobuild && allunits[player][takeresourcesfrom]->holding[2]>=allbuildablebuildings[buildwhat].goldtobuild && allunits[player][takeresourcesfrom]->holding[3]>=allbuildablebuildings[buildwhat].stonetobuild)
+                {
+                    buildingResourcesFrom=takeresourcesfrom;
+                    return point((int)x+side, i-1);
                 }
             }
         }

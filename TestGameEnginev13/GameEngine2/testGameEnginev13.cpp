@@ -1394,6 +1394,8 @@ void initializeGameEngine()
 	}
 	actallunits[0][0].veterancylvl=3; //TESTING ONLY
 	actallunits[0][0].lieutenant=1;   //TESTING ONLY
+    for(int i=0; i<4; i++)
+        actallunits[0][0].holding[i]=200; //DELETE!!!
 	//actallunits[0].push_back(unit(allbuildableunits[2], 50, 20, 0, 6));
 	allbuildings[0].push_back(building(allbuildablebuildings[1], 85, 65, 0, 0, 68, 65, 85, 88, 500, 500, 500, 500, -2)); //MUST UPDATE BoundingBox
 	creationqueueunits[0].resize(1);

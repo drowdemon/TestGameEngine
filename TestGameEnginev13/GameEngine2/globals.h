@@ -45,6 +45,8 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define RIGHT 2
 #define UP    4
 #define DOWN  8
+//! How far you can be from a unit to steal resources from it, for building, **already squared**
+#define DISTUNITRESOURCE 9
 
 //forward declarations of functions
 void hourpassed(int arg);
