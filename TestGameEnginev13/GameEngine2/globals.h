@@ -66,6 +66,7 @@ bool checktouchingland(int x, int y);
 string inttos(int num);
 bool transferResources(int player, string input, int bindex1, int bindex2);
 void mainTimerProc(int arg);
+void initPrices();
 void initializeGameEngine();
 void selectone(int player, point &clicked); //select one unit, no shift key pressed, if its a siege unit, select everyone manning it as well
 void selectmany(int player, myrect &clicked); //select all the units in a box made by clicking and holding and dragging

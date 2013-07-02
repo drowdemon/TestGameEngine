@@ -180,3 +180,12 @@ powerBonus::powerBonus(vector<short> aw, double ab, double ap, double db, double
     defenseBonus=db;
     defensePercentBonus=dp;
 }
+unitPriceMod::unitPriceMod(short fw, short f, short w, short g, short s, short t)
+{
+    forWhat=fw;
+    prices[0]=f;
+    prices[1]=w;
+    prices[2]=g;
+    prices[3]=s;
+    time=t;
+}

@@ -949,6 +949,214 @@ int main(int argc, char **argv)
 	glutMainLoop();
 	return 0;
 }
+void initPrices()
+{
+    //Infantry to Infantry
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(5,30,0,10,0,100)); //militia to swordsman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(6,20,0,10,0,80)); //militia to spearman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(9,70,0,20,0,200)); //militia to shielded swordsman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(10,70,0,20,0,200)); //militia to two-handed swordsman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(11,110,0,45,0,250)); //militia to dual swordsman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(13,80,0,25,0,200)); //militia to pikeman
+    allbuildableunits[4].allPriceMods.push_back(unitPriceMod(15,70,0,30,0,200)); //militia to axe man
+    
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(6,20,0,10,0,70)); //swordsman to spearman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(9,60,0,15,0,120)); //swordsman to shielded swordsman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(10,60,0,15,0,120)); //swordsman to two handed swordsman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(11,85,0,35,0,200)); //swordsman to dual swordsman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(12,120,25,65,0,350)); //swordsman to swordsmaster
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(13,65,0,25,0,130)); //swordsman to pikeman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(14,105,0,40,0,190)); //swordsman to elite pikeman
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(15,60,0,30,0,130)); //swordsman to axe man
+    allbuildableunits[5].allPriceMods.push_back(unitPriceMod(16,125,15,80,0,370)); //swordsman to axe master
+    
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(5,22,0,10,0,80)); //spearman to swordsman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(9,65,0,17,0,160)); //spearman to shielded swordsman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(10,65,0,17,0,160)); //spearman to two handed swordsman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(11,95,0,40,0,240)); //spearman to dual swordsman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(13,63,0,15,0,125)); //spearman to pikeman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(14,100,0,40,0,180)); //spearman to elite pikeman
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(15,63,0,30,0,160)); //spearman to axe man
+    allbuildableunits[6].allPriceMods.push_back(unitPriceMod(16,135,15,80,0,380)); //spearman to axe master
+    
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(10,15,0,5,0,40)); //shielded swordsman to two handed swordsman
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(11,42,0,25,0,100)); //shielded swordsman to dual swordsman
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(12,90,25,50,0,275)); //shielded swordsman to swordsmaster
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(13,20,0,10,0,80)); //shielded swordsman to pikeman
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(14,85,0,35,0,175)); //shielded swordsman to elite pikeman
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(15,20,0,15,0,160)); //shielded swordsman to axe man
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(16,100,15,70,0,320)); //shielded swordsman to axe master
+    
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(9,15,0,5,0,40)); //two-handed swordsman to shielded swordsman
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(11,40,0,23,0,100)); //two-handed swordsman to dual swordsman
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(12,90,25,50,0,275)); //two-handed swordsman to swordsmaster
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(13,20,0,10,0,80)); //two-handed swordsman to pikeman
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(14,85,0,35,0,175)); //two-handed swordsman to elite pikeman
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(15,18,0,15,0,160)); //two-handed swordsman to axe man
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(16,100,15,70,0,320)); //two-handed swordsman to axe master
+    
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(12,60,25,40,0,150)); //dual swordsman to swordsmaster
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(13,15,0,5,0,80)); //dual swordsman to pikeman
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(14,30,0,15,0,150)); //dual swordsman to elite pikeman
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(15,10,0,10,0,80)); //dual swordsman to axe man
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(16,65,15,50,0,175)); //dual swordsman to axe master
+    
+    allbuildableunits[12].allPriceMods.push_back(unitPriceMod(14,30,0,10,0,100)); //swordsmaster to elite pikeman
+    allbuildableunits[12].allPriceMods.push_back(unitPriceMod(16,20,0,25,0,100)); //swordsmaster to axe master
+    
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(9,20,0,10,0,100)); //pikeman to shielded swordsman
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(10,20,0,10,0,100)); //pikeman to two-handed swordsman
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(11,55,0,35,0,160)); //pikeman to dual swordsman
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(12,100,25,57,0,340)); //pikeman to swordsmaster
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(14,50,0,25,0,150)); //pikeman to elite pikeman
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(15,18,0,20,0,150)); //pikeman to axe man
+    allbuildableunits[13].allPriceMods.push_back(unitPriceMod(16,110,15,75,0,325)); //pikeman to axe master
+    
+    allbuildableunits[14].allPriceMods.push_back(unitPriceMod(12,65,25,45,0,250)); //elite pikeman to swordsmaster
+    allbuildableunits[14].allPriceMods.push_back(unitPriceMod(16,65,15,50,0,260)); //elite pikeman to axe master
+    
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(9,25,0,7,0,100)); //axe man to shielded swordsman
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(10,25,0,7,0,100)); //axe man to two-handed swordsman
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(11,65,0,30,0,155)); //axe man to dual swordsman
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(12,120,25,55,0,333)); //axe man to swordsmaster
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(13,25,0,5,0,100)); //axe man to pikeman
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(14,55,0,28,0,150)); //axe man to elite pikeman
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(16,100,15,70,0,315)); //axe man to axe master
+    
+    allbuildableunits[16].allPriceMods.push_back(unitPriceMod(12,30,15,10,0,100)); //axe master to swordsmaster 
+    allbuildableunits[16].allPriceMods.push_back(unitPriceMod(14,20,0,5,0,100)); //axe master to elite pikeman
+    
+    //Archers to Archers
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(8,15,15,5,0,90)); //archer to javelinist
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(17,50,25,12,0,150)); //archer to longbow man
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(18,35,25,50,0,160)); //archer to crossbow man
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(19,65,50,33,0,170)); //archer to elite javelinist
+    
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(7,15,10,5,0,80)); //javelinist to archer
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(17,55,20,12,0,160)); //javelinist to longbow man
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(18,40,20,50,0,160)); //javelinist to crossbow man
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(19,60,45,30,0,165)); //javelinist to elite javelinist
+    
+    allbuildableunits[17].allPriceMods.push_back(unitPriceMod(18,20,15,45,0,100)); //longbowman to crossbow man
+    allbuildableunits[17].allPriceMods.push_back(unitPriceMod(19,30,35,20,0,110)); //longbowman to elite javelinist
+    
+    allbuildableunits[18].allPriceMods.push_back(unitPriceMod(17,30,15,10,0,100)); //crossbow man to longbowman
+    allbuildableunits[18].allPriceMods.push_back(unitPriceMod(19,40,35,15,0,110)); //crossbow man to elite javelinist
+    
+    allbuildableunits[19].allPriceMods.push_back(unitPriceMod(17,20,10,15,0,100)); //elite javelinist to longbowman
+    allbuildableunits[19].allPriceMods.push_back(unitPriceMod(18,15,10,30,0,110)); //elite javelinist to crossbow man
+    
+    //Scouts and spies and assassins to same.
+    allbuildableunits[20].allPriceMods.push_back(unitPriceMod(21,70,0,15,0,100)); //scout to mounted scout
+    allbuildableunits[20].allPriceMods.push_back(unitPriceMod(32,75,0,70,0,210)); //scout to spy
+    
+    allbuildableunits[21].allPriceMods.push_back(unitPriceMod(20,15,0,10,0,75)); //mounted scout to scout
+    allbuildableunits[21].allPriceMods.push_back(unitPriceMod(32,45,0,67,0,200)); //mounted scout to spy
+    
+    allbuildableunits[32].allPriceMods.push_back(unitPriceMod(33,45,0,115,0,175)); //spy to elite spy
+    allbuildableunits[32].allPriceMods.push_back(unitPriceMod(34,85,0,165,0,250)); //spy to assassin
+    
+    allbuildableunits[33].allPriceMods.push_back(unitPriceMod(34,45,0,110,0,130)); //elite spy to assassin
+    
+    //archer cavalry to archer cavalry
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(23,35,35,10,0,225)); //mounted javelinist to mounted archer
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(24,23,50,10,0,275)); //mounted javelinist to fast mounted archer
+    
+    allbuildableunits[23].allPriceMods.push_back(unitPriceMod(24,10,30,7,0,100)); //mounted archer to fast mounted archer
+    
+    allbuildableunits[24].allPriceMods.push_back(unitPriceMod(23,18,10,7,0,100)); //fast mounted archer to mounted archer
+    
+    //heavy cavalry to heavy cavalry
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(26,50,0,30,0,150)); //apprentice knight to knight
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(27,100,20,55,0,275)); //apprentice knight to elite knight
+    
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(27,55,20,40,0,150)); //apprentice knight to elite knight
+    
+    //Transport
+    allbuildableunits[28].allPriceMods.push_back(unitPriceMod(29,15,50,13,0,75)); //oxen to cart
+    allbuildableunits[28].allPriceMods.push_back(unitPriceMod(30,40,75,23,0,130)); //oxen to pull team
+    allbuildableunits[28].allPriceMods.push_back(unitPriceMod(31,80,125,58,0,170)); //oxen to heavy pull team
+    
+    allbuildableunits[29].allPriceMods.push_back(unitPriceMod(30,40,50,15,0,90)); //cart to pull team
+    allbuildableunits[29].allPriceMods.push_back(unitPriceMod(31,80,100,52,0,125)); //cart to heavy pull team
+    
+    allbuildableunits[30].allPriceMods.push_back(unitPriceMod(31,40,75,47,0,100)); //pull team to heavy pull team
+    
+    //Archers to Archer cavalry
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(22,70,20,15,0,100)); //archer to mounted javelinist
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(23,100,30,22,0,215)); //archer to mounted archer
+    allbuildableunits[7].allPriceMods.push_back(unitPriceMod(24,97,50,26,0,250)); //archer to fast mounted archer
+    
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(22,65,15,15,0,80)); //javelinist to mounted javelinist
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(23,108,25,22,0,230)); //javelinist to mounted archer
+    allbuildableunits[8].allPriceMods.push_back(unitPriceMod(24,105,45,26,0,270)); //javelinist to fast mounted archer
+    
+    allbuildableunits[17].allPriceMods.push_back(unitPriceMod(23,55,15,20,0,125)); //longbow man to mounted archer
+    allbuildableunits[17].allPriceMods.push_back(unitPriceMod(24,50,33,20,0,160)); //longbow man to fast mounted archer
+    
+    allbuildableunits[18].allPriceMods.push_back(unitPriceMod(23,75,17,7,0,130)); //crossbowman man to mounted archer
+    allbuildableunits[18].allPriceMods.push_back(unitPriceMod(24,70,35,7,0,165)); //crossbowman man to fast mounted archer
+    
+    allbuildableunits[19].allPriceMods.push_back(unitPriceMod(23,45,13,12,0,120)); //elite javelinist to mounted archer
+    allbuildableunits[19].allPriceMods.push_back(unitPriceMod(24,42,15,12,0,155)); //elite javelinist to fast mounted archer
+    
+    //archer cavalry to archers 
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(7,15,15,10,0,100)); //mounted javelinist to archer
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(8,10,7,7,0,60)); //mounted javelinist to javelinist
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(17,45,25,15,0,175)); //mounted javelinist to longbowman
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(18,40,25,50,0,175)); //mounted javelinist to crossbowman
+    allbuildableunits[22].allPriceMods.push_back(unitPriceMod(19,45,45,30,0,185)); //mounted javelinist to crossbowman
+    
+    allbuildableunits[23].allPriceMods.push_back(unitPriceMod(17,45,25,15,0,175)); //mounted archer to longbowman
+    allbuildableunits[23].allPriceMods.push_back(unitPriceMod(18,40,25,50,0,175)); //mounted archer to crossbowman
+    allbuildableunits[23].allPriceMods.push_back(unitPriceMod(19,45,45,30,0,185)); //mounted archer to elite javelinist
+    
+    allbuildableunits[24].allPriceMods.push_back(unitPriceMod(17,55,20,15,0,175)); //fast mounted archer to longbowman
+    allbuildableunits[24].allPriceMods.push_back(unitPriceMod(18,50,20,50,0,175)); //fast mounted archer to crossbowman
+    allbuildableunits[24].allPriceMods.push_back(unitPriceMod(19,55,35,30,0,185)); //fast mounted archer to elite javelinist
+    
+    //heavy cavalry to infantry
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(9,15,0,12,0,125)); //apprentice knight to shielded swordsman
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(10,15,0,12,0,125)); //apprentice knight to two-handed swordsman
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(11,55,0,38,0,200)); //apprentice knight to dual swordsman
+    allbuildableunits[25].allPriceMods.push_back(unitPriceMod(15,12,0,20,0,175)); //apprentice knight to axe man
+    
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(9,12,0,10,0,100)); //knight to shielded swordsman
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(10,12,0,10,0,100)); //knight to two-handed swordsman
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(11,25,0,20,0,125)); //knight to dual swordsman
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(12,70,25,65,0,275)); //knight to swordsmaster
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(13,12,0,10,0,100)); //knight to pikeman
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(15,10,0,14,0,100)); //knight to axe man
+    allbuildableunits[26].allPriceMods.push_back(unitPriceMod(16,70,15,78,0,275)); //knight to axe master
+    
+    allbuildableunits[27].allPriceMods.push_back(unitPriceMod(11,20,0,15,0,100)); //elite knight to dual swordsman
+    allbuildableunits[27].allPriceMods.push_back(unitPriceMod(12,50,15,40,0,180)); //elite knight to swordsmaster   
+    allbuildableunits[27].allPriceMods.push_back(unitPriceMod(14,20,0,15,0,120)); //elite knight to elite pikeman
+    allbuildableunits[27].allPriceMods.push_back(unitPriceMod(16,50,10,55,0,180)); //elite knight to axe master
+    
+    //Infantry to heavy cavalry
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(24,25,0,15,0,125)); //shielded swordsman to apprentice knight
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(25,55,0,20,0,200)); //shielded swordsman to knight
+    allbuildableunits[9].allPriceMods.push_back(unitPriceMod(26,100,0,52,0,300)); //shielded swordsman to elite knight
+    
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(24,25,0,15,0,125)); //two-handed swordsman to apprentice knight
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(25,55,0,20,0,200)); //two-handed swordsman to knight
+    allbuildableunits[10].allPriceMods.push_back(unitPriceMod(26,100,0,52,0,300)); //two-handed swordsman to elite knight
+    
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(25,35,0,15,0,150)); //dual swordsman to knight
+    allbuildableunits[11].allPriceMods.push_back(unitPriceMod(26,90,20,42,0,225)); //dual swordsman to elite knight
+    
+    allbuildableunits[12].allPriceMods.push_back(unitPriceMod(26,25,15,25,0,130)); //swordsmaster to elite knight
+    
+    allbuildableunits[14].allPriceMods.push_back(unitPriceMod(25,40,0,20,0,200)); //elite pikeman to knight
+    allbuildableunits[14].allPriceMods.push_back(unitPriceMod(26,100,20,45,0,275)); //elite pikeman to elite knight
+    
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(24,30,0,12,0,125)); //axe man to apprentice knight
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(25,70,0,20,0,200)); //axe man to knight
+    allbuildableunits[15].allPriceMods.push_back(unitPriceMod(26,120,20,47,0,300)); //axe man to elite knight
+    
+    allbuildableunits[16].allPriceMods.push_back(unitPriceMod(26,25,17,18,0,130)); //axe master to elite knight
+}  
 void initializeGameEngine()
 {
 	srand((unsigned int)time(0)); //From here: absolutely necessary stuff.
@@ -1116,6 +1324,8 @@ void initializeGameEngine()
     allbuildableunits[6].allBonuses.push_back(powerBonus(unitsaffected,0,2,5,0)); //give spearmen a bonus vs. cavalry
     allbuildableunits[13].allBonuses.push_back(powerBonus(unitsaffected,3,2.5,7,0)); //give pikemen a bonus vs. cavalry
     allbuildableunits[14].allBonuses.push_back(powerBonus(unitsaffected,10,2.5,10,0)); //give elite pikemen a bonus vs. cavalry
+
+    initPrices(); //set prices
     
     //buttons
 	allbuttons.push_back(button(WIDTH*2/3+5+300+20,615,92,18,"Make Regiment",makereg,YOUR_MULT_UNITS));
@@ -1394,8 +1604,6 @@ void initializeGameEngine()
 	}
 	actallunits[0][0].veterancylvl=3; //TESTING ONLY
 	actallunits[0][0].lieutenant=1;   //TESTING ONLY
-    for(int i=0; i<4; i++)
-        actallunits[0][0].holding[i]=200; //DELETE!!!
 	//actallunits[0].push_back(unit(allbuildableunits[2], 50, 20, 0, 6));
 	allbuildings[0].push_back(building(allbuildablebuildings[1], 85, 65, 0, 0, 68, 65, 85, 88, 500, 500, 500, 500, -2)); //MUST UPDATE BoundingBox
 	creationqueueunits[0].resize(1);

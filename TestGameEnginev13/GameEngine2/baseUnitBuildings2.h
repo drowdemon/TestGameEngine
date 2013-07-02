@@ -58,6 +58,7 @@ public:
 	short stoneontraining;
 	short timeontraining;
 	string name;		//!< What is this unit called
+	vector<unitPriceMod> allPriceMods; //!< How the price changes when training this unit into another one. Set manually, not in file.
 	basicunit(float h=0, short ma=0, short ra=0, short a=0, short ba=0, float LOS=0, float s=0, short as=0, short fc=0, short sn=0, float ar=0, short pid=0, float c=0, short high=0, short w=0, short bs=0, short mxhld=0, unsigned char wisit=1, unsigned char ming=-1, unsigned char maxg=-1, short aa=0, short ch=100, char tf=0, short ft=0, short wt=0, short gt=0, short st=0, short tt=0, string n=""); //!< [default] constructor
 };
 //! A building, stores all info that does not change from building to building and is required for each building

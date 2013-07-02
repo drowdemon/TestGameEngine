@@ -224,4 +224,12 @@ public:
 	double defensePercentBonus;
 	powerBonus(vector<short> aw, double ab, double ap, double db, double dp);
 };
+class unitPriceMod
+{
+public:
+	short forWhat;
+	short prices[4];
+	short time;
+	unitPriceMod(short fw, short f, short w, short g, short s, short t);
+};
 #endif

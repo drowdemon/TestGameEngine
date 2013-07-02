@@ -48,18 +48,50 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 	if(creating==-1)
 	{
         if(unitAllowed[player][createwhat]) //researched/unlocked
-        {    
-            if(holding[0]>=allbuildableunits[createwhat].foodontraining && holding[1]>=allbuildableunits[createwhat].woodontraining && holding[2]>=allbuildableunits[createwhat].goldontraining && holding[3]>=allbuildableunits[createwhat].stoneontraining) //enough resources
+        {   
+            short price[4]={allbuildableunits[createwhat].foodontraining,allbuildableunits[createwhat].woodontraining,allbuildableunits[createwhat].goldontraining,allbuildableunits[createwhat].stoneontraining};
+            short time=allbuildableunits[createwhat].timeontraining;
+            if(pindex!=-1) //get corrected prices
             {
-                resources[player][0]-=allbuildableunits[createwhat].foodontraining;
+                for(unsigned int i=0; i<allbuildableunits[allunits[player][pindex]->id].allPriceMods.size(); i++)
+                {
+                    if(createwhat==allbuildableunits[allunits[player][pindex]->id].allPriceMods[i].forWhat)
+                    {
+                        for(int j=0; j<4; j++)
+                        {
+                            price[j]=allbuildableunits[allunits[player][pindex]->id].allPriceMods[i].prices[j];
+                        }
+                        time=allbuildableunits[allunits[player][pindex]->id].allPriceMods[i].time;
+                        break;
+                    }
+                }
+            }
+            bool enoughResources=true;
+            for(int i=0; i<4; i++)
+            {
+                if(holding[i]<price[i]) //not enough resources
+                {
+                    enoughResources=false;
+                    break;
+                }
+            }
+            //if(holding[0]>=allbuildableunits[createwhat].foodontraining && holding[1]>=allbuildableunits[createwhat].woodontraining && holding[2]>=allbuildableunits[createwhat].goldontraining && holding[3]>=allbuildableunits[createwhat].stoneontraining) //enough resources
+            if(enoughResources)
+            {
+                /*resources[player][0]-=allbuildableunits[createwhat].foodontraining;
                 resources[player][1]-=allbuildableunits[createwhat].woodontraining;
                 resources[player][2]-=allbuildableunits[createwhat].goldontraining;
                 resources[player][3]-=allbuildableunits[createwhat].stoneontraining;
                 holding[0]-=allbuildableunits[createwhat].foodontraining;
                 holding[1]-=allbuildableunits[createwhat].woodontraining;
                 holding[2]-=allbuildableunits[createwhat].goldontraining;
-                holding[3]-=allbuildableunits[createwhat].stoneontraining;
-                creationqueueunits[player][index].push_back(creationinfo(pindex, allbuildableunits[createwhat].timeontraining, createwhat));
+                holding[3]-=allbuildableunits[createwhat].stoneontraining;*/
+                for(int i=0; i<4; i++)
+                {
+                    holding[i]-=price[i];
+                    resources[player][i]-=price[i];
+                }
+                creationqueueunits[player][index].push_back(creationinfo(pindex, time, createwhat));
             }
             else if(player==0) //not enough resources
             {
