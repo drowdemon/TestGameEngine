@@ -108,6 +108,7 @@ int indexBuildingsbuttonend;
 int indexTransferbutton;
 int indexUnitButtons;
 int indexUnitButtonsend;
-int indexAdvErrors;
 int indexResearchbutton;
 int indexResearchbuttonend;
+int indexAdvErrors;
+int indexResearchErrors;

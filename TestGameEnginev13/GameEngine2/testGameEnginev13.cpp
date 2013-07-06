@@ -1535,6 +1535,7 @@ void initializeGameEngine()
             buttonypos+=20;
         }
         allbuttons.push_back(button(5+buttonxpos,615+buttonypos,90,18,allResearches[i].name,beginresearch,YOUR_BUILDING | RESEARCH_BUILDING,i));
+        allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,researchSomething));
     }
     indexResearchbuttonend=allbuttons.size();
     //end research buttons
@@ -1586,9 +1587,12 @@ void initializeGameEngine()
 	allErr.push_back(ErrorMSG("Cannot Build This Building Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
     allErr.push_back(ErrorMSG("Cannot Train This Unit Yet", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
     allErr.push_back(ErrorMSG("First Select a Garrisoned Unit to Train", WIDTH/3+5+80,HEIGHT-16,4.0*FPS));
+    allErr.push_back(ErrorMSG("This has Already Been Researched", WIDTH/3+5+80,HEIGHT-16,3.0*FPS));
+    allErr.push_back(ErrorMSG("This is Currently Being Researched Elsewhere", WIDTH/3+5+80,HEIGHT-16,3.5*FPS));
     
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Building", YOUR_UNIT | YOUR_MULT_UNITS, progressBuilding));
     allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Unit",YOUR_BUILDING,progressUnit));
+    allProgressBar.push_back(progressBar(85,HEIGHT-20,100,"Research",YOUR_BUILDING,progressResearch));
     
     vector<advReq> uinfo;
     vector<advReq> binfo;
@@ -1601,7 +1605,12 @@ void initializeGameEngine()
     string msg("Congratulations, you have unlocked the ");
     indexAdvErrors=allErr.size();
     for(unsigned int i=0; i<allAdvancements.size(); i++)
-        allErr.push_back(ErrorMSG(msg+allAdvancements[i].unlockMessage()+"!!!", WIDTH/3+5,HEIGHT-16,2.5*FPS,RGB(0,170,0)));
+        allErr.push_back(ErrorMSG(msg+allAdvancements[i].unlockMessage()+"!!!", WIDTH/3+5,HEIGHT-16,7.5*FPS,RGB(0,170,0)));
+    
+    //more abuse, this time not for advancements but for researches. Its here because I wanted it to go after the normal error messages.
+    indexResearchErrors=allErr.size();
+    for(unsigned int i=0; i<allResearches.size(); i++)
+        allErr.push_back(ErrorMSG("You have finished researching " + allResearches[i].name, WIDTH/3+5,HEIGHT-30,4.5*FPS,RGB(0,170,0)));
     
 	for(int i=0; i<numplayers; i++)
 		generals[i]=0;
@@ -1783,6 +1792,30 @@ void mainTimerProc(int arg)
                     continue;
                 if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend && !researchAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
                     continue;
+                if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend) //don't print already researched/currently researching researches
+                {
+                    bool good=true;
+                    for(unsigned int j=0; j<alreadyResearched[0].size(); j++)
+                    {
+                        if(i-indexResearchbutton==(unsigned int)alreadyResearched[0][j])
+                        {
+                            good=false;
+                            break;
+                        }
+                    }
+                    if(!good)
+                        continue;
+                    for(unsigned int j=0; j<allCurrResearch[0].size(); j++)
+                    {
+                        if(i-indexResearchbutton==(unsigned int)allCurrResearch[0][j].researchingWhat)
+                        {
+                            good=false;
+                            break;
+                        }
+                    }
+                    if(!good)
+                        continue;
+                }
 				char *toprint=new char[allbuttons[i].text.size()+1];
 				for(unsigned int j=0; j<allbuttons[i].text.size(); j++)
 				{
@@ -1848,7 +1881,7 @@ void mainTimerProc(int arg)
                 {
                     drawEmptyRect(allProgressBar[i].x,allProgressBar[i].y,allProgressBar[i].width,18,black);
                     makeRect(allProgressBar[i].x, allProgressBar[i].y,allProgressBar[i].width*progress,17,green);
-                    renderBitmapString(allProgressBar[i].x, allProgressBar[i].y+12, 0, GLUT_BITMAP_HELVETICA_12, (char*)allProgressBar[i].text.c_str());
+                    renderBitmapString(allProgressBar[i].x+3, allProgressBar[i].y+12, 0, GLUT_BITMAP_HELVETICA_12, (char*)allProgressBar[i].text.c_str());
                 }
             }
         }
@@ -2001,10 +2034,12 @@ void mainTimerProc(int arg)
             {
                 alreadyResearched[i].push_back(allCurrResearch[i][j].researchingWhat);
                 allCurrResearch[i].erase(allCurrResearch[i].begin()+j);
+                currErr=allErr[indexResearchErrors+allCurrResearch[i][j].researchingWhat];
                 j--;
+                redraw=1;
             }
         }
-    }
+    } //end researching
     
 	//Below draws things
 	if(frames%(FPS/5)==0) //Every fifth of a second. This just makes it update relatively infrequently, as more common ones are not needed
@@ -2049,9 +2084,9 @@ void mainTimerProc(int arg)
 	}
     if(frames%(FPS/2)==0) //every half second - not super critical and could get rather slow
     {
-        for(unsigned int i=0; i<allAdvancements.size(); i++)
+        for(unsigned int i=0; i<allAdvancements.size(); i++) //loop through advancements
         {
-            for(unsigned int j=0; j<advComplete.size(); j++)
+            for(unsigned int j=0; j<advComplete.size(); j++) //loop through all of the players
             {
                 if(!advComplete[j][i] && (advComplete[j][i]=allAdvancements[i].checkAdv(j)) && j==0) //if this advancement has not been accomplished by this player, and then this advancement has now been accomplished (record that) and then this is player 1, the human, display that. An "error" (abuse of error messaging system).
                 {
@@ -2242,6 +2277,30 @@ void mainTimerProc(int arg)
                 continue;
             if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend && !researchAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
                 continue;
+            if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend) //don't print mouseovers for already researched/currently researching researches
+            {
+                bool good=true;
+                for(unsigned int j=0; j<alreadyResearched[0].size(); j++)
+                {
+                    if(i-indexResearchbutton==(unsigned int)alreadyResearched[0][j])
+                    {
+                        good=false;
+                        break;
+                    }
+                }
+                if(!good)
+                    continue;
+                for(unsigned int j=0; j<allCurrResearch[0].size(); j++)
+                {
+                    if(i-indexResearchbutton==(unsigned int)allCurrResearch[0][j].researchingWhat)
+                    {
+                        good=false;
+                        break;
+                    }
+                }
+                if(!good)
+                    continue;
+            }
             if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
             {
                 for(unsigned int j=0; j<allMouseOver.size(); j++)

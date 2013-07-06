@@ -175,11 +175,40 @@ void transferResourcesButton(buttonparam b)
 void beginresearch(buttonparam b)
 {
     bool good=true;
+    for(unsigned int i=0; i<alreadyResearched[b.player].size(); i++)
+    {
+        if(alreadyResearched[b.player][i]==b.index-indexResearchbutton) //already researched this one
+        {
+           if(b.player==0)
+           {
+               currErr=allErr[ALREADYRESEARCHED];
+               redraw=1;
+           }
+           return; //done already
+        }
+    }
+    for(unsigned int i=0; i<allCurrResearch[b.player].size(); i++)
+    {
+        if(allCurrResearch[b.player][i].researchingWhat==b.index-indexResearchbutton)
+        {
+           if(b.player==0)
+           {
+               currErr=allErr[CURRENTLYRESEARCHING];
+               redraw=1;
+           }
+           return; //done already
+        }
+    }
     for(int i=0; i<4; i++)
     {
         if(allbuildings[b.player][selectedunits[b.player][0]].holding[i]<allResearches[b.index-indexResearchbutton].price[i])
         {
             good=false;
+            if(b.player==0)
+            {
+                currErr=allErr[FEWRESOURCES];
+                redraw=1;
+            }
             break;
         }
     }
@@ -190,5 +219,6 @@ void beginresearch(buttonparam b)
             allbuildings[b.player][selectedunits[b.player][0]].holding[i]-=allResearches[b.index-indexResearchbutton].price[i]; //pay
         }
         allCurrResearch[b.player].push_back(CurrentlyResearching(allResearches[b.index-indexResearchbutton].time, b.index-indexResearchbutton, selectedunits[b.player][0]));
+        redraw=3; //for progress bar
     }
 }

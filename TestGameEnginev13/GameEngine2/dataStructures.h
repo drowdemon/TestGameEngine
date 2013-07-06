@@ -157,17 +157,19 @@ public:
 	ARGB(int pa, int pr, int pg, int pb);
 };
 
-#define FEWRESOURCES     0
-#define INVALIDSTRING	 1
-#define ILLEGALLOC       2
-#define FEWMENREG        3
-#define MANYMENREG	     4
-#define SELFTRANSFER	 5
-#define TOOBIGTRANSFER   6
-#define NORESOURCELOC    7
-#define EARLYBUILD		 8
-#define EARLYTRAIN		 9
-#define NOUNITSSELECTED  10
+#define FEWRESOURCES          0
+#define INVALIDSTRING	      1
+#define ILLEGALLOC            2
+#define FEWMENREG             3
+#define MANYMENREG	          4
+#define SELFTRANSFER	      5
+#define TOOBIGTRANSFER        6
+#define NORESOURCELOC         7
+#define EARLYBUILD		      8
+#define EARLYTRAIN		      9
+#define NOUNITSSELECTED       10
+#define ALREADYRESEARCHED     11
+#define CURRENTLYRESEARCHING  12
 
 class ErrorMSG
 {

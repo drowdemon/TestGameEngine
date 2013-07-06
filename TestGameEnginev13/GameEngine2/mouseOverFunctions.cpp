@@ -57,3 +57,17 @@ string buildUnit(int index)
     s+=inttostring(allbuildableunits[index].stoneontraining);
     return s;
 }
+
+string researchSomething(int index)
+{
+    index=allbuttons[allMouseOver[index].dispwith].unitorbuilding;
+    string s("Food: ");
+    s+=inttostring(allResearches[index].price[0]);
+    s+=string(" Wood: ");
+    s+=inttostring(allResearches[index].price[1]);
+    s+=string(" Gold: ");
+    s+=inttostring(allResearches[index].price[2]);
+    s+=string(" Stone: ");
+    s+=inttostring(allResearches[index].price[3]);
+    return s;
+}

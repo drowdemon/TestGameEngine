@@ -175,7 +175,8 @@ extern int indexBuildingsbuttonend;
 extern int indexTransferbutton;
 extern int indexUnitButtons;
 extern int indexUnitButtonsend;
-extern int indexAdvErrors;
 extern int indexResearchbutton;
 extern int indexResearchbuttonend;
+extern int indexAdvErrors;
+extern int indexResearchErrors;
 #endif

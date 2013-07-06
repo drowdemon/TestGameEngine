@@ -22,3 +22,23 @@ double progressUnit(int index) //make system for multiple units
         return 1.0-(double)creationqueueunits[0][index][0].timeremaining/(double)allbuildableunits[creationqueueunits[0][index][0].createwhat].timeontraining;
     }
 }
+double progressResearch(int index)
+{
+    bool good=false;
+    unsigned int i=0;
+    for(; i<allCurrResearch[0].size(); i++)
+    {
+        if(allCurrResearch[0][i].researchingWhere==index) //researching at selected building
+        {
+            good=true;
+            break;
+        }
+    }
+    if(!good)
+        return -1;
+    else
+    {
+        redraw=1;
+        return 1.0-((double)allCurrResearch[0][i].timeleft/(double)allResearches[allCurrResearch[0][i].researchingWhat].time);
+    }
+}
