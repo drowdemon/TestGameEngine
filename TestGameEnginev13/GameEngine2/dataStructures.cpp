@@ -189,3 +189,9 @@ unitPriceMod::unitPriceMod(short fw, short f, short w, short g, short s, short t
     prices[3]=s;
     time=t;
 }
+CurrentlyResearching::CurrentlyResearching(short tl, short what, short where)
+{
+    timeleft=tl;
+    researchingWhat=what;
+    researchingWhere=where;
+}

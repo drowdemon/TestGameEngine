@@ -13,6 +13,7 @@
 #include "mouseOverFunctions.h"
 #include "GUIAndInput.h"
 #include "progressBarFunctions.h"
+#include "research.h"
 
 #include <vector>
 #include <cstdlib>
@@ -633,7 +634,13 @@ void capture(int player, point &clicked)
 	{
 		if(allbuildings[map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingplayer][map[(unsigned int)clicked.y][(unsigned int)clicked.x].buildingindex].garrisoned.size()==0)
 		{
-			if(sqrt(pow(allunits[player][selectedunits[player][0]]->x-(unsigned int)clicked.x,2)+pow(allunits[player][selectedunits[player][0]]->y-(unsigned int)clicked.y, 2))<allunits[player][selectedunits[player][0]]->los-tilecameo[map[(unsigned int)clicked.y][(unsigned int)clicked.x].tilestyle])
+            int addLOS=0;
+            for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+            {
+                if(allResearches[alreadyResearched[player][i]].checkResearch(allunits[player][selectedunits[player][0]]->id))
+                    addLOS+=allResearches[alreadyResearched[player][i]].los;
+            }
+			if(sqrt(pow(allunits[player][selectedunits[player][0]]->x-(unsigned int)clicked.x,2)+pow(allunits[player][selectedunits[player][0]]->y-(unsigned int)clicked.y, 2))<allunits[player][selectedunits[player][0]]->los-tilecameo[map[(unsigned int)clicked.y][(unsigned int)clicked.x].tilestyle]+addLOS)
 			{
 				short bindex=0;
 				if(overwritebuildings[player].size()>0)
@@ -785,7 +792,9 @@ bool checkdisp(int player, unsigned long long dispwhen)
             return true;
         else if((dispwhen&CASTLE_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==13)
             return true;
-		else if((dispwhen&HOUSE_BUILDING)>=1 || (dispwhen&BARRACKS_BUILDING)>=1 || (dispwhen&DOCK_BUILDING)>=1 || (dispwhen&ARCHERY_BUILDING)>=1 || (dispwhen&STABLE_BUILDING)>=1 || (dispwhen&CASTLE_BUILDING)>=1) //It has a flag but the other condition was false
+        else if((dispwhen&RESEARCH_BUILDING)>=1 && allbuildings[player][selectedunits[player][0]].id==7)
+            return true;
+		else if((dispwhen&HOUSE_BUILDING)>=1 || (dispwhen&BARRACKS_BUILDING)>=1 || (dispwhen&DOCK_BUILDING)>=1 || (dispwhen&ARCHERY_BUILDING)>=1 || (dispwhen&STABLE_BUILDING)>=1 || (dispwhen&CASTLE_BUILDING)>=1 || (dispwhen&RESEARCH_BUILDING)>=1) //It has a flag but the other condition was false
 			return false;
 		else //It doesn't have any flags other than YOUR_BUILDING 
 			return true;
@@ -1200,6 +1209,9 @@ void initializeGameEngine()
 	//players.push_back(1);
 	creationqueueunits.resize(numplayers);
     advComplete.resize(numplayers);
+    alreadyResearched.resize(numplayers);
+    researchAllowed.resize(numplayers);
+    allCurrResearch.resize(numplayers);
 
 	ifstream inf("unit.specs"); //Get allbuildableunits
 	if(!inf)
@@ -1245,6 +1257,28 @@ void initializeGameEngine()
             break;
         }
 	}
+    ifstream inf4("research.specs");
+    if(!inf4)
+	{
+		printf("Unable to open research.specs");
+		exit(-242);
+	}
+    while(!inf4.eof())
+	{
+		for(int i=0; i<19; i++) //19=number of args to research. Make sure that this is so.
+		{
+			inf4 >> args[i];
+            args[i]+=0.001f; //just in case. All casted to float anyway.
+			inf4.get();
+		}
+		getline(inf4, name);
+		allResearches.push_back(Research((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],(short)args[11],(short)args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(short)args[17],(short)args[18], name));
+        if(allResearches.size()>1 && allResearches[allResearches.size()-1].name==allResearches[allResearches.size()-2].name)
+        {
+            allResearches.erase(allResearches.end()-1);
+            break;
+        }
+	}
 	ifstream inf3("map2.specs");
 	if(!inf3)
 	{
@@ -1256,10 +1290,13 @@ void initializeGameEngine()
     {
         unitAllowed[i].resize(allbuildableunits.size());
         buildingAllowed[i].resize(allbuildablebuildings.size());
+        researchAllowed[i].resize(allResearches.size());
         for(unsigned int j=0; j<unitAllowed.size(); j++)
             unitAllowed[i][j]=false;
         for(unsigned int j=0; j<buildingAllowed.size(); j++)
             buildingAllowed[i][j]=false;
+        for(unsigned int j=0; j<researchAllowed.size(); j++)
+            researchAllowed[i][j]=false;
     }
     
     //what can train what
@@ -1315,6 +1352,13 @@ void initializeGameEngine()
         buildingAllowed[i][15]=true; //market
         buildingAllowed[i][16]=true; //farm
         buildingAllowed[i][18]=true; //road
+        
+        buildingAllowed[i][7]=true; //TESTING ONLY. DELETE. Research Facility.
+    }
+    
+    for(unsigned int i=0; i<researchAllowed.size(); i++)
+    {
+        researchAllowed[i][0]=true; //TESTING ALLOWED. DELETE!!
     }
     
     //bonuses
@@ -1479,7 +1523,22 @@ void initializeGameEngine()
 	}
 	indexSailorsbuttonend=allbuttons.size();
 	allbuttons.push_back(button(WIDTH*2/3+5, 615, 88, 18, "Ungarrison All",ungarrisonall,YOUR_BUILDING));
-
+    indexResearchbutton=allbuttons.size(); //research buttons. UPDATE IF RESEARCHES CREATED AT DIFFERENT BUILDINGS. Also, maybe researches will be unlocked after researching something else, so the button can be in the same place. Also, maybe there will be pagination, like for buildings
+    int buttonxpos=0;
+    int buttonypos=0;
+    for(unsigned int i=0; i<allResearches.size(); i++)
+    {
+        buttonxpos+=100;
+        if(buttonxpos>300)
+        {
+            buttonxpos=0;
+            buttonypos+=20;
+        }
+        allbuttons.push_back(button(5+buttonxpos,615+buttonypos,90,18,allResearches[i].name,beginresearch,YOUR_BUILDING | RESEARCH_BUILDING,i));
+    }
+    indexResearchbuttonend=allbuttons.size();
+    //end research buttons
+    
 	//display
 	indexResourcedispunit=alldisp.size();
 	//alldisp.push_back(display("Food", width/3+5, 615, YOUR_UNIT, &allunits[0][selectedunits[0][0]]->holding[0]));
@@ -1649,6 +1708,10 @@ void initializeGameEngine()
 			}
 		}
 	}
+    inf.close();
+    inf2.close();
+    inf3.close();
+    inf4.close();
 	//map[10][10].tilestyle=TS_BERRIES;
 	//map[10][10].resources[0]=100;
 	//allunits[1][0]->movetoy=5; //makes unit move up
@@ -1717,6 +1780,8 @@ void mainTimerProc(int arg)
                 if(((int)i>=indexBuildingsbutton && (int)i<indexBuildingsbuttonend) && !buildingAllowed[0][i-indexBuildingsbutton+1]) //not an allowed building
                     continue;
                 if((int)i>=indexUnitButtons && (int)i<indexUnitButtonsend && !unitAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
+                    continue;
+                if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend && !researchAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
                     continue;
 				char *toprint=new char[allbuttons[i].text.size()+1];
 				for(unsigned int j=0; j<allbuttons[i].text.size(); j++)
@@ -1919,27 +1984,29 @@ void mainTimerProc(int arg)
 			}
 		}
 	}//end new buildings
-	//elevation change
-	/*for(int i=20; i<30; i++)
-	{
-		for(int j=20; j<30; j++)
-		{
-			g.FillRectangle(&SolidBrush(Color(255-(map[i][j].elevation*30),255-(map[i][j].elevation*30),255-(map[i][j].elevation*30))), j*15, i*15, 15, 15);
-		}
-	}*/
-	/*POINT mouse;//scroll
-	GetCursorPos(&mouse);
-	if(mouse.x<=20 && topleft.x>0)
-		topleft.x-=1;
-	else if(mouse.x>=(client.right-20) && topleft.x<((map[0].size()*15)-client.right)/15)
-		topleft.x+=1;
-	if(mouse.y<=40 && topleft.y>0)
-		topleft.y-=.5;
-	else if(mouse.y>=(client.bottom-20) && mouse.y<=client.bottom+20 && topleft.y<((map.size()*15)-client.bottom)/15)
-		topleft.y+=.5;//end scroll*/
+    
+    //Update researching new things
+    for(unsigned int i=0; i<allCurrResearch.size(); i++)
+    {
+        for(unsigned int j=0; j<allCurrResearch[i].size(); j++)
+        {
+            if(allbuildings[i][allCurrResearch[i][j].researchingWhere].health<=0) //building destroyed
+            {
+                allCurrResearch[i].erase(allCurrResearch[i].begin()+j);
+                j--;
+                continue;
+            }
+            allCurrResearch[i][j].timeleft--;
+            if(allCurrResearch[i][j].timeleft<0) //research complete
+            {
+                alreadyResearched[i].push_back(allCurrResearch[i][j].researchingWhat);
+                allCurrResearch[i].erase(allCurrResearch[i].begin()+j);
+                j--;
+            }
+        }
+    }
+    
 	//Below draws things
-
-	//mouse.y-=20; //IMPORTANT
 	if(frames%(FPS/5)==0) //Every fifth of a second. This just makes it update relatively infrequently, as more common ones are not needed
 	{
 		for(unsigned int i=0; i<allregiments.size(); i++) //updates reports of all regiments
@@ -1966,7 +2033,13 @@ void mainTimerProc(int arg)
 						{
 							allunits[i][allregiments[i][j].unitids[k]]->recording=true;
 							vector<pointex> allseenunits;
-							allunits[i][allregiments[i][j].unitids[k]]->checkrad((int)allunits[i][allregiments[i][j].unitids[k]]->los,allunits[i][allregiments[i][j].unitids[k]]->x,allunits[i][allregiments[i][j].unitids[k]]->y,allseenunits);
+                            int addLOS;
+                            for(unsigned int h=0; h<alreadyResearched[i].size(); h++) //apply research bonuses
+                            {
+                                if(allResearches[alreadyResearched[i][h]].checkResearch(allunits[i][allregiments[i][j].unitids[k]]->id))
+                                    addLOS+=allResearches[alreadyResearched[i][h]].los;
+                            }
+							allunits[i][allregiments[i][j].unitids[k]]->checkrad((int)allunits[i][allregiments[i][j].unitids[k]]->los+addLOS-tilecameo[map[allunits[i][allregiments[i][j].unitids[k]]->y][allunits[i][allregiments[i][j].unitids[k]]->x].tilestyle],allunits[i][allregiments[i][j].unitids[k]]->x,allunits[i][allregiments[i][j].unitids[k]]->y,allseenunits);
 							allregiments[i][j].rep.updateseenunits(allseenunits);
 						}
 					}
@@ -2167,6 +2240,8 @@ void mainTimerProc(int arg)
                 continue;
             if((int)i>=indexUnitButtons && (int)i<indexUnitButtonsend && !unitAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
                 continue;
+            if((int)i>=indexResearchbutton && (int)i<indexResearchbuttonend && !researchAllowed[0][allbuttons[i].unitorbuilding]) //not an allowed unit
+                continue;
             if(mousex>allbuttons[i].x && mousex<allbuttons[i].x+allbuttons[i].width && mousey>allbuttons[i].y && mousey<allbuttons[i].y+allbuttons[i].height)
             {
                 for(unsigned int j=0; j<allMouseOver.size(); j++)
@@ -2262,7 +2337,7 @@ bool transferResources(int player, string input, int bindex1, int bindex2)
 	totrans[3]=processResources(input,'S',5);
 	for(int i=0; i<4; i++)
 	{
-		if(allbuildings[player][bindex1].holding[i]>totrans[i]) //enough stored to transfer that much
+		if(allbuildings[player][bindex1].holding[i]>=totrans[i]) //enough stored to transfer that much
 			sumtrans+=totrans[i];
 		else
 		{

@@ -171,3 +171,24 @@ void transferResourcesButton(buttonparam b)
 	transferResourcesPressed=1;
 	redraw=1;
 }
+//! This starts researching something
+void beginresearch(buttonparam b)
+{
+    bool good=true;
+    for(int i=0; i<4; i++)
+    {
+        if(allbuildings[b.player][selectedunits[b.player][0]].holding[i]<allResearches[b.index-indexResearchbutton].price[i])
+        {
+            good=false;
+            break;
+        }
+    }
+    if(good) //enough resources
+    {
+        for(int i=0; i<4; i++)
+        {
+            allbuildings[b.player][selectedunits[b.player][0]].holding[i]-=allResearches[b.index-indexResearchbutton].price[i]; //pay
+        }
+        allCurrResearch[b.player].push_back(CurrentlyResearching(allResearches[b.index-indexResearchbutton].time, b.index-indexResearchbutton, selectedunits[b.player][0]));
+    }
+}

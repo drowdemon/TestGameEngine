@@ -232,4 +232,12 @@ public:
 	short time;
 	unitPriceMod(short fw, short f, short w, short g, short s, short t);
 };
+class CurrentlyResearching
+{
+public:
+	short timeleft;
+	short researchingWhat;
+	short researchingWhere;
+	CurrentlyResearching(short tl, short what, short where);
+};
 #endif

@@ -5,6 +5,7 @@
 #include "regiment.h"
 #include "siege.h"
 #include "advancement.h"
+#include "research.h"
 
 short currplayer=0; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!! DELETE DELETE DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -83,6 +84,10 @@ vector<vector<bool> > buildingAllowed;//!< for each player, for each building, w
 vector<vector<bool> > unitAllowed; //!< for each player, for each unit, whether the unit is allowed to be trained
 vector<vector<bool> > advComplete; //!< for each player, for each advancement, whether the advancement was completed
 vector<advancement> allAdvancements; //!< all of the possible advancements
+vector<Research> allResearches; //!< all of the possible things to research
+vector<vector<short> > alreadyResearched; //!< all of the things researched by each player
+vector<vector<bool> > researchAllowed; //!< for each player, for each technology, whether the technology is allowed to be researched
+vector<vector<CurrentlyResearching> > allCurrResearch; //!< For each player, list of stuff being researched.
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
@@ -104,3 +109,5 @@ int indexTransferbutton;
 int indexUnitButtons;
 int indexUnitButtonsend;
 int indexAdvErrors;
+int indexResearchbutton;
+int indexResearchbuttonend;

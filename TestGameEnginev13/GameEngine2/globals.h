@@ -9,6 +9,7 @@
 #include "astarsearch.h"
 #include "dataStructures.h"
 #include "advancement.h"
+#include "research.h"
 
 //NOTE TO SELF: THIS FILE MAY ONLY HAVE extern VARIABLES, AND EXTERN VARIABLE MAY NOT BE DEFINED HERE i.e NO EQUALS SIGNS. THOSE GO IN globals.cpp!
 
@@ -155,6 +156,10 @@ extern vector<vector<bool> > buildingAllowed;
 extern vector<vector<bool> > unitAllowed;
 extern vector<vector<bool> > advComplete;
 extern vector<advancement> allAdvancements;
+extern vector<Research> allResearches;
+extern vector<vector<short> > alreadyResearched;
+extern vector<vector<bool> > researchAllowed;
+extern vector<vector<CurrentlyResearching> > allCurrResearch;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;
@@ -171,4 +176,6 @@ extern int indexTransferbutton;
 extern int indexUnitButtons;
 extern int indexUnitButtonsend;
 extern int indexAdvErrors;
+extern int indexResearchbutton;
+extern int indexResearchbuttonend;
 #endif

@@ -22,6 +22,7 @@
 #define ARCHERY_BUILDING  2048 //id=4
 #define STABLE_BUILDING   4096 //id=5
 #define CASTLE_BUILDING   8192 //id=13
+#define RESEARCH_BUILDING 16384 //id=7 (research facility)
 
 using namespace std;
 class button

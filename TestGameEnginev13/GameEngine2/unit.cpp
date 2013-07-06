@@ -275,9 +275,19 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 	float startx=0;
 	float starty=0;
 	bool dir=true; //true==counterclockwise, false==clockwise
+    
+    float userange=attackrange;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+        {
+            userange+=allResearches[alreadyResearched[player][i]].range;
+        }
+    }
+    
 	if(movetox>=attackcenterx)
 	{
-		startx=attackcenterx+(attackw/2)+attackrange;
+		startx=attackcenterx+(attackw/2)+userange;
 		starty=attackcentery;
 		if(movetoy>=attackcentery)
 			dir=true;
@@ -286,7 +296,7 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 	}
 	else if(movetox<=attackcenterx)
 	{
-		startx=attackcenterx-(attackw/2)-attackrange;
+		startx=attackcenterx-(attackw/2)-userange;
 		starty=attackcentery;
 		if(movetoy>=attackcentery)
 			dir=false;
@@ -314,16 +324,16 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 			j-=0.5f;
 		else
 			j+=0.5f;
-		if(j==startx+2*(attackw+attackrange-changerad) || j==startx-2*(attackw+attackrange-changerad))
+		if(j==startx+2*(attackw+userange-changerad) || j==startx-2*(attackw+userange-changerad))
 		{
 			dir=!dir;
 			numswitch++;
 			if(numswitch%2==0)
 			{
-				if(changerad<(attackw+attackrange))
+				if(changerad<(attackw+userange))
 				{
 					changerad++;
-					if(changerad>=(attackw+attackrange))
+					if(changerad>=(attackw+userange))
 					{
 						changerad=0;
 						j=startx;
@@ -333,7 +343,7 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 					else
 						j++;
 				}
-				if(changerad>=(attackw+attackrange))
+				if(changerad>=(attackw+userange))
 				{
 					changerad--;
 					if(startx>=attackcenterx)
@@ -344,9 +354,9 @@ void unit::attackgoingtobstacle(char canmoveto[6])
 			}
 		}
 		if(dir==true)
-			i=attackcentery+sqrt(pow((attackcenterx+attackw+attackrange-changerad), 2)-pow(j-attackcenterx,2));
+			i=attackcentery+sqrt(pow((attackcenterx+attackw+userange-changerad), 2)-pow(j-attackcenterx,2));
 		else
-			i=attackcentery-sqrt(pow((attackcenterx+attackw+attackrange-changerad), 2)-pow(j-attackcenterx,2));				
+			i=attackcentery-sqrt(pow((attackcenterx+attackw+userange-changerad), 2)-pow(j-attackcenterx,2));				
 	}
 }
 void unit::goingtobstacle0(char canmoveto[6])
@@ -606,13 +616,19 @@ short unit::build(short buildwhat, int buildatx, int buildaty)
 }
 void unit::revealmapcreation()
 {
-	for(float i=-los; i<los; i++)
+    short uselos=los;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+            uselos+=allResearches[alreadyResearched[player][i]].los;
+    }
+	for(float i=-uselos; i<uselos; i++)
 	{
-		for(float j=-los; j<los; j++)
+		for(float j=-uselos; j<uselos; j++)
 		{
 			if(i+y<map.size() && i+y>=0 && x+j<map.size() && j+x>=0)
 			{
-				if(sqrt(pow(i,2)+pow(j,2))<los)
+				if(sqrt(pow(i,2)+pow(j,2))<uselos)
 				{
 					minimapseen[player][(unsigned int)(i+y)][(unsigned int)(j+x)]=true;
 				}
@@ -625,11 +641,17 @@ pointex unit::getcandidate(int x, int y, double dist)
 	if(!(checkdimensions((float)x,(float)y)))
 		return pointex(-1,-1);
 	tile temp(map[y][x]);
+    short addLOS=0;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+            addLOS+=allResearches[alreadyResearched[player][i]].los;
+    }
 	if((temp.unitonMineon&1)==1)//if the space in question has a unit
 	{
 		if(players[temp.unitplayer]!=players[player]) //if this object is not allied to the player whose unit this is
 		{
-			if(dist<=los-allunits[temp.unitplayer][temp.unitindex]->camouflage-tilecameo[temp.tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+			if(dist<=los+addLOS-allunits[temp.unitplayer][temp.unitindex]->camouflage-tilecameo[temp.tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 				return pointex(x,y, dist, true,temp.unitplayer,temp.unitindex); //record its position and that its a unit(true)
 		}
 	}
@@ -637,7 +659,7 @@ pointex unit::getcandidate(int x, int y, double dist)
 	{
 		if(players[temp.buildingplayer]!=players[player]) //if this object is not allied to the player whose building this is
 		{
-			if(dist<=los) //if we can actually see the enemy building, after camouflage from it and the map
+			if(dist<=los+addLOS-tilecameo[temp.tilestyle]) //if we can actually see the enemy building, after camouflage from it and the map
 				return pointex(x,y, dist, false,temp.buildingplayer,temp.buildingindex); //record its position and that its a building(false)
 		}
 	}
@@ -697,7 +719,13 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 {
 	if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].resources[(unsigned int)gatheringwhat]>0)
 	{
-		if(frames%GATHERING_RATE==0)//time to gather
+        short addspeed=0;
+        for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+        {
+            if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+                addspeed+=allResearches[alreadyResearched[player][i]].gather[(unsigned int)gatheringwhat];
+        }
+		if(frames%(GATHERING_RATE-addspeed)==0)//time to gather
 		{
 			unsigned char sum=0;
 			for(int i=0; i<4; i++)
@@ -825,52 +853,61 @@ void unit::movement(bool siegesent) //the first time I put a class function outs
 {
 	if(checknomove(siegesent)==false) //already done
 		return;
-	if(whatisit!=3 && map[(int)movetoy][(int)movetox].unitplayer==player && allunits[player][map[(int)movetoy][(int)movetox].unitindex]->whatisit==3 && allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.size()<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->maxgarrison)//if garrisonning ship, do so
-	{
-		bool good=false;
-		for(int i=0; i<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width; i++)
-		{
-			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y-y,2))<1.414f)
-			{
-				x=movetox;
-				y=movetoy;
-				allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
-				good=true;
-				break;
-			}
-			if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height-y,2))<1.414f)
-			{
-				x=movetox;
-				y=movetoy;
-				allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
-				good=true;
-				break;
-			}
-		}
-		if(good==false)
-		{
-			for(int j=0; j<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height; j++)
-			{
-				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
-				{
-					x=movetox;
-					y=movetoy;
-					allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
-					good=true;
-					break;
-				}
-				if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
-				{
-					x=movetox;
-					y=movetoy;
-					allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
-					good=true;
-					break;
-				}
-			}
-		}
-		if(good==true)
-			return;
+	if(whatisit!=3 && map[(int)movetoy][(int)movetox].unitplayer==player && allunits[player][map[(int)movetoy][(int)movetox].unitindex]->whatisit==3)
+    {
+        short addgarrison=0;
+        for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+        {
+            if(allResearches[alreadyResearched[player][i]].checkResearch(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->id))
+                addgarrison+=allResearches[alreadyResearched[player][i]].armor;
+        }
+        if((int)allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.size()<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->maxgarrison+addgarrison)//if garrisonning ship, do so
+        {
+            bool good=false;
+            for(int i=0; i<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width; i++)
+            {
+                if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y-y,2))<1.414f)
+                {
+                    x=movetox;
+                    y=movetoy;
+                    allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
+                    good=true;
+                    break;
+                }
+                if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+i-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height-y,2))<1.414f)
+                {
+                    x=movetox;
+                    y=movetoy;
+                    allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
+                    good=true;
+                    break;
+                }
+            }
+            if(good==false)
+            {
+                for(int j=0; j<allunits[player][map[(int)movetoy][(int)movetox].unitindex]->height; j++)
+                {
+                    if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
+                    {
+                        x=movetox;
+                        y=movetoy;
+                        allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
+                        good=true;
+                        break;
+                    }
+                    if(sqrt(pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->x+allunits[player][map[(int)movetoy][(int)movetox].unitindex]->width-x,2)+pow(allunits[player][map[(int)movetoy][(int)movetox].unitindex]->y+j-y,2))<1.414f)
+                    {
+                        x=movetox;
+                        y=movetoy;
+                        allunits[player][map[(int)movetoy][(int)movetox].unitindex]->unitsinside.push_back(index);
+                        good=true;
+                        break;
+                    }
+                }
+            }
+            if(good==true)
+                return;
+        }
 	}
 	
 	if(transferring==1 && (pow(x-allbuildings[player][transferfrom].x,2)+pow(y-allbuildings[player][transferfrom].y,2))<pow(allbuildings[player][transferfrom].radiustodistribute,2)) //transferring and within transfer radius of building to transfer from
@@ -1540,10 +1577,20 @@ bool unit::checknomove(bool siegesent)
 			userordered=true;
 		if(attackingunitindex!=-1 && attackingunitplayer!=-1)// if I'm attacking someone
 		{
+            short addLOS=0;
+            short addRange=0;
+            for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+            {
+                if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+                {
+                    addLOS+=allResearches[alreadyResearched[player][i]].los;
+                    addRange+=allResearches[alreadyResearched[player][i]].range;
+                }
+            }
 			float dist=sqrt(pow(x-allunits[attackingunitplayer][attackingunitindex]->x, 2)+pow(y-allunits[attackingunitplayer][attackingunitindex]->y, 2)); //the dist from me to them
-			if(dist<=los-allunits[attackingunitplayer][attackingunitindex]->camouflage-tilecameo[map[(unsigned int)allunits[attackingunitplayer][attackingunitindex]->y][(unsigned int)allunits[attackingunitplayer][attackingunitindex]->x].tilestyle]) //can I see them
+			if(dist<=los+addLOS-allunits[attackingunitplayer][attackingunitindex]->camouflage-tilecameo[map[(unsigned int)allunits[attackingunitplayer][attackingunitindex]->y][(unsigned int)allunits[attackingunitplayer][attackingunitindex]->x].tilestyle]) //can I see them
 			{//if yes
-				if(dist<attackrange) //can I attack them (in range)
+				if(dist<attackrange+addRange) //can I attack them (in range)
 				{
 					if(unitstance!=US_DONOTHING || userordered==true)
 						fight();
@@ -1584,7 +1631,15 @@ bool unit::checknomove(bool siegesent)
 		{
 			if(allbuildings[player][garrisoned-1].beingbuilt>0) //building
 			{
-				allbuildings[player][garrisoned-1].beingbuilt--;	
+                short addbuildspeed=0;
+                for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+                {
+                    if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+                    {
+                        addbuildspeed+=allResearches[alreadyResearched[player][i]].buildspeed;
+                    }
+                }
+				allbuildings[player][garrisoned-1].beingbuilt-=buildspeed+addbuildspeed;	
 				if(allbuildings[player][garrisoned-1].beingbuilt==0) //built
 				{
 					for(float k=allbuildings[player][garrisoned-1].y-allbuildings[player][garrisoned-1].radiustodistribute; k<allbuildings[player][garrisoned-1].y+allbuildings[player][garrisoned-1].height+allbuildings[player][garrisoned-1].radiustodistribute; k+=.25)
@@ -2062,27 +2117,37 @@ bool unit::attackunitstance() //called when the unit is not doing anything, to c
 	short cyclethrough=0;
 	float startx=x;
 	float starty=y;
+    short uselos=los;
+    short addRange=0;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+        {
+            uselos+=allResearches[alreadyResearched[player][i]].los;
+            addRange+=allResearches[alreadyResearched[player][i]].range;
+        }
+    }
 	if(unitstance==US_AGGRESIVE || userordered==true)
-		cyclethrough=(short)los;
+		cyclethrough=(short)uselos;
 	else if(unitstance==US_DEFENSIVE && userordered==false)
 	{
 		startx=dstancecoox;
 		starty=dstancecooy;
-		if(dstancerad+attackrange>=los)
-			cyclethrough=(short)los;
+		if(dstancerad+attackrange+addRange>=uselos)
+			cyclethrough=(short)uselos;
 		else
-			cyclethrough=dstancerad+(short)attackrange;
+			cyclethrough=dstancerad+(short)attackrange+addRange;
 	}
 	else if(unitstance==US_DONTMOVE && userordered==false)
-		cyclethrough=(short)attackrange;
+		cyclethrough=(short)attackrange+addRange;
 	else if(unitstance==US_DONOTHING && userordered==false)
 		return false;
 	else
 		printf("Major Error. Search -99999");
 		//exit(99999);
-	if(garrisoned<=-1 && attackrange>MELEE)
+	if(garrisoned<=-1 && attackrange+addRange>MELEE)
 		cyclethrough=allbuildings[player][garrisoned-1].range;
-	else if(garrisoned<=-1 && attackrange<=MELEE)
+	else if(garrisoned<=-1 && attackrange+addRange<=MELEE)
 		cyclethrough=MELEE;
 	checkrad(cyclethrough, startx, starty, allseenunits);
 	/*for(int i=1; i<=cyclethrough; i++) //cycle through the horizontal diameter of the circle made by having a circle with center at the unit and radius LOS
@@ -2289,6 +2354,14 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 		return;
 	float enemyx=0;//where is the enemy
 	float enemyy=0;
+    float userange=attackrange;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+        {
+            userange+=allResearches[alreadyResearched[player][i]].range;
+        }
+    }
 	if(attackingwhat==true)
 	{
 		enemyx=allunits[attackingunitplayer][attackingunitindex]->x;
@@ -2298,29 +2371,29 @@ void unit::attackmovement() //the index and player of the unit that is going to 
 	{
 		enemyx=allbuildings[attackingunitplayer][attackingunitindex].x;
 		enemyy=allbuildings[attackingunitplayer][attackingunitindex].y;
-		float dist1=sqrt(pow((enemyx-x), 2)+pow((enemyy-y), 2))-attackrange;
+		float dist1=sqrt(pow((enemyx-x), 2)+pow((enemyy-y), 2))-userange;
 		float enemyx2=allbuildings[attackingunitplayer][attackingunitindex].x+allbuildings[attackingunitplayer][attackingunitindex].width;
 		float enemyy2=allbuildings[attackingunitplayer][attackingunitindex].y+allbuildings[attackingunitplayer][attackingunitindex].height;
 		float tempx=enemyx;
-		if(sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))-attackrange<dist1)
+		if(sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))-userange<dist1)
 		{
-			dist1=sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))-attackrange;
+			dist1=sqrt(pow((enemyx2-x), 2)+pow((enemyy-y), 2))-userange;
 			enemyx=enemyx2;
 		}
-		if(sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))-attackrange<dist1)
+		if(sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))-userange<dist1)
 		{
-			dist1=sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))-attackrange;
+			dist1=sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2))-userange;
 			enemyy=enemyy2;
 			enemyx=enemyx2;
 		}
-		if(sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))-attackrange<dist1)
+		if(sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))-userange<dist1)
 		{
-			dist1=sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))-attackrange;
+			dist1=sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))-userange;
 			enemyx=tempx;
 			enemyy=enemyy2;
 		}
 	}
-	float range=attackrange;
+	float range=userange;
 	if(garrisoned<=-1 && attackrange>MELEE)
 		range=allbuildings[player][(-garrisoned)-1].range;
 	if(garrisoned<=-1)
@@ -2522,8 +2595,16 @@ int unit::innerFight(unit *what)
 		return 0;
 	if(frames%attackspeed==0)
 	{
+        short addRange=0;
+        for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+        {
+            if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+            {
+                addRange+=allResearches[alreadyResearched[player][i]].range;
+            }
+        }
         float dist=sqrt(pow(x-what->x, 2)+pow(y-what->y, 2));
-        float actualrange=attackrange+0.05f;
+        float actualrange=attackrange+addRange+0.05f;
         if(garrisoned<=-1)
         {
             if(attackrange!=MELEE)
@@ -2560,6 +2641,15 @@ int unit::innerFight(unit *what)
             attack+=(veterancylvl/**0.5f*/); //add for vet lvl
             if(!(garrisoned<=-1) && regimentid>=0) //if not garrisoned, add for regiment lvl
                 attack+=allregiments[player][regimentid].reglvl/2;//4;
+            short addAccuracy=0;
+            for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+            {
+                if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+                {
+                    attack+=allResearches[alreadyResearched[player][i]].attack;
+                    addAccuracy=allResearches[alreadyResearched[player][i]].accuracy;
+                }
+            }
             for(unsigned int i=0; i<allBonuses.size(); i++) //apply attack bonuses
             {
                 for(unsigned int j=0; j<allBonuses[i].againstWhat.size(); j++)
@@ -2579,6 +2669,11 @@ int unit::innerFight(unit *what)
             else if(what->regimentid>=0)
                 armor+=allregiments[what->player][what->regimentid].reglvl/3;//5; //add for reg lvl, if not garrisoned
             armor+=what->veterancylvl/2;//3.0f; //add for vet lvl
+            for(unsigned int i=0; i<alreadyResearched[what->player].size(); i++) //apply research bonuses
+            {
+                if(allResearches[alreadyResearched[what->player][i]].checkResearch(what->id))
+                    armor+=allResearches[alreadyResearched[what->player][i]].armor;
+            }
             for(unsigned int i=0; i<what->allBonuses.size(); i++) //apply defense bonuses
             {
                 for(unsigned int j=0; j<what->allBonuses[i].againstWhat.size(); j++)
@@ -2602,7 +2697,7 @@ int unit::innerFight(unit *what)
             if(dmg<=0) //if its <=25, will go here, dmg is 0
                 return 0;
 
-            int chance=chanceHit; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
+            int chance=chanceHit+addAccuracy; //chance of hitting: note, possibly make a chance of blocking for defender and chance of missing for attacker and use those here as well, esp for ranged units
             if(what->garrisoned<=-1) 
                 chance-=allbuildings[what->player][(-what->garrisoned)-1].chanceofbeinghit;
             int rndnum = rand()%100;
@@ -2704,7 +2799,19 @@ int unit::innerFight(building &what)
             dist=sqrt(pow((enemyx2-x), 2)+pow((enemyy2-y), 2));
         if(sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2))<dist)
             dist=sqrt(pow((enemyx-x), 2)+pow((enemyy2-y), 2));
-        float actualrange=attackrange+0.05f;
+        short addAccuracy=0;
+        short addAttack=0;
+        short addRange=0;
+        for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+        {
+            if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+            {
+                addAccuracy+=allResearches[alreadyResearched[player][i]].accuracy;
+                addAttack+=allResearches[alreadyResearched[player][i]].buildingattack;
+                addRange+=allResearches[alreadyResearched[player][i]].range;
+            }
+        }
+        float actualrange=attackrange+addRange+0.05f;
         if(garrisoned<=-1)
         {
             if(attackrange!=MELEE)
@@ -2714,14 +2821,20 @@ int unit::innerFight(building &what)
         {
             float hpercent=(health/allbuildableunits[id].health)*100;
             float dmg=0;
+            short addArmor=0;
+            for(unsigned int i=0; i<alreadyResearched[what.player].size(); i++) //apply research bonuses
+            {
+                if(allResearches[alreadyResearched[what.player][i]].checkResearch(what.id, true))
+                    addArmor+=allResearches[alreadyResearched[what.player][i]].armor;
+            }
             if(hpercent==100)
-                dmg=(float)buildingattack-((what.beingbuilt>0) ? 0 : (float)what.armor);
+                dmg=(float)buildingattack+addAttack-((what.beingbuilt>0) ? 0 : ((float)what.armor+addArmor));
             //for this formula and what it does, see the excel document called age of emps health percents 
             else if(hpercent<100 && hpercent>25)
                 dmg=(buildingattack*.01f*((.0159f*hpercent*hpercent)-(3.2933f*hpercent)+171.81f))-((what.beingbuilt>0) ? 0 : (float)what.armor);
             if(dmg<=0) //if its <=25, will go here, dmg is 0
                 return 0;
-            if((rand()%100)>chanceHit)
+            if((rand()%100)>chanceHit+addAccuracy)
                 return 0; //missed
             what.health-=(short)dmg;
             if(what.player==0 && what.selected==true)
@@ -2768,8 +2881,14 @@ int unit::innerFight(building &what)
 vector <pointex2> unit::findallies(int foodneeded) //returns the index of the nearest unit of same player carrying food
 {
 	short cyclethrough=SEE_ALLIES;
-	if(los<cyclethrough)
-		cyclethrough=(short)los;
+    int uselos=los;
+    for(unsigned int i=0; i<alreadyResearched[player].size(); i++) //apply research bonuses
+    {
+        if(allResearches[alreadyResearched[player][i]].checkResearch(id))
+            uselos+=allResearches[alreadyResearched[player][i]].los;
+    }
+	if(uselos<cyclethrough)
+		cyclethrough=(short)uselos;
 	vector <pointex2> allseenunits;
 	for(int i=1; i<=cyclethrough; i++) //cycle through the horizontal diameter of the circle made by having a circle with center at the unit and radius LOS
 	{
@@ -2779,7 +2898,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 			{
 				if(map[(unsigned int)y][(unsigned int)x+i].unitplayer==player) //if this object is the players
 				{
-					if(i<=los-tilecameo[map[(unsigned int)y][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+					if(i<=uselos-tilecameo[map[(unsigned int)y][(unsigned int)x+i].tilestyle]) //if we can actually see the allied unit, after camouflage from it and the map
 						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x+i].unitindex, i, allunits[player][map[(unsigned int)y][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
@@ -2790,7 +2909,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 			{
 				if(map[(unsigned int)y+i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
-					if(i<=los-tilecameo[map[(unsigned int)y+i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+					if(i<=uselos-tilecameo[map[(unsigned int)y+i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 						allseenunits.push_back(pointex2(map[(unsigned int)y+i][(unsigned int)x].unitindex, i, allunits[player][map[(unsigned int)y+i][(unsigned int)x].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
@@ -2801,7 +2920,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 			{
 				if(map[(unsigned int)y][(unsigned int)x-i].unitplayer==player) //if this object is the players
 				{
-					if(i<=los-tilecameo[map[(unsigned int)y][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+					if(i<=uselos-tilecameo[map[(unsigned int)y][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 						allseenunits.push_back(pointex2(map[(unsigned int)y][(unsigned int)x-i].unitindex, i, allunits[player][map[(unsigned int)y][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
@@ -2812,7 +2931,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 			{
 				if(map[(unsigned int)y-i][(unsigned int)x].unitplayer==player) //if this object is the players
 				{
-					if(i<=los-tilecameo[map[(unsigned int)y-i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+					if(i<=uselos-tilecameo[map[(unsigned int)y-i][(unsigned int)x].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 						allseenunits.push_back(pointex2(map[(unsigned int)y-1][(unsigned int)x].unitindex, i, allunits[player][map[(unsigned int)y-i][(unsigned int)x].unitindex]->holding[0])); //record its position and that its a unit(true)
 				}
 			}
@@ -2830,7 +2949,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 						{
 							if(map[(unsigned int)y+j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
-								if(dist<=los-tilecameo[map[(unsigned int)y+j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+								if(dist<=uselos-tilecameo[map[(unsigned int)y+j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x+i].unitindex, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
@@ -2841,7 +2960,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 						{
 							if(map[(unsigned int)y+j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{
-								if(dist<=los-tilecameo[map[(unsigned int)y+j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+								if(dist<=uselos-tilecameo[map[(unsigned int)y+j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 									allseenunits.push_back(pointex2(map[(unsigned int)y+j][(unsigned int)x-i].unitindex, dist, allunits[player][map[(unsigned int)y+j][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
@@ -2855,7 +2974,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 						{
 							if(map[(unsigned int)y-j][(unsigned int)x+i].unitplayer==player) //if this object is the players
 							{
-								if(dist<=los-tilecameo[map[(unsigned int)y-j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+								if(dist<=uselos-tilecameo[map[(unsigned int)y-j][(unsigned int)x+i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x+i].unitindex, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x+i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}
@@ -2866,7 +2985,7 @@ vector <pointex2> unit::findallies(int foodneeded) //returns the index of the ne
 						{
 							if(map[(unsigned int)y-j][(unsigned int)x-i].unitplayer==player) //if this object is the players
 							{
-								if(dist<=los-tilecameo[map[(unsigned int)y-j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
+								if(dist<=uselos-tilecameo[map[(unsigned int)y-j][(unsigned int)x-i].tilestyle]) //if we can actually see the enemy unit, after camouflage from it and the map
 									allseenunits.push_back(pointex2(map[(unsigned int)y-j][(unsigned int)x-i].unitindex, dist, allunits[player][map[(unsigned int)y-j][(unsigned int)x-i].unitindex]->holding[0])); //record its position and that its a unit(true)
 							}
 						}

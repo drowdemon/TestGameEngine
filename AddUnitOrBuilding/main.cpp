@@ -9,9 +9,9 @@ int main()
 {
 	while(true)
 	{
-		cout << "Unit (1) or Building (2)?" << endl;
+		cout << "Unit (1) or Building (2) or Research (3)?" << endl;
 		int whichone=0;
-		while(whichone!=1 && whichone!=2)
+		while(whichone!=1 && whichone!=2 && whichone!=3)
 			cin >> whichone;
 		int dowhat=0;
 		cout << "Add (1), Modify (n/a), or Delete (n/a)" << endl;
@@ -95,7 +95,7 @@ int main()
 			}
 			outf << " " << name;
 		}
-		else
+		else if(whichone==2)
 		{
 			ofstream outf("/home/marc/Coding/TestGameEngine/TestGameEnginev13/GameEngine2/building.specs", ios::app);
 			if(!outf)
@@ -159,7 +159,67 @@ int main()
 			}
 			outf << " " << name;
 		}
-		cout << endl << "Done!" << endl << "To quit input 'q', else input 'r' to input another unit/building" << endl;
+        else if(whichone==3) //research
+        {
+            ofstream outf("/home/marc/Coding/TestGameEngine/TestGameEnginev13/GameEngine2/research.specs", ios::app);
+			if(!outf)
+			{
+				cout << "Unable to open research.specs" << endl;
+				//system("pause");
+				exit(-235);
+			}
+			//outf << "\n";
+			float args[19]={0};
+			cout << "changewhat  ";
+			cin >> args[0];
+            cout << "food  ";
+			cin >> args[1];
+            cout << "wood  ";
+			cin >> args[2];
+            cout << "gold  ";
+			cin >> args[3];
+            cout << "stone  ";
+			cin >> args[4];
+            cout << "time  ";
+			cin >> args[5];
+            cout << "researched where  ";
+			cin >> args[6];
+            cout << "armor  ";
+			cin >> args[7];
+            cout << "attack  ";
+			cin >> args[8];
+            cout << "range  ";
+			cin >> args[9];
+            cout << "accuracy  ";
+			cin >> args[10];
+            cout << "food speed  ";
+			cin >> args[11];
+            cout << "wood speed  ";
+			cin >> args[12];
+            cout << "gold speed  ";
+			cin >> args[13];
+            cout << "stone speed  ";
+			cin >> args[14];
+            cout << "building attack  ";
+			cin >> args[15];
+            cout << "build speed  ";
+			cin >> args[16];
+            cout << "max garrison  ";
+			cin >> args[17];
+            cout << "LOS  ";
+	    cin >> args[18];
+            string name;
+			cout << "name  ";
+			cin >> name;
+            for(int i=0; i<19; i++)
+			{
+				outf << args[i];
+				if(i<19-1)
+					outf << ",";
+			}
+			outf << " " << name;
+        }
+		cout << endl << "Done!" << endl << "To quit input 'q', else input 'r' to input another unit/building/research" << endl;
 		char input='t';
 		while(input!='q' && input!='r')
 		{

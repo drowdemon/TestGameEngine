@@ -17,5 +17,6 @@ void beginrecordreport(buttonparam b);
 void givereport(buttonparam b);
 void nextpage(buttonparam b);
 void transferResourcesButton(buttonparam b);
+void beginresearch(buttonparam b);
 
 #endif
