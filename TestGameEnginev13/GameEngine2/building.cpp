@@ -177,6 +177,11 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 			short tempg=allunits[player][pindex]->garrisoned;
 			actallunits[player][pindex]=unit(allbuildableunits[createwhat], allunits[player][pindex]->x, allunits[player][pindex]->y, player, pindex, allunits[player][pindex]->moral);
 			allunits[player][pindex]->garrisoned=tempg;
+            
+            vector<short> tempselected=selectedunits[player]; //tells ungarrison what building to ungarrison from. hacky.
+            selectedunits[player].clear();
+            selectedunits[player].push_back(index);
+            
 			for(unsigned int i=0; i<garrisoned.size(); i++)
 			{
 				if(allunits[player][garrisoned[i]]->index==pindex)
@@ -185,6 +190,7 @@ void building::createunit(short createwhat, short pindex, short creating) //crea
 					break;
 				}
 			}
+            selectedunits[player]=tempselected;
 		}
 	}
 }
