@@ -2068,7 +2068,7 @@ void mainTimerProc(int arg)
 						{
 							allunits[i][allregiments[i][j].unitids[k]]->recording=true;
 							vector<pointex> allseenunits;
-                            int addLOS;
+                            int addLOS=0;
                             for(unsigned int h=0; h<alreadyResearched[i].size(); h++) //apply research bonuses
                             {
                                 if(allResearches[alreadyResearched[i][h]].checkResearch(allunits[i][allregiments[i][j].unitids[k]]->id))
