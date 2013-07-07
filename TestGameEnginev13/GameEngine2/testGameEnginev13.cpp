@@ -1380,7 +1380,9 @@ void initializeGameEngine()
 	allbuttons.push_back(button(WIDTH*2/3+5+225,615,70,18,"Do Nothing",setstance,YOUR_UNIT | YOUR_MULT_UNITS));
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22, 70, 18, "Designate",designate,YOUR_UNIT));
 	allbuttons.push_back(button(WIDTH*2/3+5, 615+22*3, 70, 18, "Record", beginrecordreport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
-	allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT | YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
+    allbuttons.push_back(button(WIDTH*2/3+5, 615+22*3, 70, 18, "Record", unitrecordreport, YOUR_UNIT));
+	allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_MULT_UNITS | YOUR_REGIMENT_MEMBER));
+    allbuttons.push_back(button(WIDTH*2/3+5+75, 615+22*3, 70, 18, "Report", givereport, YOUR_UNIT));
 	indexTransferbutton=allbuttons.size();
     allbuttons.push_back(button(WIDTH*2/3+5+300, 615+22*3, 113, 18, "Transfer Resources", transferResourcesButton, YOUR_UNIT | YOUR_MULT_UNITS));	
     allMouseOver.push_back(mouseOver("Enter resources to transfer from one building to another in the format: [type of resource][amount] i.e. Food100gold20W40s10 or just g30. At any point it may be the whole word or just the first letter.",5,HEIGHT-105,indexTransferbutton,nullMouseFunc));
@@ -1958,6 +1960,18 @@ void mainTimerProc(int arg)
 				allunits[i][j]->lieutenant++;
 				allunits[i][j]->lieutexp=0;
 			}
+            if(allunits[i][j]->selfRecording)
+            {
+                vector<pointex> allseenunits;
+                int addLOS=0;
+                for(unsigned int h=0; h<alreadyResearched[i].size(); h++) //apply research bonuses
+                {
+                    if(allResearches[alreadyResearched[i][h]].checkResearch(allunits[i][j]->id))
+                        addLOS+=allResearches[alreadyResearched[i][h]].los;
+                }
+                allunits[i][j]->checkrad((int)allunits[i][j]->los+addLOS-tilecameo[map[(unsigned int)allunits[i][j]->y][(unsigned int)allunits[i][j]->x].tilestyle],allunits[i][j]->x,allunits[i][j]->y,allseenunits);
+                allunits[i][j]->rep.updateseenunits(allseenunits);
+            }
 		}
 	}//end go through allunits
 	for(unsigned int i=0; i<newlybuiltbuildings.size(); i++) //new buildings
@@ -2041,7 +2055,6 @@ void mainTimerProc(int arg)
         }
     } //end researching
     
-	//Below draws things
 	if(frames%(FPS/5)==0) //Every fifth of a second. This just makes it update relatively infrequently, as more common ones are not needed
 	{
 		for(unsigned int i=0; i<allregiments.size(); i++) //updates reports of all regiments
@@ -2052,7 +2065,7 @@ void mainTimerProc(int arg)
 				{
 					for(unsigned int k=0; k<allregiments[i][j].unitids.size(); k++)
 					{
-						double dist=sqrt(pow(allunits[i][allregiments[i][j].lieutenant]->x-allunits[i][allregiments[i][j].unitids[k]]->x,2)+pow(allunits[i][allregiments[i][j].lieutenant]->y-allunits[i][allregiments[i][j].unitids[k]]->y,2));
+						double dist=pow(allunits[i][allregiments[i][j].lieutenant]->x-allunits[i][allregiments[i][j].unitids[k]]->x,2)+pow(allunits[i][allregiments[i][j].lieutenant]->y-allunits[i][allregiments[i][j].unitids[k]]->y,2);
 						if(dist>DIST_TO_REG)
 						{
 							if(allunits[i][allregiments[i][j].unitids[k]]->recording==false)
@@ -2061,12 +2074,18 @@ void mainTimerProc(int arg)
 							{
 								allunits[i][allregiments[i][j].unitids[k]]->rep=allregiments[i][j].rep;
 								allunits[i][allregiments[i][j].unitids[k]]->recording=false;
+                                allunits[i][allregiments[i][j].unitids[k]]->selfRecording=true;                                
 								continue;
 							}
 						}
 						else
 						{
-							allunits[i][allregiments[i][j].unitids[k]]->recording=true;
+                            if(!allunits[i][allregiments[i][j].unitids[k]]->recording)
+                            {
+                                allunits[i][allregiments[i][j].unitids[k]]->recording=true;
+                                allunits[i][allregiments[i][j].unitids[k]]->selfRecording=false;
+                                allregiments[i][j].rep.merge(allunits[i][allregiments[i][j].unitids[k]]->rep);
+                            }
 							vector<pointex> allseenunits;
                             int addLOS=0;
                             for(unsigned int h=0; h<alreadyResearched[i].size(); h++) //apply research bonuses
@@ -2096,6 +2115,7 @@ void mainTimerProc(int arg)
             }
         }
     }
+    //Below draws things
 	for(unsigned int i=(int)topleft.y; i<topleft.y+HEIGHT/15; i++) //loop through map, print tiles
 	{
 		for(unsigned int j=(int)topleft.x; j<topleft.x+WIDTH/15; j++)

@@ -36,10 +36,14 @@ public:
 
 	//! This takes a vector of seen enemy units, and uses it to update enemyseenunits
 	void updateseenunits(vector<pointex> &seenunits);
+	//! The same, for merge()
+	void updateseenunits(vector<reportsimpleunitinfo> &seenunits);
 	//! This takes an enemy unit that was killed, and records that
 	void updatedkilledunits(short player, short index);
 	//! This gives a report
 	void give();
+	//! Merges two reports.
+	void merge(report r); 
 	//! This updates the text in the report
 	char* gentxtMyKilled();
 	char* gentxtSeen();

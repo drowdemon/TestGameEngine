@@ -148,6 +148,11 @@ void beginrecordreport(buttonparam b)
 	for(unsigned int i=0; i<allregiments[b.player][allunits[b.player][selectedunits[b.player][0]]->regimentid].unitids.size(); i++)
 		allunits[b.player][allregiments[b.player][allunits[b.player][selectedunits[b.player][0]]->regimentid].unitids[i]]->recording=true;
 }
+//! This records a report for a single unit
+void unitrecordreport(buttonparam b)
+{
+	allunits[b.player][selectedunits[b.player][0]]->selfRecording=true;
+}
 //! This gives whatever report the unit has access to
 void givereport(buttonparam b)
 {

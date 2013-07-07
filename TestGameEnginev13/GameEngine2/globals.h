@@ -39,8 +39,8 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define SEE_ALLIES 5
 //! The size of the map on one side
 #define MAPSIZE 200 //will be 1000
-//! Distance that a unit can be from the lieutenant of a regiment before it no longer recieves/updates report
-#define DIST_TO_REG 20 
+//! Distance that a unit can be from the lieutenant of a regiment before it no longer recieves/updates report Already squared.
+#define DIST_TO_REG 400  //a squared distance
 //! The 4 directions, for scrolling
 #define LEFT  1
 #define RIGHT 2

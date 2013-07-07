@@ -97,6 +97,7 @@ unit::unit(float h, short ma, short ra, short a, short ba, float LOS, float s, s
     buildingx=-1;
     buildingy=-1;
     buildingResourcesFrom=-1;
+    selfRecording=false;
 }
 unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, short ra, short a, short ba, float LOS, float s, short as, short fc, /*short ft, short wt, short gt, short st, short tt, */short sn, float px, float py, float ar, short pid, float c, short p, short i, short high, short w, short bs, short mxhld, unsigned char wisit, unsigned char ming, unsigned char maxg, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(h, ma, ra, a, ba, LOS, s, as, fc, sn, ar, pid, c, high, w, bs, mxhld, wisit, ming, maxg)
 {
@@ -181,6 +182,7 @@ unit::unit(unsigned char hlding[4], float se[8], myrect bb, float h, short ma, s
     buildingx=-1;
     buildingy=-1;
     buildingResourcesFrom=-1;
+    selfRecording=false;
 }
 unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts, short vetlvl, float xp, float mx, float my, short si, char us, bool sotr, float dx, float dy, short drad, short spec, /*short tr,*/ short regid, bool lieut) : baseunit(u.health, u.meleeattack, u.rangedattack, u.armor, u.buildingattack, u.los, u.speed, u.attackspeed, u.foodconsumed, u.sleepneeded, u.attackrange, u.id, u.camouflage, u.height, u.width, u.buildspeed, u.maxhold, u.whatisit, u.mingarrison, u.maxgarrison, u.attackarea, u.chanceHit)
 {
@@ -249,6 +251,7 @@ unit::unit(basicunit u, float px, float py, short p, short i, float m, float ts,
     buildingx=-1;
     buildingy=-1;
     buildingResourcesFrom=-1;
+    selfRecording=false;
 }
 void unit::attackgoingtobstacle(char canmoveto[6])
 {
@@ -2710,6 +2713,8 @@ int unit::innerFight(unit *what)
                 {
                     if(regimentid!=-1 && allregiments[player][regimentid].recording==true)
                         allregiments[player][regimentid].rep.updatedkilledunits(what->player, what->index);
+                    else if(selfRecording)
+                        rep.updatedkilledunits(what->player, what->index);
                     if(what->regimentid!=-1)
                     {
                         allregiments[what->player][what->regimentid].removeunit(what->index);

@@ -24,9 +24,29 @@ void report::updateseenunits(vector<pointex> &seenunits)
 				break;
 			}
 		}
-		if(good==true)
+		if(good)
 		{
 			enemyseenunits.push_back(reportsimpleunitinfo(allunits[seenunits[i].player][seenunits[i].index]->id, point((float)seenunits[i].x,(float)seenunits[i].y), seenunits[i].player,seenunits[i].index));
+			enemylivedids.push_back(enemyseenunits.size()-1);
+		}
+	}
+}
+void report::updateseenunits(vector<reportsimpleunitinfo> &seenunits)
+{
+	for(unsigned int i=0; i<seenunits.size(); i++)
+	{
+		bool good=true;
+		for(unsigned int j=0; j<enemyseenunits.size(); j++)
+		{
+			if(seenunits[i].enemyplayer==enemyseenunits[j].enemyplayer && seenunits[i].enemyindex==enemyseenunits[j].enemyindex)
+			{
+				good=false;
+				break;
+			}
+		}
+		if(good)
+		{
+			enemyseenunits.push_back(seenunits[i]);
 			enemylivedids.push_back(enemyseenunits.size()-1);
 		}
 	}
@@ -143,4 +163,47 @@ char* report::gentxtEnemyKilled()
 	}
 	ret[text.size()]=0;
 	return ret;
+}
+void report::merge(report r)
+{
+    updateseenunits(r.enemyseenunits);
+    vector<short> temp;
+    for(unsigned int i=0; i<r.enemykilledids.size(); i++)
+    {
+        bool good=true;
+        for(unsigned int j=0; j<enemykilledids.size(); j++)
+        {
+            if(r.enemykilledids[i]==enemykilledids[j])
+            {
+                good=false;
+                break;
+            }
+        }
+        if(good)
+        {
+            temp.push_back(r.enemykilledids[i]);
+        }
+    }
+    for(unsigned int i=0; i<temp.size(); i++)
+        updatedkilledunits(r.enemyseenunits[temp[i]].enemyplayer,r.enemyseenunits[temp[i]].enemyindex);
+    
+    temp.clear();
+    for(unsigned int i=0; i<r.unitslost.size(); i++)
+    {
+        bool good=true;
+        for(unsigned int j=0; j<unitslost.size(); j++)
+        {
+            if(r.unitslost[i].id==unitslost[j].id)
+            {
+                good=false;
+                break;
+            }
+        }
+        if(good)
+        {
+            temp.push_back(i);
+        }
+    }
+    for(unsigned int i=0; i<temp.size(); i++)
+        unitslost.push_back(r.unitslost[temp[i]]);
 }
