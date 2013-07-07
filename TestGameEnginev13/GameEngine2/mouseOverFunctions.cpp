@@ -47,14 +47,54 @@ string nullMouseFunc(int index)
 string buildUnit(int index)
 {
     index=allbuttons[allMouseOver[index].dispwith].unitorbuilding;
-    string s("Food: ");
-    s+=inttostring(allbuildableunits[index].foodontraining);
+    
+    short total[4]={0,0,0,0};
+    for(unsigned int k=0; k<allgarrisonedselectedunits[0].size(); k++)
+    {
+        short price[4]={allbuildableunits[index].foodontraining,allbuildableunits[index].woodontraining,allbuildableunits[index].goldontraining,allbuildableunits[index].stoneontraining};
+
+        for(unsigned int i=0; i<allbuildableunits[allunits[0][allgarrisonedselectedunits[0][k]]->id].allPriceMods.size(); i++)
+        {
+            if(index==allbuildableunits[allunits[0][allgarrisonedselectedunits[0][k]]->id].allPriceMods[i].forWhat)
+            {
+                for(int j=0; j<4; j++)
+                {
+                    price[j]=allbuildableunits[allunits[0][allgarrisonedselectedunits[0][k]]->id].allPriceMods[i].prices[j];
+                }
+                break;
+            }
+        }
+        for(int i=0; i<4; i++)
+            total[i]+=price[i];
+    }
+    
+    string s;
+    int sum=0;
+    for(int i=0; i<4; i++)
+        sum+=total[i];
+    if(sum==0) //total is empty
+    {
+        total[0]=allbuildableunits[index].foodontraining;
+        total[1]=allbuildableunits[index].woodontraining;
+        total[2]=allbuildableunits[index].goldontraining;
+        total[3]=allbuildableunits[index].stoneontraining;
+        s+="Generic Cost   ";
+    }
+    else
+        s+="Total   ";
+    
+    s+="Food: ";
+   // s+=inttostring(allbuildableunits[index].foodontraining);
+    s+=inttostring(total[0]);
     s+=string(" Wood: ");
-    s+=inttostring(allbuildableunits[index].woodontraining);
+    s+=inttostring(total[1]);
+    //s+=inttostring(allbuildableunits[index].woodontraining);
     s+=string(" Gold: ");
-    s+=inttostring(allbuildableunits[index].goldontraining);
+    s+=inttostring(total[2]);
+    //s+=inttostring(allbuildableunits[index].goldontraining);
     s+=string(" Stone: ");
-    s+=inttostring(allbuildableunits[index].stoneontraining);
+    s+=inttostring(total[3]);
+    //s+=inttostring(allbuildableunits[index].stoneontraining);
     return s;
 }
 
