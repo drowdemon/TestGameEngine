@@ -157,9 +157,9 @@ void unitrecordreport(buttonparam b)
 void givereport(buttonparam b)
 {
 	if(allunits[b.player][selectedunits[b.player][0]]->recording==true)
-		allregiments[b.player][allunits[b.player][selectedunits[b.player][0]]->regimentid].rep.give();
+		allregiments[b.player][allunits[b.player][selectedunits[b.player][0]]->regimentid].rep.give(b.player);
 	else
-		allunits[b.player][selectedunits[b.player][0]]->rep.give();
+		allunits[b.player][selectedunits[b.player][0]]->rep.give(b.player);
 }
 //! This flips to the next page
 void nextpage(buttonparam b)

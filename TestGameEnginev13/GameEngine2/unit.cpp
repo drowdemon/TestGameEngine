@@ -633,7 +633,22 @@ void unit::revealmapcreation()
 			{
 				if(sqrt(pow(i,2)+pow(j,2))<uselos)
 				{
-					minimapseen[player][(unsigned int)(i+y)][(unsigned int)(j+x)]=true;
+                    if(generals[player]==index) //this is the general, he can see
+                        minimapseen[player][(unsigned int)(i+y)][(unsigned int)(j+x)]=true;
+                    else if(selfRecording) //this unit is recording stuff
+                    {
+                        bool good=true;
+                        for(unsigned int k=0; k<rep.seenTiles.size(); k++)
+                        {
+                            if((int)(i+y)==rep.seenTiles[k].y && (int)(j+x)==rep.seenTiles[k].x) //repeat
+                            {
+                                good=false;
+                                break;
+                            }
+                        }
+                        if(good)
+                            rep.seenTiles.push_back(point((int)(j+x), (int)(i+y)));
+                    }
 				}
 			}
 		}

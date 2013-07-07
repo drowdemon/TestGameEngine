@@ -1196,8 +1196,8 @@ void initializeGameEngine()
 	for(int i=0; i<MAPSIZE; i++)
 	{
 		map[i].resize(MAPSIZE);
-		minimapseen[0][i].resize(MAPSIZE);
-		minimapseen[1][i].resize(MAPSIZE);
+        for(int j=0; j<numplayers; j++)
+            minimapseen[j][i].resize(MAPSIZE);
 	}
 	allunits.resize(numplayers);
 	actallunits.resize(numplayers);

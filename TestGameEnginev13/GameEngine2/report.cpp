@@ -63,8 +63,10 @@ void report::updatedkilledunits(short player, short index)
 		}
 	}
 }
-void report::give()
+void report::give(short player)
 {
+    for(unsigned int i=0; i<seenTiles.size(); i++)
+        minimapseen[player][(unsigned int)seenTiles[i].y][(unsigned int)seenTiles[i].x]=true;
 	//reportdialoghwnd=CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_REPORTBOX), hWnd, reportdialogproc);
     makeReportDialog=true;
 	reportDialogWindow=glutCreateSubWindow(mainWindow, 30, 30, 330, 400);
@@ -206,4 +208,24 @@ void report::merge(report r)
     }
     for(unsigned int i=0; i<temp.size(); i++)
         unitslost.push_back(r.unitslost[temp[i]]);
+    
+    temp.clear();
+    for(unsigned int i=0; i<r.seenTiles.size(); i++)
+    {
+        bool good=true;
+        for(unsigned int j=0; j<seenTiles.size(); j++)
+        {
+            if((int)r.seenTiles[i].x==(int)seenTiles[j].x && (int)r.seenTiles[i].y==(int)seenTiles[j].y)
+            {
+                good=false;
+                break;
+            }
+        }
+        if(good)
+        {
+            temp.push_back(i);
+        }
+    }
+    for(unsigned int i=0; i<temp.size(); i++)
+        seenTiles.push_back(r.seenTiles[temp[i]]);
 }

@@ -30,6 +30,7 @@ public:
 	//! This contains ids of surviving enemy units
 	vector <short> enemylivedids; //can be derived. This is for easy access. id in enemyseenunits
 	vector <reportsimpleunitinfo> enemyseenunits; //!< this contains basic info about all of the enemy units that were seen
+	vector <point> seenTiles; //!< This contains tiles the unit has seen.  //MAKE IT AN OPTIMIZED HASHTABLE/LIST, or rather a linked hashset and list. So for accessing to see if its something new, use a hashtable, for listing/looping through use the list, add/erase from both. 
 
 	//! Completely empty default constructor
 	report();
@@ -41,7 +42,7 @@ public:
 	//! This takes an enemy unit that was killed, and records that
 	void updatedkilledunits(short player, short index);
 	//! This gives a report
-	void give();
+	void give(short player);
 	//! Merges two reports.
 	void merge(report r); 
 	//! This updates the text in the report
