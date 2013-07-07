@@ -1352,13 +1352,6 @@ void initializeGameEngine()
         buildingAllowed[i][15]=true; //market
         buildingAllowed[i][16]=true; //farm
         buildingAllowed[i][18]=true; //road
-        
-        buildingAllowed[i][7]=true; //TESTING ONLY. DELETE. Research Facility.
-    }
-    
-    for(unsigned int i=0; i<researchAllowed.size(); i++)
-    {
-        researchAllowed[i][0]=true; //TESTING ALLOWED. DELETE!!
     }
     
     //bonuses
