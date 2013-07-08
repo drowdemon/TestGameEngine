@@ -27,7 +27,7 @@ int main()
 				exit(-235);
 			}
 			outf << "\n";
-			float args[26]={0};
+			float args[28]={0};
 			cout << "health  ";
 			cin >> args[0];
 			cout << "meleeattack  ";
@@ -87,10 +87,10 @@ int main()
 			string name;
 			cout << "name  ";
 			cin >> name;
-			for(int i=0; i<26; i++)
+			for(int i=0; i<28; i++)
 			{
 				outf << args[i];
-				if(i<26-1)
+				if(i<28-1)
 					outf << ",";
 			}
 			outf << " " << name;
@@ -169,7 +169,7 @@ int main()
 				exit(-235);
 			}
 			//outf << "\n";
-			float args[19]={0};
+			float args[21]={0};
 			cout << "changewhat  ";
 			cin >> args[0];
             cout << "food  ";
@@ -208,16 +208,20 @@ int main()
 			cin >> args[17];
             cout << "LOS  ";
 	    cin >> args[18];
+	    cout << "X   ";
+	    cin >> args[19];
+	    cout << "Y   ";
+	    cin >> args[20];
             string name;
 			cout << "name  ";
 			cin >> name;
-            for(int i=0; i<19; i++)
+            for(int i=0; i<21; i++)
 			{
 				outf << args[i];
-				if(i<19-1)
+				if(i<21-1)
 					outf << ",";
 			}
-			outf << " " << name;
+			outf << " " << name << "\n";
         }
 		cout << endl << "Done!" << endl << "To quit input 'q', else input 'r' to input another unit/building/research" << endl;
 		char input='t';

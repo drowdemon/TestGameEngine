@@ -5,7 +5,7 @@ using namespace std;
 
 extern vector<basicbuilding> allbuildablebuildings;
 
-Research::Research(short cw, short food, short wood, short gold, short stone, short t, short rw, short arm, short att, short r, short acc, short fs, short ws, short gs, short ss, short ba, short bs, short mg, short l, string n)
+Research::Research(short cw, short food, short wood, short gold, short stone, short t, short rw, short arm, short att, short r, short acc, short fs, short ws, short gs, short ss, short ba, short bs, short mg, short l, short x, short y, string n)
 {
     changewhat=cw;
     price[0]=food;
@@ -27,6 +27,8 @@ Research::Research(short cw, short food, short wood, short gold, short stone, sh
     maxgarrison=mg;
     los=l;
     name=n;
+    xpos=x;
+    ypos=y;
 }
 
 bool Research::checkResearch(int unitid, bool building)
@@ -56,6 +58,12 @@ bool Research::checkResearch(int unitid, bool building)
             whatisit|=SPIES;
         if(unitid==33)
             whatisit|=ASSASSINS;
+        
+        //the gatherers. Anything with whatisit=1
+        if(unitid==1)
+            whatisit|=GATHERER;
+        if(unitid>=4 && unitid<=34)
+            whatisit|=GATHERER;
         if((whatisit&changewhat)>0)
             return true;
         else

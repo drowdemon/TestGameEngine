@@ -19,6 +19,8 @@ using namespace std;
 #define SPIES			  512
 #define ASSASSINS	      1024
 #define TRANSPORT		  2048
+#define GATHERER		  4096
+
 class Research
 {
 public:
@@ -35,8 +37,10 @@ public:
 	short buildspeed; //added
 	short maxgarrison; //added
 	short los; //added line of sight
+	short xpos; //where its button will be
+	short ypos; //where its button wil be
 	string name;
-	Research(short cw, short food, short wood, short gold, short stone, short t, short rw, short arm, short att, short r, short acc, short fs, short ws, short gs, short ss, short ba, short bs, short mg, short los, string n);
+	Research(short cw, short food, short wood, short gold, short stone, short t, short rw, short arm, short att, short r, short acc, short fs, short ws, short gs, short ss, short ba, short bs, short mg, short los, short x, short y, string n);
 	bool checkResearch(int unitid, bool building=false);
 };
 

@@ -1265,14 +1265,14 @@ void initializeGameEngine()
 	}
     while(!inf4.eof())
 	{
-		for(int i=0; i<19; i++) //19=number of args to research. Make sure that this is so.
+		for(int i=0; i<21; i++) //21=number of args to research. Make sure that this is so.
 		{
 			inf4 >> args[i];
             args[i]+=0.001f; //just in case. All casted to float anyway.
 			inf4.get();
 		}
 		getline(inf4, name);
-		allResearches.push_back(Research((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],(short)args[11],(short)args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(short)args[17],(short)args[18], name));
+		allResearches.push_back(Research((short)args[0],(short)args[1],(short)args[2],args[3],(short)args[4],(short)args[5],(short)args[6],(short)args[7],(short)args[8],(short)args[9],(short)args[10],(short)args[11],(short)args[12],(short)args[13],(short)args[14],(short)args[15],(short)args[16],(short)args[17],(short)args[18], (short)args[19], (short)args[20], name));
         if(allResearches.size()>1 && allResearches[allResearches.size()-1].name==allResearches[allResearches.size()-2].name)
         {
             allResearches.erase(allResearches.end()-1);
@@ -1291,11 +1291,11 @@ void initializeGameEngine()
         unitAllowed[i].resize(allbuildableunits.size());
         buildingAllowed[i].resize(allbuildablebuildings.size());
         researchAllowed[i].resize(allResearches.size());
-        for(unsigned int j=0; j<unitAllowed.size(); j++)
+        for(unsigned int j=0; j<unitAllowed[i].size(); j++)
             unitAllowed[i][j]=false;
-        for(unsigned int j=0; j<buildingAllowed.size(); j++)
+        for(unsigned int j=0; j<buildingAllowed[i].size(); j++)
             buildingAllowed[i][j]=false;
-        for(unsigned int j=0; j<researchAllowed.size(); j++)
+        for(unsigned int j=0; j<researchAllowed[i].size(); j++)
             researchAllowed[i][j]=false;
     }
     
@@ -1519,17 +1519,9 @@ void initializeGameEngine()
 	indexSailorsbuttonend=allbuttons.size();
 	allbuttons.push_back(button(WIDTH*2/3+5, 615, 88, 18, "Ungarrison All",ungarrisonall,YOUR_BUILDING));
     indexResearchbutton=allbuttons.size(); //research buttons. UPDATE IF RESEARCHES CREATED AT DIFFERENT BUILDINGS. Also, maybe researches will be unlocked after researching something else, so the button can be in the same place. Also, maybe there will be pagination, like for buildings
-    int buttonxpos=0;
-    int buttonypos=0;
     for(unsigned int i=0; i<allResearches.size(); i++)
     {
-        buttonxpos+=100;
-        if(buttonxpos>300)
-        {
-            buttonxpos=0;
-            buttonypos+=20;
-        }
-        allbuttons.push_back(button(5+buttonxpos,615+buttonypos,90,18,allResearches[i].name,beginresearch,YOUR_BUILDING | RESEARCH_BUILDING,i));
+        allbuttons.push_back(button(5+(allResearches[i].xpos*105),613+(allResearches[i].ypos*19),95,17,allResearches[i].name,beginresearch,YOUR_BUILDING | RESEARCH_BUILDING,i));
         allMouseOver.push_back(mouseOver("",5,HEIGHT-105,allbuttons.size()-1,researchSomething));
     }
     indexResearchbuttonend=allbuttons.size();
