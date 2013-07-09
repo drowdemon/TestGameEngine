@@ -440,7 +440,7 @@ void move(int player, POINT &gowhere, bool waypoint)
 			allunits[player][selectedunits[player][i]]->dstancecooy=-1;
 			allunits[player][selectedunits[player][i]]->gatheringx=-1;
 			allunits[player][selectedunits[player][i]]->gatheringy=-1;
-			allunits[player][selectedunits[player][i]]->gatheringwhat=-1; //TODO CHECK IF LEGIT
+			allunits[player][selectedunits[player][i]]->gatheringwhat=-1;
 			allunits[player][selectedunits[player][i]]->firstobstacleattempt=true; // at this point, definitely haven't tried to avoid an obstacle
 			if((map[(int)gowhere.y][(int)gowhere.x].unitonMineon&1)==1) //if there is a unit on the square where we are going
 			{
@@ -540,11 +540,11 @@ void move(int player, POINT &gowhere, bool waypoint)
 					}
 				}
 			}
-			else if(map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_TREE || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_BERRIES || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_GOLD && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2) || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_STONE && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2))
+			else if(map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_TREE || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_BERRIES || map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_ANIMAL || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_GOLD && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2) || (map[(int)gowhere.y][(int)gowhere.x].tilestyle==TS_STONE && (map[(int)gowhere.y][(int)gowhere.x].unitonMineon&2)==2))
 			{
 				allunits[player][selectedunits[player][i]]->gatheringx=(short)gowhere.x;
 				allunits[player][selectedunits[player][i]]->gatheringy=(short)gowhere.y;
-				allunits[player][selectedunits[player][i]]->gatheringwhat=map[(int)gowhere.y][(int)gowhere.x].tilestyle; //TODO: check
+				allunits[player][selectedunits[player][i]]->gatheringwhat=map[(int)gowhere.y][(int)gowhere.x].tilestyle;
 			}
 			if(allunits[player][selectedunits[player][i]]->whatisit==2) //its a siege unit
 			{
@@ -1625,6 +1625,8 @@ void initializeGameEngine()
 			{
 				map[i][j].resources[k]*=100;
 			}
+            if(map[i][j].tilestyle==TS_ANIMAL)
+                allAnimals.push_back(animal((rand()%31)+40,((float)(rand()%11)/100.0f)+.22,j,i,0,((rand()%30)+24)*FPS));
 		}
 		inf3.get(); //newline
 	}
@@ -2085,6 +2087,12 @@ void mainTimerProc(int arg)
 				}
 			}
 		}
+        for(unsigned int i=0; i<allAnimals.size(); i++) //move all of the animals
+        {
+            if(allAnimals[i].health<=0)
+                continue;
+            allAnimals[i].move();
+        }
 	}
     if(frames%(FPS/2)==0) //every half second - not super critical and could get rather slow
     {

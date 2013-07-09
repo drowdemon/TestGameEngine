@@ -10,6 +10,7 @@
 #include "dataStructures.h"
 #include "advancement.h"
 #include "research.h"
+#include "animal.h"
 
 //NOTE TO SELF: THIS FILE MAY ONLY HAVE extern VARIABLES, AND EXTERN VARIABLE MAY NOT BE DEFINED HERE i.e NO EQUALS SIGNS. THOSE GO IN globals.cpp!
 
@@ -48,6 +49,10 @@ extern short currplayer; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!
 #define DOWN  8
 //! How far you can be from a unit to steal resources from it, for building, **already squared**
 #define DISTUNITRESOURCE 9
+//! How far away you can be from something to gather from it, squared
+#define GATHERDIST 2.1*2.1
+//! How far away you can be from an animal to gather from it, squared
+#define HUNTDIST 16
 
 //forward declarations of functions
 void hourpassed(int arg);
@@ -160,6 +165,7 @@ extern vector<Research> allResearches;
 extern vector<vector<short> > alreadyResearched;
 extern vector<vector<bool> > researchAllowed;
 extern vector<vector<CurrentlyResearching> > allCurrResearch;
+extern vector<animal> allAnimals;
 
 extern int indexStancebutton;
 extern int indexResourcedispunit;

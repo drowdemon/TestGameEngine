@@ -756,6 +756,18 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 					int ts=map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle;
 					if(gatheringwhat==0 && ts==TS_BERRIES)
 						map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=TS_BUSHES;
+                    else if(gatheringwhat==0 && ts==TS_ANIMAL)
+                    {
+                        for(unsigned int i=0; i<allAnimals.size(); i++)
+                        {
+                            if(allAnimals[i].x==gatheringx && allAnimals[i].y==gatheringy)
+                            {
+                                map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=allAnimals[i].prevTileStyle;
+                                allAnimals.erase(allAnimals.begin()+i);
+                                break;
+                            }
+                        }
+                    }
 					else if(gatheringwhat==1)
 						map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle=TS_GRASS;
 					//now, search 7 by 7 square and pick nearest
@@ -766,7 +778,7 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 					redraw=true;
 				sum++;
 			}
-			if(sum>=maxhold)//go to nearest storage building (basically else)
+			if(sum>=maxhold)//go to nearest storage building (basically else, but sum changes above)
 			{
 				int sum=0;
 				if(nearesthold!=-1)
@@ -867,7 +879,7 @@ void unit::gather(char gatheringwhat) // 0=food, 1=wood, 2=gold, 3=stone
 	else
 		searchresources();
 }
-void unit::movement(bool siegesent) //the first time I put a class function outside of the class definition, this happened because it needed the definition of both unit and siege to function
+void unit::movement(bool siegesent)
 {
 	if(checknomove(siegesent)==false) //already done
 		return;
@@ -1583,6 +1595,7 @@ bool unit::checknomove(bool siegesent)
 	if(movetox==x && movetoy==y)//if I have to stay in place
 	{
 		bool didsomething=false;
+        double resourcedist=999999;
 		if(allobstacles[player][index].size()!=0) // if I didn't finish not actually staying in place
 		{
 			movetox=x+allobstacles[player][index][0].x;//move towards the next spot specified by obstacle avoidance
@@ -1707,7 +1720,7 @@ bool unit::checknomove(bool siegesent)
 			}
 			didsomething=true;
 		}
-		else if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && sqrt(pow(gatheringx-x,2)+pow(gatheringy-y,2))<=2.1)
+		else if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && (resourcedist=pow(gatheringx-x,2)+pow(gatheringy-y,2))<=GATHERDIST)
 		{
 			if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_BERRIES)
 				gather(0);
@@ -1721,6 +1734,21 @@ bool unit::checknomove(bool siegesent)
 				searchresources();
 			didsomething=true;
 		}
+        if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && resourcedist<=((HUNTDIST>(attackrange*attackrange)) ? (HUNTDIST) : (attackrange*attackrange)))
+        {
+            if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_ANIMAL && gatheringwhat==TS_ANIMAL)
+            {
+                hunt();
+                didsomething=true;
+            }
+            else if(gatheringwhat==TS_ANIMAL) //tilestyle wasn't animal, but I am indeed looking for an animal
+                searchresources();
+            if(pow(gatheringx-x,2)+pow(gatheringy-y,2)>=((HUNTDIST>(attackrange*attackrange)) ? (HUNTDIST) : (attackrange*attackrange))) //now out of range
+            {
+                movetox=gatheringx;
+                movetoy=gatheringy; //give chase
+            }
+        }
 		if(gatheringx!=-1 && gatheringy!=-1 && nearesthold!=-1 && whatisit==1)
 		{
 			int sumbuilding=0;
@@ -1864,6 +1892,28 @@ bool unit::checknomove(bool siegesent)
                 movetox=gatheringx;
                 movetoy=gatheringy;
                 return false;
+            }
+        }
+    }
+    if(gatheringx!=-1 && gatheringy!=-1 && whatisit==1 && pow(gatheringx-x,2)+pow(gatheringy-y,2)<=((HUNTDIST>(attackrange*attackrange)) ? (HUNTDIST) : (attackrange*attackrange)))
+    {
+        int sumunit=0;
+        for(int i=0; i<4; i++)
+        {
+            sumunit+=holding[i];
+        }
+        if(sumunit<maxhold && (movetox!=x || movetoy!=y)) //don't gather twice, and don't do it if I can't hold anything
+        {
+            if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_ANIMAL && gatheringwhat==TS_ANIMAL)
+            {
+                hunt();
+            }
+            else if(gatheringwhat==TS_ANIMAL) //tilestyle wasn't animal, but I am indeed looking for an animal
+                searchresources();
+            if(pow(gatheringx-x,2)+pow(gatheringy-y,2)>=((HUNTDIST>(attackrange*attackrange)) ? (HUNTDIST) : (attackrange*attackrange))) //now out of range
+            {
+                movetox=gatheringx;
+                movetoy=gatheringy; //give chase
             }
         }
     }
@@ -3277,4 +3327,29 @@ point unit::searchbuildingresources(short buildwhat)
         }
     }
     return point(-1,-1);
+}
+void unit::hunt()
+{
+    animal *hunting=NULL;
+    for(unsigned int i=0; i<allAnimals.size(); i++)
+    {
+        if(allAnimals[i].x==gatheringx && allAnimals[i].y==gatheringy)
+        {
+            hunting=&allAnimals[i];
+            break;
+        }
+    }
+    if(!hunting)
+    {
+        printf("EPIC FAIL!!!! Couldn't find animal I'm hunting.");
+        return;
+    }
+    if(hunting->health<=0)
+    {
+        gather(0);
+        return;
+    }
+    //at this point, have animal, living, in range (since hunt was called)
+    if(frames%attackspeed==0)
+        hunting->health-=((rangedattack>20) ? rangedattack : 20);
 }

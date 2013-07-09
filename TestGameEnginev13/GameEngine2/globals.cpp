@@ -6,6 +6,7 @@
 #include "siege.h"
 #include "advancement.h"
 #include "research.h"
+#include "animal.h"
 
 short currplayer=0; //DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TESTING ONLY!!!!!!!!!!!!!!!!!!!!!!!!! DELETE DELETE DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -88,6 +89,7 @@ vector<Research> allResearches; //!< all of the possible things to research
 vector<vector<short> > alreadyResearched; //!< all of the things researched by each player
 vector<vector<bool> > researchAllowed; //!< for each player, for each technology, whether the technology is allowed to be researched
 vector<vector<CurrentlyResearching> > allCurrResearch; //!< For each player, list of stuff being researched.
+vector<animal> allAnimals;
 
 //Glut has ints instead of HWNDs. These are to store windows
 int mainWindow=0;
