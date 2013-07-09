@@ -1626,7 +1626,7 @@ void initializeGameEngine()
 				map[i][j].resources[k]*=100;
 			}
             if(map[i][j].tilestyle==TS_ANIMAL)
-                allAnimals.push_back(animal((rand()%31)+40,((float)(rand()%11)/100.0f)+.22,j,i,0,((rand()%30)+24)*FPS));
+                allAnimals.push_back(animal((rand()%31)+40,((float)(rand()%11)/100.0f)+.22,j,i,0,((rand()%300)+300)*FPS));
 		}
 		inf3.get(); //newline
 	}

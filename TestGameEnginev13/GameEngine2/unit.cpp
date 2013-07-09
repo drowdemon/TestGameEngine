@@ -1906,7 +1906,8 @@ bool unit::checknomove(bool siegesent)
         {
             if(map[(unsigned int)gatheringy][(unsigned int)gatheringx].tilestyle==TS_ANIMAL && gatheringwhat==TS_ANIMAL)
             {
-                hunt();
+                return !hunt();
+                //return false;
             }
             else if(gatheringwhat==TS_ANIMAL) //tilestyle wasn't animal, but I am indeed looking for an animal
                 searchresources();
@@ -1914,6 +1915,7 @@ bool unit::checknomove(bool siegesent)
             {
                 movetox=gatheringx;
                 movetoy=gatheringy; //give chase
+                return false;
             }
         }
     }
@@ -3207,7 +3209,7 @@ point unit::checksurroundingarea(short cwidth, short cheight)
 }
 void unit::searchresources()
 {
-	double mindist=99999999;
+	double mindist=99999999; //I think this function is the one that causes perceptable lag during hunting, but I'm not sure. 
 	int minx=-1;
 	int miny=-1;
 	for(int i=-3; i<=3; i++)
@@ -3328,7 +3330,7 @@ point unit::searchbuildingresources(short buildwhat)
     }
     return point(-1,-1);
 }
-void unit::hunt()
+bool unit::hunt()
 {
     animal *hunting=NULL;
     for(unsigned int i=0; i<allAnimals.size(); i++)
@@ -3342,14 +3344,24 @@ void unit::hunt()
     if(!hunting)
     {
         printf("EPIC FAIL!!!! Couldn't find animal I'm hunting.");
-        return;
+        return true;
     }
     if(hunting->health<=0)
     {
-        gather(0);
-        return;
+        if(pow(x-gatheringx,2)+pow(y-gatheringy,2)<GATHERDIST)
+            gather(0);
+        else
+        {
+            if(movetox==gatheringx+1 && movetoy==gatheringy)
+                return false;
+            movetox=gatheringx+1;
+            movetoy=gatheringy;
+            return true;
+        }
+        return true;
     }
     //at this point, have animal, living, in range (since hunt was called)
     if(frames%attackspeed==0)
         hunting->health-=((rangedattack>20) ? rangedattack : 20);
+    return true;
 }

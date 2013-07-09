@@ -112,7 +112,7 @@ protected:
 	bool checknomove(bool siegesent);
 	void searchresources();
 	bool distToBuilding(int bindex, double dist);
-	void hunt();
+	bool hunt();
 private:
 	int innerFight(unit *what);
 	int innerFight(building &what);

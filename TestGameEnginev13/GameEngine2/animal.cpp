@@ -48,19 +48,19 @@ void animal::move()
             map[y][x+1].tilestyle=TS_ANIMAL;
             map[y][x+1].resources[0]=200;
         }
-        if(chkmvp1(map[y][x-1], 0, -1, 0))
+        else if(chkmvp1(map[y][x-1], 0, -1, 0))
         {
             allAnimals.push_back(animal(health, speed, x-1, y, 0, reprowhen,map[y][x-1].tilestyle));
             map[y][x-1].tilestyle=TS_ANIMAL;
             map[y][x-1].resources[0]=200;
         }
-        if(chkmvp1(map[y+1][x], 0, -1, 0))
+        else if(chkmvp1(map[y+1][x], 0, -1, 0))
         {
             allAnimals.push_back(animal(health, speed, x, y+1, 0, reprowhen,map[y+1][x].tilestyle));
             map[y+1][x].tilestyle=TS_ANIMAL;
             map[y+1][x].resources[0]=200;
         }
-        if(chkmvp1(map[y-1][x], 0, -1, 0))
+        else if(chkmvp1(map[y-1][x], 0, -1, 0))
         {
             allAnimals.push_back(animal(health, speed, x, y-1, 0, reprowhen,map[y-1][x].tilestyle));
             map[y-1][x].tilestyle=TS_ANIMAL;
